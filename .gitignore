@@ -1,0 +1,7 @@
+data_satellite/*
+output/*
+.ipynb_checkpoints/*
+dist/*
+build/*
+data/*
+nso_main_tests.ipynb
