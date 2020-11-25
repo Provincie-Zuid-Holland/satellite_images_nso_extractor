@@ -5,14 +5,15 @@ This leads to a unnecessary large amount of data, if you only want to study a sm
 
 This repo cuts a selected region out of the original file, provided that the selected region is smaller than the original file.
 And then saves this cutout thus reducing the unnecessary saved data. 
-While also calculating the NVDI the cutout region.
+While also calculating the Normalized difference vegetation index (NVDI, used in crop analysis) of the cutout region.
+We are working on more variables.
 
 And it can also automate the downloading process instead of manual clicking all the download links at [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/)
 
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
-1. First GeoJSON file of the region you want to cut. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that.
+1. First get a GeoJSON file of the region you want to cut. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that.
 2. Make a instance of nso_geojsonregion with instance of the geojson region you have, where you want to store the cropped files and the NSO account based on step 0.
 2. Retrieve download links for the specific region you want to have.
 3. Download the found links.
