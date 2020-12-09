@@ -45,27 +45,20 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
      
     src = rasterio.open(raster_path)
     
-    pol_trans = transform_geom({'init': 'epsg:4326'},
-***REMOVED***                  src.crs,***REMOVED***              
-***REMOVED***                  {"type": "Polygon",
-***REMOVED***                  "coordinates": [coords[0][0]]})
-     
-    out_image,out_transform = mask.mask(src,
-***REMOVED***      [pol_trans],
-***REMOVED***      crop=True)    
-    
-    tiff_output = rasterio.open(raster_path_cropped,\
-***REMOVED***  'w', driver='Gtiff',
-***REMOVED***  width=out_image.shape[1], height=out_image.shape[2],
-***REMOVED***  count=src.count,
-***REMOVED***  crs=src.profile['crs'],
-***REMOVED***  transform=out_transform,
-***REMOVED***  dtype=src.dtypes[0],                          
-***REMOVED***  )
+    if geo.crs['init'] != 'epsg:28992':
+        geo = geo.to_crs(epsg=28992)
 
+   out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True)
+   out_meta = src.meta
+
+   out_meta.update({"driver": "GTiff",
+                 "height": out_image.shape[1],
+                 "width": out_image.shape[2],
+                 "transform": out_transform})
     
-    tiff_output.write(out_image)  
-    tiff_output.close()
+    with rasterio.open(raster_path_cropped, "w", **out_meta) as dest:
+            dest.write(out_image)
+            dest.close()
 
     print("Plotting data for:"+raster_path_cropped+"-----------------------------------------------------")
     # TODO: Make this optional to plot.
