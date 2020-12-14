@@ -48,10 +48,10 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
     if geo.crs['init'] != 'epsg:28992':
         geo = geo.to_crs(epsg=28992)
 
-   out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True)
-   out_meta = src.meta
+    out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True)
+    out_meta = src.meta
 
-   out_meta.update({"driver": "GTiff",
+    out_meta.update({"driver": "GTiff",
                  "height": out_image.shape[1],
                  "width": out_image.shape[2],
                  "transform": out_transform})
