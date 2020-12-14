@@ -48,7 +48,7 @@ class nso_georegion:
             @param delete_zip_file: wether or not to delete the downloaded .zip file.
             @param delete_source_files: wether or not to delete the unzipped file.
         """
-
+        
         true_path = path
         if '.tif' not in true_path:
             for x in glob.glob(path+'/*.tif', recursive=True):
