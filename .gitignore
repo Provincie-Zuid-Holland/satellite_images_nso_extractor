@@ -1,6 +1,10 @@
 data_satellite/*
 output/*
-<<<<<<< HEAD
+.ipynb_checkpoints/*
+dist/*
+build/*
+data/*
+nso_main_tests.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -131,11 +135,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-=======
-.ipynb_checkpoints/*
-dist/*
-build/*
-data/*
->>>>>>> 194a7093a0d265f4ce012910a1c41ccc67bbc604
-nso_main_tests.ipynb
