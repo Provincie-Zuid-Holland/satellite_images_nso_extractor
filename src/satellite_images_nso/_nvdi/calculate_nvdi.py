@@ -25,7 +25,9 @@ def normalized_diff(b1: np.array, b2: np.array) -> np.array:
     """
     if not (b1.shape == b2.shape):
         raise ValueError("Both arrays should have the same dimensions")
-
+    
+    b1 = b1.astype('f4')
+    b2 = b2.astype('f4')
     # Ignore warning for division by zero
     with np.errstate(divide="ignore"):#np.seterr(divide='ignore', invalid='ignore')
         n_diff = (b1 - b2) / (b1 + b2)
@@ -61,6 +63,9 @@ def enhanced_vegetation_index(red: np.array, blue: np.array, nir: np.array, L: f
     if not ((red.shape == blue.shape) and (blue.shape == nir.shape)):
         raise ValueError("All arrays should have the same dimensions")
     # Ignore warning for division by zero
+    red = red.astype('f4')
+    blue = blue.astype('f4')
+    nir = nir.astype('f4')
     with np.errstate(divide="ignore"):#np.seterr(divide='ignore', invalid='ignore')
         evi = G * (nir - red) / (nir + c1 * red - c2 * blue + L) 
         
