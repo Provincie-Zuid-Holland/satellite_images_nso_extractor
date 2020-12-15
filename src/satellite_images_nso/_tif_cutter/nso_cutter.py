@@ -10,7 +10,6 @@ import sys
 import os
 import time
 import re
-import os
 import zipfile
 import numpy as np
 import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
