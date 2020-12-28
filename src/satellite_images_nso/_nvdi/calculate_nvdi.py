@@ -3,7 +3,13 @@ import earthpy.plot as ep
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 
+"""
+    This class is used for various NVDI calculations.
 
+    For more information check:
+    https://en.wikipedia.org/wiki/Enhanced_vegetation_index
+
+"""
 
 def normalized_diff(b1: np.array, b2: np.array) -> np.array:
     """Take two n-dimensional numpy arrays and calculate the normalized
@@ -49,7 +55,9 @@ def normalized_diff(b1: np.array, b2: np.array) -> np.array:
   
 def enhanced_vegetation_index(red: np.array, blue: np.array, nir: np.array, L: float=1, c1: float=6, c2: float=7.5, G: float=2.5) -> np.array:
     """
-    https://en.wikipedia.org/wiki/Enhanced_vegetation_index
+ 
+    This function makes groups out of the NVDI values.
+    For a nicer plot.
     
     @param red: numpy array color values for red channel
     @param blue: numpy array color values for blue channel

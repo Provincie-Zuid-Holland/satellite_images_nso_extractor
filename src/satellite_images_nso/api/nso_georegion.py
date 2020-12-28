@@ -5,10 +5,18 @@ import satellite_images_nso._encryption.encryption as encryption
 from datetime import date
 import glob
 import shutil
+import geopandas as gpd
+import json
 
-
-
+"""
+    This class constructs a nso georegion object.
+   
+    Author: Michael de Winter
+"""
 class nso_georegion:
+
+
+    
 
     def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str):
         """
@@ -19,24 +27,36 @@ class nso_georegion:
             @username: the username of the nso account.
             @password: the password of the nso account
         """
+        
         self.path_to_geojson = path_to_geojson
+        self.georegion = self.__getFeatures(gpd.read_file(path_to_geojson))[0]
         self.output_folder = output_folder 
        
         self.username = username
         self.password = password
 
+    def  __getFeatures(self,gdf):
+        """
+            Function to parse features from GeoDataFrame in such a manner that rasterio wants them
+    
+            @param gdf: a geopandas data frame
+        """
+        return [json.loads(gdf.to_json())['features'][0]['geometry']['coordinates']]
+
+
+
     def retrieve_download_links(self,start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3):
         """
             This functions retrieves download links for area chosen in the geojson for the nso.
 
-            @param path_to_geojson: path to where the geojson is stored.
+            @param georegion: Polygon with the stored georegion.
             @param start_date: From when satelliet date needs to be looked at.
             @param end_date: the end date of the period which needs to be looked at
             @param max_meters: Maximum resolution which needs to be looked at.
 
             @return: the found download links.
         """
-        return nso_api.retrieve_download_links(self.path_to_geojson,self.username, self.password, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3  )
+        return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3  )
 
     def crop_and_calculate_nvdi(self,path, calculate_nvdi = True):
         """
@@ -90,6 +110,9 @@ class nso_georegion:
             shutil.rmtree(extracted_folder)
 
         return "Succesfully cropped .tif file"
+
+    def get_georegion(self):
+        return self.georegion 
 
 
 
