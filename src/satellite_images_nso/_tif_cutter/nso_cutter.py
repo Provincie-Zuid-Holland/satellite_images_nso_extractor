@@ -35,7 +35,7 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
         This cuts the sattelite image with a chosen shape.
 
         TODO: Make this accept a object of geopandas or shapely.
-        @param load_schape: path to the shape.
+        @param load_schape: path to the geojson shape file.
         @param raster_path_wgs: path to the raster wgs.
         @param raster_path_cropped: path were the cropped raster will be stored.
     """
@@ -45,6 +45,7 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
      
     src = rasterio.open(raster_path)
     
+    # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
     if geo.crs['init'] != 'epsg:28992':
         geo = geo.to_crs(epsg=28992)
 
