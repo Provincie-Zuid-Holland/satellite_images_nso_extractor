@@ -63,7 +63,7 @@ def retrieve_download_links(path_to_geojson, user_n, pass_n, start_date = "2014-
     return links
 
 
-def download_link(link,absolute_path, user_n, pass_n):
+def download_link(link,absolute_path, user_n, pass_n , file_exists_check):
     """
         Method for downloading satelliet data from a link.
 
