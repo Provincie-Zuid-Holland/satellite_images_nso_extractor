@@ -1,7 +1,5 @@
 import requests
 from requests.auth import HTTPBasicAuth 
-import json
-import geopandas as gpd
 import objectpath
 import os
 from datetime import date
@@ -9,20 +7,20 @@ import zipfile
 import shapely
 import numpy as np
 
+"""
 
-def  __getFeatures(gdf):
-    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them
-    
-        @param gdf: a geopandas data frame
-    """
-    return [json.loads(gdf.to_json())['features'][0]['geometry']['coordinates']]
+    This class is a python wrapper around the NSO api.
+    Provides functionality such as retrieving download links for a the satellite images for a provides georegion.
+    We use the NSO cloud coverage filter for now, note that the NSO cloud coverage filter filters the whole satellite images instead of only the cropped image
 
+    Author: Michael de Winter.
+"""
 
-def retrieve_download_links(path_to_geojson, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3,):
+def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3,):
     """
         This functions retrieves download links for area chosen in the geojson.
 
-        @param path_to_geojson: path to where the geojson is stored.
+        @param georegion: a polygon with the georegion.
         @param start_date: From when satelliet date needs to be looked at.
         @param end_date: the end date of the period which needs to be looked at
         @param max_meters: Maximum resolution which needs to be looked at.
@@ -31,7 +29,7 @@ def retrieve_download_links(path_to_geojson, user_n, pass_n, start_date = "2014-
 
     """
 
-    geojson_coordinates = __getFeatures(gpd.read_file(path_to_geojson))[0]
+    geojson_coordinates = georegion
 
     url = 'https://api.satellietdataportaal.nl/v1/search'
     myobj = { "type": "Feature","geometry":

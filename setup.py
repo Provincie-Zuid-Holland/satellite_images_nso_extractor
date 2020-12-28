@@ -20,5 +20,5 @@ setup(
     python_requires='>=3.6',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
-    install_requires= ["requests>=2.25.0", "objectpath>=0.6.1", "earthpy>=0.9.2", "cryptography>=3.2.1", "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.7.0","rasterio>=1.1.3","Shapely>=1.7.0"]
+    install_requires= ["requests>=2.25.0", "objectpath>=0.6.1", "earthpy>=0.9.2",  "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.7.0","rasterio>=1.1.3","Shapely>=1.7.0"]
 )

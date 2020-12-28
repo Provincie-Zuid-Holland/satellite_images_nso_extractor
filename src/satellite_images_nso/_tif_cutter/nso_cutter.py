@@ -21,16 +21,8 @@ from matplotlib import pyplot as plt
     @author: Michael de Winter.
 """
 
-def __getFeatures(gdf):
-    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them
-    
-        @param gdf: a geopandas data frame
-    """
-    return [json.loads(gdf.to_json())['features'][0]['geometry']['coordinates']]
 
-
-
-def __make_the_cut(load_shape, raster_path, raster_path_cropped):
+def __make_the_cut(geo_region, raster_path, raster_path_cropped):
     """
         This cuts the sattelite image with a chosen shape.
 
@@ -40,8 +32,8 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
         @param raster_path_cropped: path were the cropped raster will be stored.
     """
 
-    geo = gpd.read_file(load_shape)
-    coords = __getFeatures(geo)
+    
+    coords = geo_region
      
     src = rasterio.open(raster_path)
     
