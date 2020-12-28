@@ -35,6 +35,7 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
     """
         This cuts the sattelite image with a chosen shape.
 
+        TODO: Make this accept a object of geopandas or shapely.
         @param load_schape: path to the shape.
         @param raster_path_wgs: path to the raster wgs.
         @param raster_path_cropped: path were the cropped raster will be stored.
@@ -86,7 +87,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
 
 def run(raster_path,load_shape, calculate_nvdi = True):
     """
-        Main run method.
+        Main run method, combines the cutting of the file based on the shape and calculates the NVDI index.
 
         @param raster_path: path to a raster file.
         @param load_shape: path the file that needs to be cropped.
