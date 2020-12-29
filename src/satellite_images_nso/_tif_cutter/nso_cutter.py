@@ -73,7 +73,7 @@ def __get_xy_df(satelliet_beeld) -> DataFrame:
     """
     out_image = satelliet_beeld.read()
     x, y = satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))  # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
-    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T               # Create pandas dataframe with flatten values
+    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T # Create pandas dataframe with flatten values
     satelliet_df['x'] = x
     satelliet_df['y'] = y
     satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'x', 'y']

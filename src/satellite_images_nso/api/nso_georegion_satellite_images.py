@@ -9,10 +9,13 @@ import json
 
 """
     This class constructs a nso georegion object.
+
+    WHich can be used for retrieving download links for satellite images for a parameter georegion.
+    Or cropping satellite images for the parameter georegion.
    
     Author: Michael de Winter
 """
-class nso_georegion:
+class nso_georegion_satellite_images:
 
     def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str):
         """
@@ -25,6 +28,7 @@ class nso_georegion:
         """
         
         self.path_to_geojson = path_to_geojson
+        # georegion is a variable which contains the coordinates in the geojson.
         self.georegion = self.__getFeatures(path_to_geojson)[0]
         self.output_folder = output_folder 
        
@@ -106,6 +110,9 @@ class nso_georegion:
         return "Succesfully cropped .tif file"
 
     def get_georegion(self):
+        """
+            Get the coordinates from the geojson.
+        """
         return self.georegion 
 
 
