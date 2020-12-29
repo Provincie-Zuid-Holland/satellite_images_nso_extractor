@@ -6,30 +6,36 @@ from datetime import date
 import zipfile 
 import shapely
 import numpy as np
+import json
 
 """
 
-    This class is a python wrapper around the NSO api.
-    Provides functionality such as retrieving download links for a the satellite images for a provides georegion.
-    We use the NSO cloud coverage filter for now, note that the NSO cloud coverage filter filters the whole satellite images instead of only the cropped image
+    This class is a python wrapper with added functionality around the NSO api.
+
+    Provides functionality such as:
+
+    - Retrieving download links for satellite images for a georegion.
+
+    - Cloud coverage filtering, note that we use the NSO cloud coverage filter for now, this filter filters the whole satellite images instead of only the cropped image. TODO: Make a filter for the cropped image.
+
+    - Download and unzipping functionality for satellite download links. 
 
     Author: Michael de Winter.
 """
 
 def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3,):
     """
-        This functions retrieves download links for area chosen in the geojson.
+        This functions retrieves download links for satellite image corresponding to the region in the geojson.
 
         @param georegion: a polygon with the georegion.
         @param start_date: From when satelliet date needs to be looked at.
         @param end_date: the end date of the period which needs to be looked at
         @param max_meters: Maximum resolution which needs to be looked at.
-
         @return: the found download links.
-
     """
 
     geojson_coordinates = georegion
+   
 
     url = 'https://api.satellietdataportaal.nl/v1/search'
     myobj = { "type": "Feature","geometry":

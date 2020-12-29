@@ -22,24 +22,24 @@ from matplotlib import pyplot as plt
 """
 
 
-def __make_the_cut(geo_region, raster_path, raster_path_cropped):
+def __make_the_cut(load_shape, raster_path, raster_path_cropped):
     """
         This cuts the sattelite image with a chosen shape.
 
         TODO: Make this accept a object of geopandas or shapely.
         @param load_schape: path to the geojson shape file.
+        @param 
         @param raster_path_wgs: path to the raster wgs.
         @param raster_path_cropped: path were the cropped raster will be stored.
     """
 
-    
-    coords = geo_region
+    geo_file = gpd.read_file(load_shape)
      
     src = rasterio.open(raster_path)
     
     # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-    if geo.crs['init'] != 'epsg:28992':
-        geo = geo.to_crs(epsg=28992)
+    if geo_file.crs['init'] != 'epsg:28992':
+        geo_file = geo_file.to_crs(epsg=28992)
 
     out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True)
     out_meta = src.meta
@@ -77,7 +77,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi)
 
 
-def run(raster_path,load_shape, calculate_nvdi = True):
+def run(raster_path, load_shape, calculate_nvdi = True):
     """
         Main run method, combines the cutting of the file based on the shape and calculates the NVDI index.
 
