@@ -9,7 +9,6 @@ import numpy as np
 import json
 
 """
-
     This class is a python wrapper with added functionality around the NSO api.
 
     Provides functionality such as:
@@ -35,7 +34,8 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
     """
 
     geojson_coordinates = georegion
-   
+    
+    print(geojson_coordinates)
 
     url = 'https://api.satellietdataportaal.nl/v1/search'
     myobj = { "type": "Feature","geometry":

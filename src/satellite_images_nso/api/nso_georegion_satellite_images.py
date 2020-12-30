@@ -1,6 +1,6 @@
 import os
 import satellite_images_nso._nso_data_extraction.nso_api as nso_api
-import satellite_images_nso._tif_cutter.nso_cutter as nso_cutter
+import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 from datetime import date
 import glob
 import shutil
@@ -21,10 +21,10 @@ class nso_georegion_satellite_images:
         """
             Init of the class.
 
-            @path_to_geojson: Path where the geojson is located.
-            @output_folder: folder where the cropped and nvdi files will be stored.
-            @username: the username of the nso account.
-            @password: the password of the nso account
+            @param path_to_geojson: Path where the geojson is located.
+            @param output_folder: folder where the cropped and nvdi files will be stored.
+            @param username: the username of the nso account.
+            @param password: the password of the nso account
         """
         
         self.path_to_geojson = path_to_geojson
@@ -75,7 +75,7 @@ class nso_georegion_satellite_images:
         if ".tif" not in true_path:
             return ".Tif not found"
         else: 
-            cropped_path, nvdi_path, nvdi_matrix =  nso_cutter.run(true_path, self.path_to_geojson, calculate_nvdi )
+            cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, calculate_nvdi )
             cropped_path = cropped_path.replace("\\", "/") 
             nvdi_path = nvdi_path.replace("\\", "/")
             nvdi_matrix = nvdi_matrix.replace("\\","/")

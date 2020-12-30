@@ -17,7 +17,7 @@ import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
 from matplotlib import pyplot as plt
 
 """
-    This is a python class for making cuts out of .tif files easier.
+    This is a python class for making various manipulationg such as making cuts out of .tif files, nvdi calculations and exporting to geopandas.
 
     @author: Michael de Winter.
 """
@@ -27,15 +27,13 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
     """
         This cuts the sattelite image with a chosen shape.
 
-        TODO: Make this accept a object of geopandas or shapely.
-        @param load_schape: path to the geojson shape file.
-        @param 
-        @param raster_path_wgs: path to the raster wgs.
+        TODO: Make this accept a object of geopandas or shapely and crs independant.
+        @param load_schape: path to a geojson shape file.
+        @param raster_path_wgs: path to the raster .tiff file.
         @param raster_path_cropped: path were the cropped raster will be stored.
     """
-
     geo_file = gpd.read_file(load_shape)
-     
+
     src = rasterio.open(raster_path)
 
     # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
@@ -65,20 +63,27 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
           transform=src.transform)
 
 
-def __get_xy_df(satelliet_beeld) -> DataFrame:
+def tranform_vector_to_xy_df(path_to_vector):
     """
-    Maps a rasterio satellite object to pandas dataframe. With the corresponding x and y coordinates
-    @param satelliet_beeld: rasterio DatasetReader
+    Maps a rasterio satellite object to pandas dataframe. With the corresponding x and y coordinates and NVDI.
+
+
+    @param path_to_vector: path to a vector which be read with rasterio.
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
-    out_image = satelliet_beeld.read()
-    x, y = satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))  # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
-    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T # Create pandas dataframe with flatten values
+
+    satellite_image = rasterio.open(path_to_vector)
+    out_image = satellite_image.read()
+    x, y = satellite_image.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))  # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
+    ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])
+    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T  # Create pandas dataframe with flatten values
+    print(len(satelliet_df))
+    print(len(x))
     satelliet_df['x'] = x
     satelliet_df['y'] = y
-    satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'x', 'y']
-    satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'], crs=satelliet_beeld.crs)
-    
+    satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'ndvi', 'x', 'y']
+    satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'], crs=satellite_image.crs)
+
     return satelliet_df
 
 
