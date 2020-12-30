@@ -74,12 +74,13 @@ def tranform_vector_to_xy_df(path_to_vector):
 
     satelliet_beeld = rasterio.open(path_to_vector)
     out_image = satelliet_beeld.read()
-    x, y = satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))                # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
+    # x, y = satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))                # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
+    x_y = np.array( satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2]))) ).T 
     ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])***REMOVED***            
     satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T               # Create pandas dataframe with flatten values
     satelliet_df['ndvi'] = ndvi.flatten()
-    satelliet_df['x'] = x
-    satelliet_df['y'] = y
+    satelliet_df['x'] = x_y[:, 0]
+    satelliet_df['y'] = x_y[:, 1]
     satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'ndvi', 'x', 'y']
     satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'], crs=satellite_image.crs)
 
