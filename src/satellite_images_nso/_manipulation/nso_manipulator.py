@@ -71,6 +71,8 @@ def tranform_vector_to_xy_df(path_to_vector):
     @param path_to_vector: path to a vector which be read with rasterio.
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
+
+    satelliet_beeld = rasterio.open(path_to_vector)
     out_image = satelliet_beeld.read()
     x, y = satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))                # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
     ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])                                          
