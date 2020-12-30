@@ -23,9 +23,9 @@ And it can also automate the downloading process instead of manual clicking all 
 ```python
 # This the way the import nso.
 import satellite_images_nso.api.nso_georegion as nso
-path_geojson = "C:/repos/satellite_images/nso/data/solleveld.geojson"
+path_geojson = "/src/example/example.geojson"
 # The first parameter is the path to the geojson, the second the map where the cropped satellite data will be installed
-georegion = nso.nso_georegion(path_geojson,"C:/repos/Output/",\
+georegion = nso.nso_georegion(path_geojson,"/src/output/",\
                               YOUR_USER_NAME_HERE,\
                              YOUR_PASSWORD_HERE)
 
@@ -56,6 +56,12 @@ Depencencies are : "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.7.0","rasterio>
 ## Install GDAL on MacOS
 Install GDAL by using Brew:  
 `brew install GDAL`
+
+# Run as a docker container
+```console
+docker run -it --entrypoint bash dockerhubpzh/satellite_images_nso_docker
+```
+See: https://hub.docker.com/r/dockerhubpzh/satellite_images_nso_docker
 
 # Local development
 Run `rebuild.bat` to build and install package on local computer.
