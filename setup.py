@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="satellite_images_nso", # Replace with your own username
-    version="1.1.3",
+    version="1.1.4",
     author="Michael de Winter",
     author_email="m.r.dewinter88@live.nl",
     description="Satellie extraction and cutter",
