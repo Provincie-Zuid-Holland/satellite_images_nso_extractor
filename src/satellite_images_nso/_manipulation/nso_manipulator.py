@@ -71,14 +71,11 @@ def tranform_vector_to_xy_df(path_to_vector):
     @param path_to_vector: path to a vector which be read with rasterio.
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
-
-    satellite_image = rasterio.open(path_to_vector)
-    out_image = satellite_image.read()
-    x, y = satellite_image.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))  # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
-    ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])
-    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T  # Create pandas dataframe with flatten values
-    print(len(satelliet_df))
-    print(len(x))
+    out_image = satelliet_beeld.read()
+    x, y = satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))                # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
+    ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])                                          
+    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T               # Create pandas dataframe with flatten values
+    satelliet_df['ndvi'] = ndvi.flatten()
     satelliet_df['x'] = x
     satelliet_df['y'] = y
     satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'ndvi', 'x', 'y']
