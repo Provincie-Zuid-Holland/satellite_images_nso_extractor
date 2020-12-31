@@ -67,7 +67,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
     return links
 
 
-def download_link(link,absolute_path, user_n, pass_n , file_exists_check):
+def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool = False):
     """
         Method for downloading satelliet data from a link.
 
