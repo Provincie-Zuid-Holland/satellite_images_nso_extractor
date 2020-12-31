@@ -63,26 +63,33 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
           transform=src.transform)
 
 
-def tranform_vector_to_xy_df(path_to_vector):
+def tranform_vector_to_pixel_df(path_to_vector):
     """
-    Maps a rasterio satellite object to pandas dataframe. With the corresponding x and y coordinates and NVDI.
+    Maps a rasterio satellite vector object to a geo pandas dataframe per pixel. 
+    With the corresponding x and y coordinates and NVDI.
 
 
     @param path_to_vector: path to a vector which be read with rasterio.
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
 
-    satelliet_beeld = rasterio.open(path_to_vector)
-    out_image = satelliet_beeld.read()
-    # x, y = satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2])))                # Convert indices to x,y. E.g. (0, 0) -> (51320, 418920)
-    x_y = np.array( satelliet_beeld.xy(list(range(out_image.shape[1])), list(range(out_image.shape[2]))) ).T 
+    satellite_image = rasterio.open(path_to_vector)
+    out_image = satellite_image.read()
+ 
+    x_y_np =np.array(
+              satellite_image.xy(
+                  np.repeat( np.array(range(out_image.shape[1])), out_image.shape[2] ),
+                  np.repeat( np.array(range(out_image.shape[2])), out_image.shape[1] )
+              )
+          ).T
+
     ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])***REMOVED***            
-    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T               # Create pandas dataframe with flatten values
+    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T              
     satelliet_df['ndvi'] = ndvi.flatten()
-    satelliet_df['x'] = x_y[:, 0]
-    satelliet_df['y'] = x_y[:, 1]
+    satelliet_df['x'] = [row[0] for row in x_y_np]
+    satelliet_df['y'] = [row[1] for row in x_y_np]
     satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'ndvi', 'x', 'y']
-    satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'], crs=satellite_image.crs)
+    satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'])
 
     return satelliet_df
 
