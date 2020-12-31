@@ -15,7 +15,7 @@ import json
    
     Author: Michael de Winter
 """
-class nso_georegion_satellite_images:
+class nso_georegion:
 
     def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str):
         """
