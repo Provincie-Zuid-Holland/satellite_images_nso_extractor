@@ -5,6 +5,7 @@ dist/*
 build/*
 data/*
 nso_main_tests.ipynb
+geo_database.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
