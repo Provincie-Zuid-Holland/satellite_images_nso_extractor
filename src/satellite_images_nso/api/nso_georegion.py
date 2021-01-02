@@ -22,7 +22,7 @@ class nso_georegion:
             Init of the class.
 
             @param path_to_geojson: Path where the geojson is located.
-            @param output_folder: folder where the cropped and nvdi files will be stored.
+            @param output_folder: Folder where the cropped and nvdi files will be stored.
             @param username: the username of the nso account.
             @param password: the password of the nso account
         """
@@ -65,8 +65,7 @@ class nso_georegion:
 
             @oaram path: Path to a .tif file.
             @param calculate_nvdi: Wether or not to also calculate the NVDI index.
-        """
-        
+        """       
         true_path = path
         if '.tif' not in true_path:
             for x in glob.glob(path+'/*.tif', recursive=True):

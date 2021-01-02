@@ -1,5 +1,5 @@
 @echo on
-pip uninstall -y dist\satellite_images_nso-1.1.3-py3-none-any.whl
+pip uninstall -y dist\satellite_images_nso-1.1.7-py3-none-any.whl
 del /Q dist\
 python setup.py bdist_wheel
-pip install dist\satellite_images_nso-1.1.3-py3-none-any.whl
+pip install dist\satellite_images_nso-1.1.7-py3-none-any.whl

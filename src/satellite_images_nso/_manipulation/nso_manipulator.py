@@ -15,14 +15,13 @@ import zipfile
 import numpy as np
 import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
 from matplotlib import pyplot as plt
+import re
 
 """
     This is a python class for making various manipulationg such as making cuts out of .tif files, nvdi calculations and exporting to geopandas.
 
     @author: Michael de Winter.
 """
-
-
 def __make_the_cut(load_shape, raster_path, raster_path_cropped):
     """
         This cuts the sattelite image with a chosen shape.
@@ -33,7 +32,6 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
         @param raster_path_cropped: path were the cropped raster will be stored.
     """
     geo_file = gpd.read_file(load_shape)
-
     src = rasterio.open(raster_path)
 
     # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
@@ -91,6 +89,9 @@ def tranform_vector_to_pixel_df(path_to_vector):
     satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'ndvi', 'x', 'y']
     satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'])
 
+    # The file name should contain the date and the name of the satellite and thus good information to store.
+    split_file_name = path_to_vector.split("/")
+    satelliet_df['filename'] = split_file_name[len(path_to_vector.split("/"))-1]
     return satelliet_df
 
 
