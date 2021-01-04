@@ -73,14 +73,19 @@ def tranform_vector_to_pixel_df(path_to_vector):
 
     satellite_image = rasterio.open(path_to_vector)
     out_image = satellite_image.read()
- 
-    x_y_np =np.array(
-              satellite_image.xy(
-                  np.repeat( np.array(range(out_image.shape[1])), out_image.shape[2] ),
-                  np.repeat( np.array(range(out_image.shape[2])), out_image.shape[1] )
-              )
-          ).T
 
+
+
+    cart_prod = np.array(np.meshgrid(range(out_image.shape[1]), range(out_image.shape[2])))
+
+    x_y_np  =np.array(
+                satellite_image.xy(
+                    cart_prod[0].flatten(),
+                    cart_prod[1].flatten() )
+                
+            ).T
+ 
+ 
     ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])***REMOVED***            
     satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T              
     satelliet_df['ndvi'] = ndvi.flatten()

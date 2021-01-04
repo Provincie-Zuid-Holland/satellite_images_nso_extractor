@@ -99,7 +99,7 @@ def check_if_geojson_in_region(row,projected_shape):
     """
         This method checks if the geojson is fully in the TCI raster.
 
-        TODO: For now it's only fully in the georegion.        
+        TODO: For now it's only fully in the georegion on which the cloud coverage is calculated.      
         @param src_TCI_raster_dataset: The rasterio opened TCI raster.
         @param projected_shape: The geojson warped to the src of the copernicus crs.
     """
