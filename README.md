@@ -8,10 +8,13 @@ And then saves this cutout thus reducing the unnecessary saved data.
 While also calculating the Normalized difference vegetation index (NVDI, used in crop analysis) of the cutout region.
 We are working on more variables on satellite images.
 
+This image gives a illustration: 
+![Alt text](example.png?raw=true "Title")
+
+
 
 In essence it automates the downloading process instead of manual clicking all the download links at [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/)
 
-![Alt text](example.png?raw=true "Title")
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
