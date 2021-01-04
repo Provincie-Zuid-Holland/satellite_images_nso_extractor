@@ -3,13 +3,13 @@ This python code is intended to automate/make easier the data extraction and cut
 NSO provides free satellite images form the Netherlands, a downside however is that the NSO provides a very large region and as such a very large data file (Around 1 gb per image).
 This leads to a unnecessary large amount of data, if you only want to study a smaller specific region.
 
-This python code cuts a selected region out of the original file, provided that the selected region is smaller than the original file.
+This python code cuts a selected region out of the original satellite image, provided that the selected region is smaller than the original file.
 And then saves this cutout thus reducing the unnecessary saved data. 
 While also calculating the Normalized difference vegetation index (NVDI, used in crop analysis) of the cutout region.
-We are working on more variables.
+We are working on more variables on satellite images.
 
 
-And it can also automate the downloading process instead of manual clicking all the download links at [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/)
+In essence it automates the downloading process instead of manual clicking all the download links at [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/)
 
 # Getting Started
 
