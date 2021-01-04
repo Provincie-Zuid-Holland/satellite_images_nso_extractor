@@ -11,7 +11,7 @@ We are working on more variables on satellite images.
 
 In essence it automates the downloading process instead of manual clicking all the download links at [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/)
 
-![Alt text](example.jpg?raw=true "Title")
+![Alt text](example.png?raw=true "Title")
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
