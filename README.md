@@ -1,6 +1,6 @@
 # Introduction 
 This python code is intended to automate/make easier the data extraction and cutting of satellite data from the netherlands space office (NSO).
-NSO provides free satellite images from the Netherlands, a downside however is that the NSO provides a very large region and as such a very large data file (Around 1 gb per image).
+NSO provides free satellite images from the Netherlands, a downside however is that the NSO provides a very large region and as such a very large data file.
 This leads to a unnecessary large amount of data, if you only want to study a smaller specific region.
 
 This python code cuts a selected region out of the original satellite image, provided that the selected region is smaller than the original file.
@@ -38,6 +38,15 @@ links = georegion.retrieve_download_links()
 # Downloads a satelliet image from the NSO, make a crop out of it so it fits the geojson region and calculate the NVDI index.
 # The output will stored in the designated output folder.
 georegion.execute_link(links[0])
+
+
+# The sat_manipulator gives other handy transmation on satellite date.
+import satellite_images_nso.api.sat_manipulator as sat_manipulator
+
+# This function reads a .tif file, which is a format the satellite data is stored in,  and converts it to a pixel based geopandas dataframe.
+# For machine learning purposes.
+path_to_vector = "path/to/folder/*.tif"
+geo_df_pixel = sat_manipulator.tranform_vector_to_pixel_gpdf(path_to_vector)
 ```
 
 # Installation.
