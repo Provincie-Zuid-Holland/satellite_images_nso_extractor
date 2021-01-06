@@ -1,7 +1,7 @@
 import rasterio
 from rasterio.plot import show
 import geopandas as gpd
-from pandas import DataFrame
+import pandas as pd
 import json
 import shapely
 import pyproj
@@ -74,29 +74,24 @@ def tranform_vector_to_pixel_df(path_to_vector):
     satellite_image = rasterio.open(path_to_vector)
     out_image = satellite_image.read()
 
-
-
     cart_prod = np.array(np.meshgrid(range(out_image.shape[1]), range(out_image.shape[2])))
-
-    x_y_np  =np.array(
-                satellite_image.xy(
-                    cart_prod[0].flatten(),
-                    cart_prod[1].flatten() )
-                
-            ).T
- 
+    x_y_np  =np.array(satellite_image.xy(cart_prod[0].flatten(),cart_prod[1].flatten())).T
  
     ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])***REMOVED***            
-    satelliet_df = DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T              
+    satelliet_df = pd.DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T              
     satelliet_df['ndvi'] = ndvi.flatten()
     satelliet_df['x'] = [row[0] for row in x_y_np]
     satelliet_df['y'] = [row[1] for row in x_y_np]
     satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'ndvi', 'x', 'y']
     satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'])
-
+    
     # The file name should contain the date and the name of the satellite and thus good information to store.
     split_file_name = path_to_vector.split("/")
     satelliet_df['filename'] = split_file_name[len(path_to_vector.split("/"))-1]
+
+    # Convert to geopandas Dataframe.
+    # NOTE!: Since we are using dutch satellite images the crs is in the dutch rijksdriehoek!
+    satelliet_df = gpd.GeoDataFrame(satelliet_df, crs=28992, geometry=satelliet_df['geometry'])
     return satelliet_df
 
 
