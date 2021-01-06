@@ -13,8 +13,6 @@ This image gives a illustration:
 
 
 
-In essence it automates the downloading process instead of manual clicking all the download links at [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/)
-
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
