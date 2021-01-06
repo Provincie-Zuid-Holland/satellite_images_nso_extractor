@@ -40,7 +40,7 @@ links = georegion.retrieve_download_links()
 georegion.execute_link(links[0])
 
 
-# The sat_manipulator gives other handy transmation on satellite date.
+# The sat_manipulator gives other handy transmations on satellite data.
 import satellite_images_nso.api.sat_manipulator as sat_manipulator
 
 # This function reads a .tif file, which is a format the satellite data is stored in,  and converts it to a pixel based geopandas dataframe.
