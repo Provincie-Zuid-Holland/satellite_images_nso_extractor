@@ -1,3 +1,5 @@
+import geopandas as gpd
+from geopandas.tools import sjoin
 import numpy as np
 import earthpy.plot as ep
 from matplotlib import pyplot as plt
@@ -10,7 +12,28 @@ from matplotlib.colors import ListedColormap
     https://en.wikipedia.org/wiki/Enhanced_vegetation_index
 
 """
+def join_ndvi_habitat(ndvi_geo_df: gpd.geodataframe.GeoDataFrame, habitat_geo_df: gpd.geodataframe.GeoDataFrame) -> gpd.geodataframe.DataFrame:
+    """
+    Filter the ndvi dataframe based on habitat polygons
+    @param ndvi_geo_df: geopandas dataframe, with ndvi values for each pixel
+    @param habitat_geo_df: geopandas dataframe, with geometry column of a habitat
+    @return geopandas dataframe: with ndvi values which lie within the habitat geometry(polygon)
+    """
+    if ndvi_geo_df.crs != habitat_geo_df.crs:
+        ndvi_geo_df = ndvi_geo_df.to_crs(habitat_geo_df.crs)
+        
+    return sjoin(ndvi_geo_df, habitat_geo_df, how='left').dropna(subset=[habitat_geo_df.columns[0]])
 
+
+def aggregate_ndvi_habitat(ndvi_geo_df: gpd.geodataframe.GeoDataFrame) -> pd.Series:
+    """
+    Calculate the aggregated statistics for NDVI 
+    @param ndvi_geo_df: geopandas dataframe, with ndvi values for each pixel
+    @return pandas series: with 'mean', 'std', 'min', 'max', 'count' in the row axis
+    """
+    return ndvi_geo_df['ndvi'].agg(['mean', 'std', 'min', 'max', 'count'])
+
+    
 def normalized_diff(b1: np.array, b2: np.array) -> np.array:
     """Take two n-dimensional numpy arrays and calculate the normalized
     difference.
