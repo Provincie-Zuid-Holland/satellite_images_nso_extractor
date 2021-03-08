@@ -19,3 +19,12 @@ def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
         @param output_path: Where the cut should be stored.
     """
     return nso_manipulator.__make_the_cut(shape_file, path_to_tiff_file, output_path)
+
+def write_pixel_gdf_to_ms_tsql_db(gpdf, db_server, db_name, usnername_db, password_db, schema_name, table_name, col_name_geometry):
+    """
+        This function writes a geopandas dataframe to a MS T-SQL database.
+
+        TODO: Put it in a better class? And is this really needed?
+
+    """
+    return nso_manipulator.__write_pixel_gdf_to_ms_tsql_db(gpdf, db_server, db_name, usnername_db, password_db, schema_name, table_name, col_name_geometry)
