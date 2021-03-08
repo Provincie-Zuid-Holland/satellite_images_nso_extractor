@@ -84,3 +84,7 @@ Run `rebuild.bat` to build and install package on local computer.
 # Author
 Michael de Winter
 
+Daniel Overdevest
+
+Yilong Wen
+
