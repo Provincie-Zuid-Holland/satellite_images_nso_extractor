@@ -1,6 +1,7 @@
 import geopandas as gpd
 from geopandas.tools import sjoin
 import numpy as np
+import pandas as pd
 import earthpy.plot as ep
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
