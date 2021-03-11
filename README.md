@@ -16,7 +16,7 @@ This image gives a illustration:
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
-1. First get a GeoJSON file of the region you want to cut. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that.
+1. First get a GeoJSON file of the region you want to cut. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that. Note the coordinates have to be in WGS84! ( Which should be standard for a geojson.) 
 2. Make a instance of nso_geojsonregion with instance of the geojson region you have, where you want to store the cropped files and the NSO account based on step 0.
 2. Retrieve download links for the specific region you want to have.
 3. Download the found links.
@@ -38,7 +38,8 @@ links = georegion.retrieve_download_links()
 # Downloads a satelliet image from the NSO, make a crop out of it so it fits the geojson region and calculate the NVDI index.
 # The output will stored in the designated output folder.
 georegion.execute_link(links[0])
-
+# The parameters are : execute_link(self, link, delete_zip_file = False, delete_source_files = True, check_if_file_exists = True)
+# With the parameters you can decide if you want to keep the original satellite files.
 
 # The sat_manipulator gives other handy transmations on satellite data.
 import satellite_images_nso.api.sat_manipulator as sat_manipulator
@@ -53,7 +54,7 @@ geo_df_pixel = sat_manipulator.tranform_vector_to_pixel_gpdf(path_to_vector)
 
 Install this package with: `pip install satellite_images_nso`
 
-Be sure you've installed GDAL already on your computer. Other python dependencies will install automatically (Fiona>=1.8.13, GDAL>=3.0.4, geopandas>=0.7.0, rasterio>=1.1.3 Shapely>=1.7.0)
+Be sure you've installed GDAL already on your computer. Other python dependencies will install automatically (Fiona>=1.8.13, GDAL>=3.0.4, geopandas>=0.7.0, rasterio>=1.1.3 Shapely>=1.7.0). If you don't have gdal installed on your computer or if it doesn't work follow the instruction below.
 
 ## Install GDAL on Windows
 If you are a Windows user you have to install the GDAL dependency yourself via a wheels.

@@ -16,9 +16,6 @@ import numpy as np
 import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
 from matplotlib import pyplot as plt
 import re
-import sqlalchemy as sal
-
-
 """
     This is a python class for making various manipulationg such as making cuts out of .tif files, nvdi calculations and exporting to geopandas.
 
@@ -130,25 +127,4 @@ def run(raster_path, load_shape, calculate_nvdi = True):
 
 
 
-def __write_pixel_gdf_to_ms_tsql_db(gpdf, db_server, db_name, usnername_db, password_db, schema_name, table_name, col_name_geometry):
-    """
-        This function writes a geopandas dataframe to a MS T-SQL database.
 
-        TODO: Put it in a better class? And is this really needed?
-
-    """
-    connectionString = 'mssql+pyodbc://{0}:{1}@{2}:1433/{3}?driver=ODBC+Driver+17+for+SQL+Server'.format(usnername_db, password_db, db_server, db_name)
-                        
-    engine = sal.create_engine(connectionString \
-                , echo=False)
-    
-    #gdf[col_name_geometry] = gdf[col_name_geometry].apply(wkb_hexer)
-    
-    with engine.connect() as conn, conn.begin():
-        # Note use of regular Pandas `to_sql()` method.
-        gpdf.drop(['geometry'], axis=1).to_sql(table_name, con=conn, schema=schema_name,
-                   if_exists='append', index=False)
-
-        # Make a new geometry column
-        sql = "ALTER TABLE [monitor].[satellite_pixel_df] ADD [geometry] as geometry::Point(x, y, 28992)"
-        conn.execute(sql)
