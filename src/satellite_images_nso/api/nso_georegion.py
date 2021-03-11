@@ -78,9 +78,10 @@ class nso_georegion:
             cropped_path = cropped_path.replace("\\", "/") 
             nvdi_path = nvdi_path.replace("\\", "/")
             nvdi_matrix = nvdi_matrix.replace("\\","/")
-            shutil.move(cropped_path,self.output_folder+cropped_path.split("/")[len(cropped_path.split("/"))-1])
-            shutil.move(nvdi_path,self.output_folder+nvdi_path.split("/")[len(nvdi_path.split("/"))-1])
-            shutil.move(nvdi_matrix,self.output_folder+nvdi_matrix.split("/")[len(nvdi_matrix.split("/"))-1])
+   
+            shutil.move(cropped_path,self.output_folder+"/"+cropped_path.split("/")[len(cropped_path.split("/"))-1])
+            shutil.move(nvdi_path,self.output_folder+"/"+nvdi_path.split("/")[len(nvdi_path.split("/"))-1])
+            shutil.move(nvdi_matrix,self.output_folder+"/"+nvdi_matrix.split("/")[len(nvdi_matrix.split("/"))-1])
 
             
     def execute_link(self, link, delete_zip_file = False, delete_source_files = True, check_if_file_exists = True):
@@ -96,8 +97,8 @@ class nso_georegion:
         download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
 
         nso_api.download_link(link,download_archive_name, self.username, self.password)
-        extracted_folder = nso_api.unzip_delete(download_archive_name,False)
-
+        extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
+  
         self.crop_and_calculate_nvdi(extracted_folder)
     
         if delete_zip_file == True:
