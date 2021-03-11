@@ -7,6 +7,7 @@ import zipfile
 import shapely
 import numpy as np
 import json
+from satellite_images_nso.__logger import logger
 
 """
     This class is a python wrapper with added functionality around the NSO api.
@@ -35,8 +36,6 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
 
     geojson_coordinates = georegion
     
-    print(geojson_coordinates)
-
     url = 'https://api.satellietdataportaal.nl/v1/search'
     myobj = { "type": "Feature","geometry":
     {"type": "Polygon", "coordinates": geojson_coordinates },"properties": {"fields":{"geometry":"false"},"filters" :
@@ -75,12 +74,16 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
         @param absolute_path: the filename and path where the file will get downloaded.
     """
 
-    r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
-    #retrieving data from the URL using get method
-    with open(absolute_path, 'wb') as f:
-        #giving a name and saving it in any required format
-        #opening the file in write mode
-        f.write(r.content)
+    # Check if file is already downloaded.
+    if os.path.isfile(absolute_path) is True:
+        logger.append_log(absolute_path+" is already downloaded \n" )
+    else:    
+        r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
+        #retrieving data from the URL using get method
+        with open(absolute_path, 'wb') as f:
+            #giving a name and saving it in any required format
+            #opening the file in write mode
+            f.write(r.content)
 
 def unzip_delete(path,delete = True): 
     """

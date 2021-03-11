@@ -79,7 +79,9 @@ def normalized_diff(b1: np.array, b2: np.array) -> np.array:
   
 def enhanced_vegetation_index(red: np.array, blue: np.array, nir: np.array, L: float=1, c1: float=6, c2: float=7.5, G: float=2.5) -> np.array:
     """
- 
+    DEPRECATED MIGHT BE USED IN THE FUTURE!
+
+    
     This function makes groups out of the NVDI values.
     For a nicer plot.
     
