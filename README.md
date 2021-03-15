@@ -1,12 +1,12 @@
 # Introduction 
 This python code is intended to automate/make easier the data extraction and cutting of satellite data from the netherlands space office (NSO).
 NSO provides free satellite images from the Netherlands, a downside however is that the NSO provides a very large region and as such a very large data file.
-This leads to a unnecessary large amount of data, if you only want to study a smaller specific region.
+This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region.
 
-This python code cuts a selected region out of the original satellite image, provided that the selected region is smaller than the original file.
+This python code cuts a selected region out of the original satellite image based on a geojson, provided that the selected region is smaller than the original file.
 And then saves this cutout thus reducing the unnecessary saved data. 
-While also calculating the Normalized difference vegetation index (NVDI, used in crop analysis) of the cutout region.
-We are working on extracting more variables on satellite images.
+A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) of the cutout region.
+We are working on extracting more variables on satellite images!
 
 This image gives a illustration: 
 ![Alt text](example.png?raw=true "Title")
@@ -32,15 +32,16 @@ georegion = nso.nso_georegion(path_geojson,"/src/output/",\
                               YOUR_USER_NAME_HERE,\
                              YOUR_PASSWORD_HERE)
 
-# This method fetches all the download links to all the satelliet images which contain region in the geojson.
-links = georegion.retrieve_download_links()
+# This method fetches all the download links to all the satelliet images which contain the region in the geojson.
 # Filter out for which satellite you want to download links from! SV for example stands for the Suoerview satellite
+links = georegion.retrieve_download_links()
+
 
 # Downloads a satelliet image from the NSO, make a crop out of it so it fits the geojson region and calculate the NVDI index.
 # The output will stored in the designated output folder.
 georegion.execute_link(links[0])
-# The parameters are : execute_link(self, link, delete_zip_file = False, delete_source_files = True, check_if_file_exists = True)
-# With the parameters you can decide if you want to keep the original satellite files.
+# The parameters are : execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True)
+# With the parameters you can decide if you want to keep the original satellite files, such  as wether to keep the downloaded zip file or the extracted source files from which the cutout will be made.
 
 # The sat_manipulator gives other handy transmations on satellite data.
 import satellite_images_nso.api.sat_manipulator as sat_manipulator
@@ -50,7 +51,7 @@ import satellite_images_nso.api.sat_manipulator as sat_manipulator
 path_to_vector = "path/to/folder/*.tif"
 geo_df_pixel = sat_manipulator.tranform_vector_to_pixel_gpdf(path_to_vector)
 ```
-
+See also the jupyter notebook in src/nso_notebook_example.ipynb
 # Installation.
 
 Install this package with: `pip install satellite_images_nso`

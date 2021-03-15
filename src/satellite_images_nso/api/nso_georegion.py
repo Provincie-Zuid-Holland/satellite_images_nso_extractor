@@ -39,7 +39,10 @@ class nso_georegion:
         
         self.path_to_geojson = correct_file_path(path_to_geojson)
         # georegion is a variable which contains the coordinates in the geojson, which should be WGS!
-        self.georegion = self.__getFeatures(path_to_geojson)[0]
+        self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+        if len(self.georegion) == 0 :
+            raise Exception("Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session")
+
         self.output_folder = correct_file_path(output_folder)
        
         self.username = username
@@ -77,7 +80,6 @@ class nso_georegion:
             @param calculate_nvdi: Wether or not to also calculate the NVDI index.
         """       
         true_path = path
-        print(path)
         if '.tif' not in true_path:
             for x in glob.glob(path+'/*.tif', recursive=True):
                 true_path = x

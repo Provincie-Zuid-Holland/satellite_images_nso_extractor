@@ -44,11 +44,12 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
     headers = {'content-type': 'application/json'}
     x = requests.post(url, auth = HTTPBasicAuth(user_n, pass_n), data = json.dumps(myobj) ,  headers=headers )
 
+   
     reponse = json.loads(x.text)
 
     # Check if valid reponse
-    if reponse != "":
-        raise Exception("No valid response from NSO!")
+    if reponse == "":
+        raise Exception("No valid response from NSO! message:"+x.text)
         
     links = []
 
@@ -66,7 +67,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
         except Exception as e: 
             print(e)
             print(row)
-            logger.append_log(e+" "+row)
+            logger.append_log(str(e)+" "+str(row))
 
     return links
 
