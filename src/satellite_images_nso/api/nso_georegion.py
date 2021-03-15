@@ -84,9 +84,9 @@ class nso_georegion:
             shutil.move(nvdi_matrix,self.output_folder+"/"+nvdi_matrix.split("/")[len(nvdi_matrix.split("/"))-1])
 
             
-    def execute_link(self, link, delete_zip_file = False, delete_source_files = True, check_if_file_exists = True):
+    def execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True):
         """ 
-            Executes the download, croppend and the calculating of the NVDI for a specific link.
+            Executes the download, croppend 67and the calculating of the NVDI for a specific link.
         
             @param link: Link to a file from the NSO.
             @param geojson_path: Path to a geojson with the selected region.
