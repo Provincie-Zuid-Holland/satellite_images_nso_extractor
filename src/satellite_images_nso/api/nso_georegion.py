@@ -6,6 +6,7 @@ import glob
 import shutil
 import geopandas as gpd
 import json
+from satellite_images_nso.__logger import logger
 
 """
     This class constructs a nso georegion object.
@@ -15,6 +16,15 @@ import json
    
     Author: Michael de Winter
 """
+
+def correct_file_path(path):
+    " File path does not need to end with /"
+    path = path.replace("\\","/")
+    if path.endswith("/"):
+        return path[:-1]
+    return path
+
+
 class nso_georegion:
 
     def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str):
@@ -27,10 +37,10 @@ class nso_georegion:
             @param password: the password of the nso account
         """
         
-        self.path_to_geojson = path_to_geojson
-        # georegion is a variable which contains the coordinates in the geojson.
+        self.path_to_geojson = correct_file_path(path_to_geojson)
+        # georegion is a variable which contains the coordinates in the geojson, which should be WGS!
         self.georegion = self.__getFeatures(path_to_geojson)[0]
-        self.output_folder = output_folder 
+        self.output_folder = correct_file_path(output_folder)
        
         self.username = username
         self.password = password
@@ -67,12 +77,14 @@ class nso_georegion:
             @param calculate_nvdi: Wether or not to also calculate the NVDI index.
         """       
         true_path = path
+        print(path)
         if '.tif' not in true_path:
             for x in glob.glob(path+'/*.tif', recursive=True):
                 true_path = x
         
         if ".tif" not in true_path:
-            return ".Tif not found"
+            logger.append_log(true_path+" Error:  .tif not found") 
+            raise Exception(".tif not found")
         else: 
             cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, calculate_nvdi )
             cropped_path = cropped_path.replace("\\", "/") 

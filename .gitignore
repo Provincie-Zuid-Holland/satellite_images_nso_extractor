@@ -140,3 +140,4 @@ dmypy.json
 
 # Ignore log file
 webhook_log.txt
+log.txt
