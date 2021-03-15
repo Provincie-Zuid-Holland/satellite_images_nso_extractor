@@ -46,6 +46,10 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
 
     reponse = json.loads(x.text)
 
+    # Check if valid reponse
+    if reponse != "":
+        raise Exception("No valid response from NSO!")
+        
     links = []
 
     for row in reponse['features']:
@@ -62,6 +66,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
         except Exception as e: 
             print(e)
             print(row)
+            logger.append_log(e+" "+row)
 
     return links
 
@@ -76,7 +81,8 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
 
     # Check if file is already downloaded.
     if os.path.isfile(absolute_path) is True:
-        logger.append_log(absolute_path+" is already downloaded \n" )
+        logger.append_log(absolute_path+" is already downloaded in \n" )
+        print("File already downloaded: \n"+absolute_path)
     else:    
         r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
         #retrieving data from the URL using get method
@@ -115,20 +121,16 @@ def check_if_geojson_in_region(row,projected_shape):
 
     xy_intersection = geojson_shape.intersection(row_shape).boundary.xy
     
-    #print(geojson_shape.within(row_shape) )
-    #print(np.array(geojson_shape_xy).shape)
-    #print(np.array(xy_intersection).shape )
     try:
         difference_array = np.array(geojson_shape_xy) -  np.array(xy_intersection)
        
         if max(difference_array.min(), difference_array.max(), key=abs) < 10000:
             return_statement = True
-    except:
-        print(" ")
-        #print(row_shape.intersection(geojson_shape) )
+    except Exception as e: 
+            print(e)
+            print(row)
+            logger.append_log(e+" "+row)
 
-    #print(return_statement)
-    
     return return_statement
 
 
