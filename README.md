@@ -34,6 +34,7 @@ georegion = nso.nso_georegion(path_geojson,"/src/output/",\
 
 # This method fetches all the download links to all the satelliet images which contain region in the geojson.
 links = georegion.retrieve_download_links()
+# Filter out for which satellite you want to download links from! SV for example stands for the Suoerview satellite
 
 # Downloads a satelliet image from the NSO, make a crop out of it so it fits the geojson region and calculate the NVDI index.
 # The output will stored in the designated output folder.
