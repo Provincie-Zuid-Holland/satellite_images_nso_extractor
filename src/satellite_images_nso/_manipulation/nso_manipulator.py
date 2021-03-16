@@ -34,7 +34,7 @@ def __make_the_cut(load_shape, raster_path, raster_path_cropped):
     src = rasterio.open(raster_path)
 
     # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-    if geo_file.crs['init'] != 'epsg:28992':
+    if geo_file.crs != 'epsg:28992':
         geo_file = geo_file.to_crs(epsg=28992)
 
     out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True)
