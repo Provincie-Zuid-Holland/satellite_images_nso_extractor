@@ -56,7 +56,10 @@ See also the jupyter notebook in src/nso_notebook_example.ipynb
 
 Install this package with: `pip install satellite_images_nso`
 
-Be sure you've installed GDAL already on your computer. Other python dependencies will install automatically (Fiona>=1.8.13, GDAL>=3.0.4, geopandas>=0.7.0, rasterio>=1.1.3 Shapely>=1.7.0). If you don't have gdal installed on your computer or if it doesn't work follow the instruction below.
+Be sure you've installed GDAL already on your computer. Other python dependencies will install automatically (Fiona>=1.8.13, GDAL>=3.0.4, geopandas>=0.9.0, rasterio>=1.1.3 Shapely>=1.7.0).
+Or look into the requirements.txt file.
+
+If you don't have gdal installed on your computer or if it doesn't work follow the instruction below.
 
 ## Install GDAL on Windows
 If you are a Windows user you have to install the GDAL dependency yourself via a wheels.
@@ -65,7 +68,7 @@ Instead install these wheels with pip install XXX.XX.XX.whl.
 
 Go to https://www.lfd.uci.edu/~gohlke/pythonlibs/ for the wheels of these depencies:
  
-Depencencies are : "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.7.0","rasterio>=1.1.3","Shapely>=1.7.0"
+Depencencies are : "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.9.0","rasterio>=1.1.3","Shapely>=1.7.0"
 
 
 ## Install GDAL on MacOS
