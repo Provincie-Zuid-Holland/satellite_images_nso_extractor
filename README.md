@@ -70,6 +70,19 @@ Go to https://www.lfd.uci.edu/~gohlke/pythonlibs/ for the wheels of these depenc
  
 Depencencies are : "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.9.0","rasterio>=1.1.3","Shapely>=1.7.0"
 
+# Install GDAL on Databricks
+If you are using databricks use this code to set up a init script which installs GDAL.
+
+```python
+    dbutils.fs.mkdirs("dbfs:/databricks/FileStore/init_script")
+    dbutils.fs.put("/databricks/FileStore/init_script/gdal.sh","""
+        #!/bin/bash
+        set -ex
+        /databricks/python/bin/python -V
+        ./databricks/conda/etc/profile.d/conda.sh
+        conda activate /databricks/python
+        conda install -y gdal""", True)
+```
 
 ## Install GDAL on MacOS
 Install GDAL by using Brew:  
