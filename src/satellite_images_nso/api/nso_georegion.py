@@ -135,8 +135,6 @@ class nso_georegion:
     def check_already_downloaded_links(self):
         """
             Check which links have already been dowloaded.
-
-
         """
         downloaded_files = []
 
@@ -144,6 +142,24 @@ class nso_georegion:
             downloaded_files.append(file)
 
         return downloaded_files
+    
+    def get_current_content_blob(self):
+        """
+            Get the current content of the blob storage.
+        """
+        return blob_storage.create_df_current_tiff_files(self.blob_url, self.container)
+
+    def upload_file_to_blob(self,path_to_file, name):
+        """
+            Input for upload to blob storage.
+        """
+        return blob_storage.upload_file_rm_blob(path_to_file, self.container, name)
+
+    def get_output_folder(self):
+        """
+            Get the output folder
+        """
+        return self.output_folder
 
     def get_georegion(self):
         """
@@ -157,18 +173,13 @@ class nso_georegion:
         """
         return self.region_name
 
-    def get_current_content_blob(self):
+    def get_current_container(self):
         """
-            Get the current content of the blob storage.
+            Return a container.
         """
-        blob_storage.create_df_current_tiff_files(self.blob_url, self.container)
+        return self.container
 
-    def upload_file_to_blob(self,path_to_file):
-        """
-            Input for upload to blob storage.
-        """
-        blob_storage.upload_file_rm_blob(path_to_file, self.container)
-
+  
 
 
 
