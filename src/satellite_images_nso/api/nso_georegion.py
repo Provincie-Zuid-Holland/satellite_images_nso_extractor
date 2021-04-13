@@ -7,6 +7,7 @@ import shutil
 import geopandas as gpd
 import json
 from satellite_images_nso.__logger import logger
+from satellite_images_nso.__connect_blob_storage import blob_storage
 
 """
     This class constructs a nso georegion object.
@@ -27,7 +28,7 @@ def correct_file_path(path):
 
 class nso_georegion:
 
-    def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str):
+    def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str, blob_connection_string = False, blob_container_name = False, blob_url = False):
         """
             Init of the class.
 
@@ -38,6 +39,8 @@ class nso_georegion:
         """
         
         self.path_to_geojson = correct_file_path(path_to_geojson)
+        # Name needs to be included in the geojson name.
+        self.region_name = path_to_geojson.split("/")[len(path_to_geojson.split("/"))-1].split('.')[0]
         # georegion is a variable which contains the coordinates in the geojson, which should be WGS!
         self.georegion = self.__getFeatures(self.path_to_geojson)[0]
         if len(self.georegion) == 0 :
@@ -47,6 +50,11 @@ class nso_georegion:
        
         self.username = username
         self.password = password
+
+        # Azure container.
+        if blob_connection_string != False and blob_container_name != False and blob_url != False:
+           self.container = blob_storage.get_container(blob_connection_string,blob_container_name) 
+           self.blob_url = blob_url
 
     def  __getFeatures(self,path):
         """
@@ -85,7 +93,7 @@ class nso_georegion:
                 true_path = x
         
         if ".tif" not in true_path:
-            logger.append_log(true_path+" Error:  .tif not found") 
+            logger.append_messsage(true_path+" Error:  .tif not found") 
             raise Exception(".tif not found")
         else: 
             cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, calculate_nvdi )
@@ -123,11 +131,44 @@ class nso_georegion:
 
         return "Succesfully cropped .tif file"
 
+
+    def check_already_downloaded_links(self):
+        """
+            Check which links have already been dowloaded.
+
+
+        """
+        downloaded_files = []
+
+        for file in glob.glob(self.output_folder+'/*'+str(self.region_name)+'*.tif'):
+            downloaded_files.append(file)
+
+        return downloaded_files
+
     def get_georegion(self):
         """
             Get the coordinates from the geojson.
         """
         return self.georegion 
+
+    def get_region_name(self):
+        """
+            Get the name of the shape file.
+        """
+        return self.region_name
+
+    def get_current_content_blob(self):
+        """
+            Get the current content of the blob storage.
+        """
+        blob_storage.create_df_current_tiff_files(self.blob_url, self.container)
+
+    def upload_file_to_blob(self,path_to_file):
+        """
+            Input for upload to blob storage.
+        """
+        blob_storage.upload_file_rm_blob(path_to_file, self.container)
+
 
 
 

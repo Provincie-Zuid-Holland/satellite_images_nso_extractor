@@ -67,7 +67,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
         except Exception as e: 
             print(e)
             print(row)
-            logger.append_log(str(e)+" "+str(row))
+            logger.append_message(str(e)+" "+str(row))
 
     return links
 
@@ -82,7 +82,7 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
 
     # Check if file is already downloaded.
     if os.path.isfile(absolute_path) is True:
-        logger.append_log(absolute_path+" is already downloaded in \n" )
+        logger.append_message(absolute_path+" is already downloaded in \n" )
         print("File already downloaded: \n"+absolute_path)
     else:    
         r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
@@ -130,7 +130,7 @@ def check_if_geojson_in_region(row,projected_shape):
     except Exception as e: 
             print(e)
             print(row)
-            logger.append_log(e+" "+row)
+            logger.append_message(e+" "+row)
 
     return return_statement
 
