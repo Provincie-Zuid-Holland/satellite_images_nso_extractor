@@ -31,8 +31,8 @@ def create_df_current_tiff_files(blob_url, container):
     return df_filenames
 
 
-def upload_file_rm_blob(path_to_file,container):
-    
-    with open(path_to_file, "rb") as data:
-        container.upload_blob(data)
+def upload_file_rm_blob(path_to_file,container, name):
+
+    with open(path_to_file, "rb") as data:      
+        container.upload_blob(name,data)
 
