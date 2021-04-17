@@ -70,6 +70,10 @@ Go to https://www.lfd.uci.edu/~gohlke/pythonlibs/ for the wheels of these depenc
  
 Depencencies are : "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.9.0","rasterio>=1.1.3","Shapely>=1.7.0"
 
+Then follow the fourth solution on this stackoverflow question:
+https://gis.stackexchange.com/questions/2276/installing-gdal-with-python-on-windows
+
+
 # Install GDAL on Databricks
 If you are using databricks use this code to set up a init script which installs GDAL.
 
