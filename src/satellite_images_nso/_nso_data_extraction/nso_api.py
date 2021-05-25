@@ -7,7 +7,8 @@ import zipfile
 import shapely
 import numpy as np
 import json
-from satellite_images_nso.__logger import logger
+from satellite_images_nso.__logger import logger_nso
+import sys
 
 """
     This class is a python wrapper with added functionality around the NSO api.
@@ -22,6 +23,9 @@ from satellite_images_nso.__logger import logger
 
     Author: Michael de Winter.
 """
+logger = logger_nso.init_logger()
+
+
 
 def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3,):
     """
@@ -33,6 +37,8 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
         @param max_meters: Maximum resolution which needs to be looked at.
         @return: the found download links.
     """
+    save_stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
 
     geojson_coordinates = georegion
     
@@ -42,15 +48,12 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
     { "datefilter":{ "startdate": start_date,"enddate" : end_date }, "resolutionfilter":{ "maxres" :max_meters, "minres" : 0 }} } }
 
     headers = {'content-type': 'application/json'}
-    x = requests.post(url, auth = HTTPBasicAuth(user_n, pass_n), data = json.dumps(myobj) ,  headers=headers )
-
-   
+    x = requests.post(url, auth = HTTPBasicAuth(user_n, pass_n), data = json.dumps(myobj) ,  headers=headers )  
     reponse = json.loads(x.text)
 
     # Check if valid reponse
     if reponse == "":
-        raise Exception("No valid response from NSO! message:"+x.text)
-        
+        raise Exception("No valid response from NSO! message:"+x.text)       
     links = []
 
     for row in reponse['features']:
@@ -65,10 +68,9 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
                             links.append(download['href'] )
                 
         except Exception as e: 
-            print(e)
-            print(row)
-            logger.append_message(str(e)+" "+str(row))
+            logger.info(str(e)+" This error can be normal!")
 
+    sys.stdout = save_stdout
     return links
 
 
@@ -82,7 +84,7 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
 
     # Check if file is already downloaded.
     if os.path.isfile(absolute_path) is True:
-        logger.append_message(absolute_path+" is already downloaded in \n" )
+        logger.info(absolute_path+" is already downloaded in \n" )
         print("File already downloaded: \n"+absolute_path)
     else:    
         r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
@@ -130,7 +132,7 @@ def check_if_geojson_in_region(row,projected_shape):
     except Exception as e: 
             print(e)
             print(row)
-            logger.append_message(e+" "+row)
+            logger.info(e+" "+row)
 
     return return_statement
 

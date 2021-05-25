@@ -154,7 +154,7 @@ def make_ndvi_plot(path, title, save_figure =True):
     fig, ax = plt.subplots(figsize=(28, 12))
     im = ax.imshow(ndvi_class, cmap=nbr_cmap)
 
-    ep.draw_legend(im_ax=im, classes=classes, titles=ndvi_cat_names)
+    ep.draw_legend(im_ax=im, classes=classes)
     ax.set_title(
         title+" Normalized Difference Vegetation Index (NDVI) Classes",
         fontsize=14,
