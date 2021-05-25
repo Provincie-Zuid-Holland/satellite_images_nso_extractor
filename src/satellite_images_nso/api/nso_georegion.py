@@ -6,7 +6,7 @@ import glob
 import shutil
 import geopandas as gpd
 import json
-from satellite_images_nso.__logger import logger
+from satellite_images_nso.__logger import logger_nso
 from satellite_images_nso.__connect_blob_storage import blob_storage
 
 """
@@ -17,6 +17,8 @@ from satellite_images_nso.__connect_blob_storage import blob_storage
    
     Author: Michael de Winter
 """
+
+logger = logger_nso.init_logger()
 
 def correct_file_path(path):
     " File path does not need to end with /"
@@ -93,7 +95,7 @@ class nso_georegion:
                 true_path = x
         
         if ".tif" not in true_path:
-            logger.append_messsage(true_path+" Error:  .tif not found") 
+            logger.info(true_path+" Error:  .tif not found") 
             raise Exception(".tif not found")
         else: 
             cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, calculate_nvdi )
