@@ -69,7 +69,7 @@ Instead install these wheels with pip install XXX.XX.XX.whl.
 Go to https://www.lfd.uci.edu/~gohlke/pythonlibs/ for the wheels of these depencies:
  
 Depencencies are : "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.9.0","rasterio>=1.1.3","Shapely>=1.7.0"
-
+NOTE: You can't use normal pip for the installation of any of these depencies or else they won't find GDAL. So use all the .whl files!
 Then follow the fourth solution on this stackoverflow question:
 https://gis.stackexchange.com/questions/2276/installing-gdal-with-python-on-windows
 
