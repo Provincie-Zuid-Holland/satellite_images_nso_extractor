@@ -11,7 +11,7 @@ def append_message(message):
                 myfile.write(str(datetime.datetime.now())+": "+str(message)+"\n")
 import sys
 import logging
-from opencensus.ext.azure.log_exporter import AzureLogHandler
+
 
 """
 Logger settings init.
