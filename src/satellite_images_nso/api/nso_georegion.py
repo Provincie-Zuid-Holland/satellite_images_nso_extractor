@@ -7,7 +7,7 @@ import shutil
 import geopandas as gpd
 import json
 from satellite_images_nso.__logger import logger_nso
-from satellite_images_nso.__connect_blob_storage import blob_storage
+
 
 """
     This class constructs a nso georegion object.
