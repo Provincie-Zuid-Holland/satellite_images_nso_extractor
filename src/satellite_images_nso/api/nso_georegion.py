@@ -3,10 +3,10 @@ import satellite_images_nso._nso_data_extraction.nso_api as nso_api
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 from datetime import date
 import glob
-import shutil
 import geopandas as gpd
 import json
 from satellite_images_nso.__logger import logger_nso
+import shutil
 
 
 """
@@ -30,7 +30,7 @@ def correct_file_path(path):
 
 class nso_georegion:
 
-    def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str, blob_connection_string = False, blob_container_name = False, blob_url = False):
+    def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str):
         """
             Init of the class.
 
@@ -53,10 +53,6 @@ class nso_georegion:
         self.username = username
         self.password = password
 
-        # Azure container.
-        if blob_connection_string != False and blob_container_name != False and blob_url != False:
-           self.container = blob_storage.get_container(blob_connection_string,blob_container_name) 
-           self.blob_url = blob_url
 
     def  __getFeatures(self,path):
         """
@@ -98,16 +94,12 @@ class nso_georegion:
             logger.info(true_path+" Error:  .tif not found") 
             raise Exception(".tif not found")
         else: 
-            cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, calculate_nvdi )
-            cropped_path = cropped_path.replace("\\", "/") 
-            nvdi_path = nvdi_path.replace("\\", "/")
-            nvdi_matrix = nvdi_matrix.replace("\\","/")
-   
-            shutil.move(cropped_path,self.output_folder+"/"+cropped_path.split("/")[len(cropped_path.split("/"))-1])
-            shutil.move(nvdi_path,self.output_folder+"/"+nvdi_path.split("/")[len(nvdi_path.split("/"))-1])
-            shutil.move(nvdi_matrix,self.output_folder+"/"+nvdi_matrix.split("/")[len(nvdi_matrix.split("/"))-1])
-
+            cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson,self.output_folder, calculate_nvdi )
+            logger.info("Cropped file is found at:"+cropped_path)
+            logger.info("The NDVI picture is found at:"+nvdi_path)
+            logger.info("NDVI numpy arrat i found at:"+nvdi_matrix)
             
+                      
     def execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True):
         """ 
             Executes the download, croppend 67and the calculating of the NVDI for a specific link.
@@ -118,13 +110,17 @@ class nso_georegion:
             @param delete_source_files: whether or not to keep the extracted files.
             @param check_if_file_exists: check wether the file is already downloaded or stored somewhere.
         """
-        download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
+        try:
+            download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
 
-        nso_api.download_link(link,download_archive_name, self.username, self.password)
-        extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
+            nso_api.download_link(link,download_archive_name, self.username, self.password)
+            extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
   
-        self.crop_and_calculate_nvdi(extracted_folder)
-    
+            self.crop_and_calculate_nvdi(extracted_folder)
+        except Exception as e: 
+            logger.info("Error: "+str(e))
+
+
         if delete_zip_file == True:
             os.remove(download_archive_name)
 
@@ -145,18 +141,6 @@ class nso_georegion:
 
         return downloaded_files
     
-    def get_current_content_blob(self):
-        """
-            Get the current content of the blob storage.
-        """
-        return blob_storage.create_df_current_tiff_files(self.blob_url, self.container)
-
-    def upload_file_to_blob(self,path_to_file, name):
-        """
-            Input for upload to blob storage.
-        """
-        return blob_storage.upload_file_rm_blob(path_to_file, self.container, name)
-
     def get_output_folder(self):
         """
             Get the output folder
@@ -174,12 +158,6 @@ class nso_georegion:
             Get the name of the shape file.
         """
         return self.region_name
-
-    def get_current_container(self):
-        """
-            Return a container.
-        """
-        return self.container
 
   
 

@@ -16,6 +16,8 @@ import numpy as np
 import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
 from matplotlib import pyplot as plt
 import re
+import shutil
+
 """
     This is a python class for making various manipulationg such as making cuts out of .tif files, nvdi calculations and exporting to geopandas.
 
@@ -107,7 +109,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
 
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi)
 
-def run(raster_path, load_shape, calculate_nvdi = True):
+def run(raster_path,output_folder , load_shape, calculate_nvdi = True):
     """
         Main run method, combines the cutting of the file based on the shape and calculates the NVDI index.
 
@@ -118,12 +120,24 @@ def run(raster_path, load_shape, calculate_nvdi = True):
     """
     raster_path_cropped = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped.tif")
     __make_the_cut(load_shape,raster_path,raster_path_cropped)
+    
+    # Path fix and move.
+    raster_path_cropped = raster_path_cropped.replace("\\", "/") 
+    shutil.move(raster_path_cropped,output_folder+"/"+raster_path_cropped.split("/")[len(raster_path_cropped.split("/"))-1])
 
     if calculate_nvdi == True:
         raster_path_nvdi = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped_nvdi")
         nvdi_output = __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi)
-        return raster_path_cropped, nvdi_output, raster_path_nvdi
 
+        raster_path_nvdi = raster_path_nvdi.replace("\\", "/")
+        nvdi_output = nvdi_output.replace("\\","/")
+
+        shutil.move(nvdi_output,output_folder+"/"+nvdi_output.split("/")[len(nvdi_output.split("/"))-1])
+        shutil.move(raster_path_nvdi,output_folder+"/"+raster_path_nvdi.split("/")[len(raster_path_nvdi.split("/"))-1])
+        
+        return raster_path_cropped, nvdi_output, raster_path_nvdi
+    else:
+        return raster_path_cropped
 
 
 
