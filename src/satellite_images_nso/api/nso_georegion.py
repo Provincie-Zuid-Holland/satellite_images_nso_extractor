@@ -120,10 +120,6 @@ class nso_georegion:
         except Exception as e: 
             logger.info("Error: "+str(e))
 
-
-        if delete_zip_file == True:
-            os.remove(download_archive_name)
-
         if delete_source_files == True:
             shutil.rmtree(extracted_folder)
 
