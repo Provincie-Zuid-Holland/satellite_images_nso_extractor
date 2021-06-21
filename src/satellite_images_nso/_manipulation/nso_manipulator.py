@@ -109,7 +109,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
 
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi)
 
-def run(raster_path,output_folder , load_shape, calculate_nvdi = True):
+def run(raster_path,  load_shape, output_folder , calculate_nvdi = True):
     """
         Main run method, combines the cutting of the file based on the shape and calculates the NVDI index.
 
@@ -134,7 +134,7 @@ def run(raster_path,output_folder , load_shape, calculate_nvdi = True):
 
         shutil.move(nvdi_output,output_folder+"/"+nvdi_output.split("/")[len(nvdi_output.split("/"))-1])
         shutil.move(raster_path_nvdi,output_folder+"/"+raster_path_nvdi.split("/")[len(raster_path_nvdi.split("/"))-1])
-        
+
         return raster_path_cropped, nvdi_output, raster_path_nvdi
     else:
         return raster_path_cropped

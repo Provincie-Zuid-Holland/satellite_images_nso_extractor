@@ -94,7 +94,7 @@ class nso_georegion:
             logger.info(true_path+" Error:  .tif not found") 
             raise Exception(".tif not found")
         else: 
-            cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson,self.output_folder, calculate_nvdi )
+            cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, calculate_nvdi )
             logger.info("Cropped file is found at:"+cropped_path)
             logger.info("The NDVI picture is found at:"+nvdi_path)
             logger.info("NDVI numpy arrat i found at:"+nvdi_matrix)
