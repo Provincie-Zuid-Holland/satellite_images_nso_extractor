@@ -95,9 +95,9 @@ class nso_georegion:
             raise Exception(".tif not found")
         else: 
             cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, calculate_nvdi )
-            logger.info("Cropped file is found at:"+cropped_path)
-            logger.info("The NDVI picture is found at:"+nvdi_path)
-            logger.info("NDVI numpy arrat i found at:"+nvdi_matrix)
+            logger.info("Cropped file is found at: "+cropped_path)
+            logger.info("The NDVI picture is found at: "+nvdi_path)
+            logger.info("NDVI numpy arrat i found at: "+nvdi_matrix)
             
                       
     def execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True):
@@ -118,9 +118,10 @@ class nso_georegion:
   
             self.crop_and_calculate_nvdi(extracted_folder)
         except Exception as e: 
-            logger.info("Error: "+str(e))
-
-        if delete_source_files == True:
+            logger.info("Error in downloading and or cropping: "+str(e))
+            print("Error in downloading and or cropping: "+str(e))
+            
+        if delete_source_files == True and 'extracted_folder' in globals():
             shutil.rmtree(extracted_folder)
 
         return "Succesfully cropped .tif file"
@@ -150,7 +151,7 @@ class nso_georegion:
         return self.georegion 
 
     def get_region_name(self):
-        """
+        """-
             Get the name of the shape file.
         """
         return self.region_name

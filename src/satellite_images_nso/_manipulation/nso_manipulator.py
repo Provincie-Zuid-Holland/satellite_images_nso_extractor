@@ -17,12 +17,16 @@ import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
 from matplotlib import pyplot as plt
 import re
 import shutil
+from satellite_images_nso.__logger import logger_nso
 
 """
     This is a python class for making various manipulationg such as making cuts out of .tif files, nvdi calculations and exporting to geopandas.
 
     @author: Michael de Winter.
 """
+
+logger = logger_nso.init_logger()
+
 def __make_the_cut(load_shape, raster_path, raster_path_cropped):
     """
         This cuts the sattelite image with a chosen shape.
@@ -123,20 +127,30 @@ def run(raster_path,  load_shape, output_folder , calculate_nvdi = True):
     
     # Path fix and move.
     raster_path_cropped = raster_path_cropped.replace("\\", "/") 
-    shutil.move(raster_path_cropped,output_folder+"/"+raster_path_cropped.split("/")[len(raster_path_cropped.split("/"))-1])
+    raster_path_cropped_moved = output_folder+"/"+raster_path_cropped.split("/")[len(raster_path_cropped.split("/"))-1]
+    
 
     if calculate_nvdi == True:
         raster_path_nvdi = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped_nvdi")
-        nvdi_output = __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi)
+        nvdi_output_classes_png_output = __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi)
 
         raster_path_nvdi = raster_path_nvdi.replace("\\", "/")
-        nvdi_output = nvdi_output.replace("\\","/")
+        raster_path_nvdi_path = output_folder+"/"+raster_path_nvdi.split("/")[len(raster_path_nvdi.split("/"))-1]
 
-        shutil.move(nvdi_output,output_folder+"/"+nvdi_output.split("/")[len(nvdi_output.split("/"))-1])
-        shutil.move(raster_path_nvdi,output_folder+"/"+raster_path_nvdi.split("/")[len(raster_path_nvdi.split("/"))-1])
+        nvdi_output_classes_png_output = nvdi_output_classes_png_output.replace("\\","/")
+        nvdi_output_classes_png_output_path = output_folder+"/"+nvdi_output_classes_png_output.split("/")[len(nvdi_output_classes_png_output.split("/"))-1]
 
-        return raster_path_cropped, nvdi_output, raster_path_nvdi
+        logger.info("Writing png to this ndvi array path: "+raster_path_nvdi_path)
+        shutil.move(raster_path_nvdi,raster_path_nvdi_path)
+        logger.info("Writing png to this png classes path: "+nvdi_output_classes_png_output_path)
+        shutil.move(nvdi_output_classes_png_output,nvdi_output_classes_png_output_path)
+        
+        # Finally move the .tif file.
+        shutil.move(raster_path_cropped,raster_path_cropped_moved)
+        
+        return raster_path_cropped, raster_path_nvdi , nvdi_output_classes_png_output
     else:
+        shutil.move(raster_path_cropped,raster_path_cropped_moved)
         return raster_path_cropped
 
 
