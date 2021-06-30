@@ -4,7 +4,6 @@ output/*
 dist/*
 build/*
 data/*
-nso_main_tests.ipynb
 geo_database.ipynb
 tests/example.py
 
