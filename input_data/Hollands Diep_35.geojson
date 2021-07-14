@@ -1,0 +1,6 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "naam_n2k": "Hollands Diep", "vhn_new": "1", "nr": "111", "beschermin": "VR", "sitecode_v": "NL9802019", "sitecode_h": null, "status": "Natura 2000-besluit 4 september 2013", "kadaster": "OZ4 63282\/152", "staatscour": "2013\/19978", "FID": "8", "Code": "28", "Provincien": "Zuid-Holland", "SHAPE_Leng": 6.5648016577531996, "SHAPE_Area": 0.38574131604293699 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 4.631151078853578, 51.721114848358503 ], [ 4.631138, 51.72114 ], [ 4.632669, 51.721494 ], [ 4.632805, 51.721524 ], [ 4.632851463558642, 51.721503391163509 ], [ 4.631151078853578, 51.721114848358503 ] ] ] } }
+]
+}
