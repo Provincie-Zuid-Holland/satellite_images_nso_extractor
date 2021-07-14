@@ -35,7 +35,7 @@ class blob_container:
         return df_filenames
 
 
-    def upload_file_rm_blob(self,path_to_file,container, name):
+    def upload_file_rm_blob(self,path_to_file, name):
 
         with open(path_to_file, "rb") as data:      
             self.container.upload_blob(name,data)
