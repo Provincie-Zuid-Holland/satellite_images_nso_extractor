@@ -77,7 +77,7 @@ class nso_georegion:
         """
         return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3)
 
-    def crop_and_calculate_nvdi(self,path, calculate_nvdi = True):
+    def crop_and_calculate_nvdi(self,path, calculate_nvdi):
         """
             Function for the crop and the calculating of the NVDI index.
             Can be used as a standalone if you have already unzipped the file.
@@ -94,29 +94,36 @@ class nso_georegion:
             logger.info(true_path+" Error:  .tif not found") 
             raise Exception(".tif not found")
         else: 
+
             cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, calculate_nvdi )
             logger.info("Cropped file is found at: "+cropped_path)
             logger.info("The NDVI picture is found at: "+nvdi_path)
             logger.info("NDVI numpy arrat i found at: "+nvdi_matrix)
-            
+            return cropped_path, nvdi_path, nvdi_matrix
                       
-    def execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True):
+    def execute_link(self, link, calculate_nvdi = True, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True):
         """ 
             Executes the download, croppend 67and the calculating of the NVDI for a specific link.
         
             @param link: Link to a file from the NSO.
             @param geojson_path: Path to a geojson with the selected region.
+            @param calculate_nvdi: Wether or not to also calculate the NDVI for the cropped region.
             @param delete_zip_file: whether or not to keep the original .zip file.
             @param delete_source_files: whether or not to keep the extracted files.
             @param check_if_file_exists: check wether the file is already downloaded or stored somewhere.
         """
+
+        cropped_path = ""
+        nvdi_path = ""
+        nvdi_matrix = ""
+
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
 
             nso_api.download_link(link,download_archive_name, self.username, self.password)
             extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
   
-            self.crop_and_calculate_nvdi(extracted_folder)
+            cropped_path, nvdi_path , nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi )
         except Exception as e: 
             logger.info("Error in downloading and or cropping: "+str(e))
             print("Error in downloading and or cropping: "+str(e))
@@ -124,7 +131,9 @@ class nso_georegion:
         if delete_source_files == True and 'extracted_folder' in globals():
             shutil.rmtree(extracted_folder)
 
-        return "Succesfully cropped .tif file"
+        logger.info("Succesfully cropped .tif file")
+
+        return cropped_path, nvdi_path, nvdi_matrix
 
 
     def check_already_downloaded_links(self):
