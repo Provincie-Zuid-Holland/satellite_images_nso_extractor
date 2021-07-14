@@ -1,0 +1,6 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "naam_n2k": "Haringvliet", "vhn_new": "3", "nr": "109", "beschermin": "VR+HR", "sitecode_v": "NL1000015", "sitecode_h": "NL1000015", "status": "Natura 2000 besluit 28 april 2015, Uitvoeringsbesluit EU 2018\/40 van 12 december 2017, ABRvS Uitspraak 201504578\/2\/R2 van 21-2-2018", "kadaster": "OZ4 66296\/200", "staatscour": "2015\/11211", "FID": "8", "Code": "28", "Provincien": "Zuid-Holland", "SHAPE_Leng": 6.5648016577531996, "SHAPE_Area": 0.38574131604293699 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 4.19442759877308, 51.771427254049669 ], [ 4.194297, 51.771482 ], [ 4.19415, 51.771564 ], [ 4.193919, 51.771767 ], [ 4.193766, 51.771934 ], [ 4.193698, 51.77205 ], [ 4.19361, 51.772235 ], [ 4.193527, 51.772489 ], [ 4.193518, 51.77257 ], [ 4.193526087081885, 51.772614266132429 ], [ 4.193898636000029, 51.771819936000043 ], [ 4.19442759877308, 51.771427254049669 ] ] ] } }
+]
+}
