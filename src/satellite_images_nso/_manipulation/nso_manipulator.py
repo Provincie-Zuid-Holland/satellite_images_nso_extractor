@@ -113,7 +113,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
 
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi)
 
-def run(raster_path,  load_shape, output_folder , calculate_nvdi = True):
+def run(raster_path,  load_shape, output_folder , calculate_nvdi):
     """
         Main run method, combines the cutting of the file based on the shape and calculates the NVDI index.
 
@@ -122,6 +122,11 @@ def run(raster_path,  load_shape, output_folder , calculate_nvdi = True):
         @param calculate_nvdi: Wether or not to also to calculate the nvdi index.
         @return: the path where the cropped file is stored or where the nvdi is stored.
     """
+
+    raster_path_cropped_moved = ""
+    raster_path_nvdi_path  = ""
+    nvdi_output_classes_png_output_path = ""
+
     raster_path_cropped = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped.tif")
     __make_the_cut(load_shape,raster_path,raster_path_cropped)
     
@@ -148,10 +153,10 @@ def run(raster_path,  load_shape, output_folder , calculate_nvdi = True):
         # Finally move the .tif file.
         shutil.move(raster_path_cropped,raster_path_cropped_moved)
         
-        return raster_path_cropped, raster_path_nvdi , nvdi_output_classes_png_output
+        return raster_path_cropped_moved, raster_path_nvdi_path , nvdi_output_classes_png_output_path
     else:
         shutil.move(raster_path_cropped,raster_path_cropped_moved)
-        return raster_path_cropped
+        return raster_path_cropped_moved, raster_path_nvdi_path  , nvdi_output_classes_png_output_path
 
 
 
