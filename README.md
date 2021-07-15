@@ -11,7 +11,7 @@ We are working on extracting more variables on satellite images!
 This image gives a illustration: 
 ![Alt text](example.png?raw=true "Title")
 
-This satellite data is only intended for dutch legal entities, dutch institutions or dutch citizens.
+*This satellite data is only intended for dutch legal entities, dutch institutions or dutch citizens.
 For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/satellietdataportaal/toegang-data/licentievoorwaarden/](https://www.spaceoffice.nl/nl/satellietdataportaal/toegang-data/licentievoorwaarden/)
 
 # Getting Started
