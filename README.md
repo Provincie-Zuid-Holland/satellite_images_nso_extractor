@@ -13,6 +13,12 @@ This image gives a illustration:
 
 
 
+
+
+
+*This satellite data is only intended for dutch legal entities, dutch institutions or dutch citizens.
+For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/satellietdataportaal/toegang-data/licentievoorwaarden/](https://www.spaceoffice.nl/nl/satellietdataportaal/toegang-data/licentievoorwaarden/)
+
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
