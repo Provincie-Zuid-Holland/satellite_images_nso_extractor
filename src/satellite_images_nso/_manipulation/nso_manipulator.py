@@ -76,28 +76,40 @@ def tranform_vector_to_pixel_df(path_to_vector):
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
 
-    satellite_image = rasterio.open(path_to_vector)
-    out_image = satellite_image.read()
+    gpf = ""
+    with rasterio.Env():
+            with rasterio.open(path_to_vector) as src:
+                crs = src.crs
 
-    cart_prod = np.array(np.meshgrid(range(out_image.shape[2]), range(out_image.shape[1])))
-    x_y_np  =np.array(satellite_image.xy(cart_prod[1].flatten(),cart_prod[0].flatten())).T
- 
-    ndvi = calculate_nvdi.normalized_diff(out_image[3], out_image[2])***REMOVED***            
-    satelliet_df = pd.DataFrame(data=[out_image[i].flatten() for i in range(out_image.shape[0])]).T              
-    satelliet_df['ndvi'] = ndvi.flatten()
-    satelliet_df['x'] = [row[0] for row in x_y_np]
-    satelliet_df['y'] = [row[1] for row in x_y_np]
-    satelliet_df.columns = ['blue', 'green', 'red', 'nir', 'ndvi', 'x', 'y']
-    satelliet_df['geometry'] = gpd.points_from_xy(x=satelliet_df['x'], y=satelliet_df['y'])
-    
-    # The file name should contain the date and the name of the satellite and thus good information to store.
-    split_file_name = path_to_vector.split("/")
-    satelliet_df['filename'] = split_file_name[len(path_to_vector.split("/"))-1]
+                # create 1D coordinate arrays (coordinates of the pixel center)
+                xmin, ymax = np.around(src.xy(0.00, 0.00), 9)  # src.xy(0, 0)
+                xmax, ymin = np.around(src.xy(src.height-1, src.width-1), 9)  # src.xy(src.width-1, src.height-1)
+                x = np.linspace(xmin, xmax, src.width)
+                y = np.linspace(ymax, ymin, src.height)  # max -> min so coords are top -> bottom
 
-    # Convert to geopandas Dataframe.
-    # NOTE!: Since we are using dutch satellite images the crs is in the dutch rijksdriehoek!
-    satelliet_df = gpd.GeoDataFrame(satelliet_df, crs=28992, geometry=satelliet_df['geometry'])
-    return satelliet_df
+                # create 2D arrays
+                xs, ys = np.meshgrid(x, y)
+                blue = src.read(1)
+                green = src.read(2)
+                red = src.read(3)
+                nir = src.read(4)
+                
+                # Apply NoData mask
+                mask = src.read_masks(1) > 0
+                xs, ys, blue, green, red, nir = xs[mask], ys[mask], blue[mask], green[mask], red[mask], nir[mask]
+
+    data = {"X": pd.Series(xs.ravel()),
+            "Y": pd.Series(ys.ravel()),
+            "blue": pd.Series(blue.ravel()),
+            "green": pd.Series(green.ravel()),
+            "red": pd.Series(red.ravel()),
+            "nir": pd.Series(nir.ravel())
+            }
+
+    df = pd.DataFrame(data=data)
+    geometry = gpd.points_from_xy(df.X, df.Y)
+    gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
+    return gdf
 
 
 def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
