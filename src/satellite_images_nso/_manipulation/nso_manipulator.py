@@ -78,7 +78,7 @@ def tranform_vector_to_pixel_df(path_to_vector):
 
     gpf = ""
     with rasterio.Env():
-            with rasterio.open(path) as src:
+            with rasterio.open(path_to_vector) as src:
                 crs = src.crs
 
                 # create 1D coordinate arrays (coordinates of the pixel center)
