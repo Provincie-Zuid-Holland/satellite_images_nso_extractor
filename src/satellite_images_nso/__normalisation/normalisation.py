@@ -37,6 +37,9 @@ import pandas as pd
 from matplotlib import pyplot
 import rasterio
 import numpy as np 
+from numpy import median
+import glob 
+
 
 def get_season_for_month(month):
     """
@@ -58,8 +61,73 @@ def get_season_for_month(month):
         season_str = "Fall"
     return season_str, season
 
+def extract_multi_date_normalisation_coefficients(path_to_tif_files):
+    """ 
+        This method generates coefficients for a folder of .tif files.
+
+        @param path_to_tif_files: Path to a folder where all the .tif files are located.
+        @return: A pandas dataframe with the median 75th quantiles.
+    """
+
+    multidate_coefficents = pd.DataFrame([],columns=["Season","Blue_median_75", "Green_median_75", "Red_median_75", "Nir_median_75"])
+    for season_cur in ["Winter","Summer","Spring","Fall"]:
+      
+        blue_count = []
+        green_count = []
+        red_count = []
+        nir_count = []
+        count = 0
+        for file in glob.glob(path_to_tif_files+"*"):
+            if ".csv" not in file:
+                season = get_season_for_month(file.split("/")[-1][4:6])[0]
+
+                if season == season_cur:
+                    df = nso_manipulator.tranform_vector_to_pixel_df(file)
+                    #print("-----file: "+str(file)+"--------")
+                    #print(df['green'].min())
+                    #print(df['blue'].min())
+                    #print(df['red'].min())
+                    #print(df['nir'].min())
+                    #print(df[['blue','green','red','nir']].min())
+                    #print(df[['blue','green','red','nir']].max())
+                    #print(df[['blue','green','red','nir']].quantile(0.75))
+                    #src = rasterio.open(file).read()
+                    #plot_out_image = np.clip(src[2::-1],
+                    #            0,2200)/2200
+                    blue_mean_add, green_mean_add, red_mean_add, nir_mean_add =  df[['blue','green','red','nir']].quantile(0.75)
+                    blue_count.append(blue_mean_add)
+                    green_count.append(green_mean_add)
+                    red_count.append(red_mean_add)
+                    nir_count.append(nir_mean_add)
+
+                    #rasterio.plot.show(plot_out_image)
+                    #pyplot.show()
+               
+        print("----------- Season Medians 75 percentile----:"+season_cur)
+        blue_count_median = median(blue_count)
+        green_count_median = median(green_count)
+        red_count_median = median(red_count)
+        nir_count_median = median(nir_count)
+    
+        print("--Blue_median:"+str(blue_count_median))
+        print("--Green_median:"+str(green_count_median))
+        print("--Red_median:"+str(red_count_median))
+        print("--NIR_median:"+str(nir_count_median))
+
+        multidate_coefficents.loc[len(multidate_coefficents)] =  [season_cur, blue_count_median, green_count_median, red_count_median, nir_count_median]
+        
+    return multidate_coefficents
+
+    
+
 
 def multidate_normalisation_75th_percentile(path_to_tif):
+    """
+        Normalisa a .tif file based on 75th percentile point.
+
+        @param path_to_tif: Path to a .tif file.
+        @return: returns a .tif file with 75th percentile normalisation.
+    """
 
     season = get_season_for_month(path_to_tif.split("/")[-1][4:6])[0]
     
