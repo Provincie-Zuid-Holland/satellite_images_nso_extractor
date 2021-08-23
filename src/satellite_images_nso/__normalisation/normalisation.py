@@ -39,6 +39,7 @@ import rasterio
 import numpy as np 
 from numpy import median
 import glob 
+import os
 
 
 def get_season_for_month(month):
@@ -131,11 +132,12 @@ def multidate_normalisation_75th_percentile(path_to_tif):
 
     season = get_season_for_month(path_to_tif.split("/")[-1][4:6])[0]
     
-    multidate_coefficents = pd.read_csv("/coefficients/Multi-date-index-coefficients_pd.csv")
+    script_dir = os.path.dirname(__file__)
+    multidate_coefficents = pd.read_csv(script_dir+"/coefficients/Multi-date-index-coefficients_pd.csv")
     multidate_coefficents = multidate_coefficents[multidate_coefficents['Season'] == season]
 
 
-    print("--------file:"+path_to_tif)
+    print("-------- Multi-date Relative Normalisation for file: \n"+path_to_tif)
     df = nso_manipulator.tranform_vector_to_pixel_df(path_to_tif)
     blue_mean_current, green_mean_current, red_mean_current, nir_mean_current =  df[['blue','green','red','nir']].quantile(0.75)
     
@@ -151,7 +153,7 @@ def multidate_normalisation_75th_percentile(path_to_tif):
     plot_out_image = np.clip(src[2::-1],
                     0,2200)/2200
 
-    rasterio.plot.show(plot_out_image, ax=axrgb)
+    rasterio.plot.show(plot_out_image, ax=axrgb, title="Original")
       
     src[0] = src[0]+blue_diff_add
     src[1] = src[1]+green_diff_add 
@@ -167,7 +169,7 @@ def multidate_normalisation_75th_percentile(path_to_tif):
     plot_out_image_2 = np.clip(src[2::-1],
                     0,2200)/2200
     
-    rasterio.plot.show(plot_out_image_2, ax=axhist)
+    rasterio.plot.show(plot_out_image_2, ax=axhist, title="Multi-date Relative Normalisation")
     pyplot.show()
       
     with rasterio.open(ahn_outpath, 'w', **meta) as outds:        
