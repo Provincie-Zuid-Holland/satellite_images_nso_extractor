@@ -20,3 +20,22 @@ def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
     """
     return nso_manipulator.__make_the_cut(shape_file, path_to_tiff_file, output_path)
 
+
+def get_season_for_month(month):
+    """
+        A function that retrieves the season for a month/
+
+        @param a int month     
+    """
+    
+    season = int(month)%12 // 3 + 1
+    season_str = ""
+    if season == 1:
+        season_str = "Winter"
+    if season == 2:
+        season_str = "Spring"
+    if season == 3:
+        season_str = "Summer"
+    if season == 4 :
+        season_str = "Fall"
+    return season_str, season
