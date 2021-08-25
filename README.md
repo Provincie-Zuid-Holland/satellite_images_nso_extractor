@@ -6,7 +6,7 @@ This leads to a unnecessary large amount of data especially if you only want to 
 This python code crops a selected region out of the original satellite image based on a geojson, provided that the selected region is smaller than the original file.
 And then saves this cutout thus reducing the unnecessary saved data. 
 A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) of the cutout region.
-We are working on extracting more variables on satellite images, like multi date normalisation in order to do atmospheric correction.
+Also a option is for relative multidate normalisation is included for atmospheric correction. 
 
 This image gives a illustration: 
 ![Alt text](example.png?raw=true "Title")
