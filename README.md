@@ -1,12 +1,12 @@
 # Introduction 
-This python code is intended to automate/make easier the data extraction and cutting of satellite data from the netherlands space office (NSO).
+This python code is intended to automate/make easier the data extraction and cropping of satellite data from the netherlands space office (NSO).
 NSO provides free satellite images from the Netherlands, a downside however is that the NSO provides a very large region and as such a very large data file.
 This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region.
 
-This python code cuts a selected region out of the original satellite image based on a geojson, provided that the selected region is smaller than the original file.
+This python code crops a selected region out of the original satellite image based on a geojson, provided that the selected region is smaller than the original file.
 And then saves this cutout thus reducing the unnecessary saved data. 
 A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) of the cutout region.
-We are working on extracting more variables on satellite images!
+Also a option is for relative multidate normalisation is included for atmospheric correction. 
 
 This image gives a illustration: 
 ![Alt text](example.png?raw=true "Title")
@@ -32,6 +32,9 @@ For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/
 ```python
 # This the way the import nso.
 import satellite_images_nso.api.nso_georegion as nso
+# The sat_manipulator gives other handy transmations on satellite data.
+import satellite_images_nso.api.sat_manipulator as sat_manipulator
+
 path_geojson = "/src/example/example.geojson"
 # The first parameter is the path to the geojson, the second the map where the cropped satellite data will be installed
 georegion = nso.nso_georegion(path_geojson,"/src/output/",\
@@ -43,14 +46,22 @@ georegion = nso.nso_georegion(path_geojson,"/src/output/",\
 links = georegion.retrieve_download_links()
 
 
+# This example filters out only 50 cm RGB Infrared Superview satellite imagery in the summer.
+season = "Summer"
+links_group = []
+for link in links:
+            if 'SV' in link and '50cm' in link and 'RGBI' in link:
+                if sat_manipulator.get_season_for_month(int(link.split("/")[len(link.split("/"))-1][4:6]))[0] == season:
+                    links_group.append(link)
+
+
+
 # Downloads a satelliet image from the NSO, make a crop out of it so it fits the geojson region and calculate the NVDI index.
 # The output will stored in the designated output folder.
-georegion.execute_link(links[0])
+georegion.execute_link(links_group[0])
 # The parameters are : execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True)
 # With the parameters you can decide if you want to keep the original satellite files, such  as wether to keep the downloaded zip file or the extracted source files from which the cutout will be made.
 
-# The sat_manipulator gives other handy transmations on satellite data.
-import satellite_images_nso.api.sat_manipulator as sat_manipulator
 
 # This function reads a .tif file, which is a format the satellite data is stored in,  and converts it to a pixel based geopandas dataframe.
 # For machine learning purposes.
