@@ -40,6 +40,8 @@ import numpy as np
 from numpy import median
 import glob 
 import os
+import io
+import requests
 
 
 def get_season_for_month(month):
@@ -132,8 +134,17 @@ def multidate_normalisation_75th_percentile(path_to_tif):
 
     season = get_season_for_month(path_to_tif.split("/")[-1][4:6])[0]
     
-    script_dir = os.path.dirname(__file__)
-    multidate_coefficents = pd.read_csv(script_dir+"/coefficients/Multi-date-index-coefficients_pd.csv")
+    # Check the PZH blob storage for the most recent multi data coefficients.
+    url="https://a804bee12d94d498fbfe55e2.blob.core.windows.net/satellite-images-nso/coefficients/Multi-date-index-coefficients_pd.csv"
+    s=requests.get(url).content
+    if s is not None and s != '':
+        print("Downloading most recent coefficients")
+        multidate_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
+    else:
+        print("Using local coefficients")
+        script_dir = os.path.dirname(__file__)
+        multidate_coefficents = pd.read_csv(script_dir+"/coefficients/Multi-date-index-coefficients_pd.csv")
+
     multidate_coefficents = multidate_coefficents[multidate_coefficents['Season'] == season]
 
 
@@ -188,8 +199,17 @@ def multi_date_dark_spot_normalisation(path_to_tif, X_specific_point = False, Y_
         @param Y_specific_point: Y coordinates of a specific point in the .tif file on which you want to normalize. In RD coordinates!
     """
 
-    script_dir = os.path.dirname(__file__)
-    dark_coefficents = pd.read_csv(script_dir+"/coefficients/dark-coefficients_pd.csv")
+
+     # Check the PZH blob storage for the most recent multi data coefficients.
+    url="https://a804bee12d94d498fbfe55e2.blob.core.windows.net/satellite-images-nso/coefficients/dark-spot-coefficients_pd.csv"
+    s=requests.get(url).content
+    if s is not None and s != '':
+        print("Downloading most recent coefficients")
+        dark_spot_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
+    else:
+        print("Using local coefficients")
+        script_dir = os.path.dirname(__file__)
+        dark_spot_coefficents = pd.read_csv(script_dir+"/coefficients/dark-spot-coefficients_pd.csv")
 
     print("-------- Dark Spot Normalisation for file: \n"+path_to_tif)
     df = nso_manipulator.tranform_vector_to_pixel_df(path_to_tif)
@@ -200,10 +220,10 @@ def multi_date_dark_spot_normalisation(path_to_tif, X_specific_point = False, Y_
     else:
         blue_current,green_current,red_current,nir_current = df[(round(df['Y'],6) == round(Y_specific_point,6)) & (round(df['X'],6) == round(X_specific_point,6))]
 
-    blue_diff_add = dark_coefficents['Blue'].values[0]-blue_current
-    green_diff_add = dark_coefficents['Green'].values[0]-green_current
-    red_diff_add = dark_coefficents['Red'].values[0]-red_current
-    nir_diff_add = dark_coefficents['Nir'].values[0]-nir_current
+    blue_diff_add = dark_spot_coefficents['Blue'].values[0]-blue_current
+    green_diff_add = dark_spot_coefficents['Green'].values[0]-green_current
+    red_diff_add = dark_spot_coefficents['Red'].values[0]-red_current
+    nir_diff_add = dark_spot_coefficents['Nir'].values[0]-nir_current
 
 
     src = rasterio.open(path_to_tif).read(masked=True)
