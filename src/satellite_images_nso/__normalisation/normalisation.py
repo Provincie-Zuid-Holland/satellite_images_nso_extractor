@@ -174,7 +174,63 @@ def multidate_normalisation_75th_percentile(path_to_tif):
       
     with rasterio.open(ahn_outpath, 'w', **meta) as outds:        
         outds.write(src)
-        
-     
-    
 
+
+def multi_date_dark_spot_normalisation(path_to_tif, X_specific_point = False, Y_specific_point =False):
+    """
+        Black point normalisation based on the most darkest point in the landsat image.
+        Save a new .tif file with the normalisation.
+
+        The coefficients are again pre calculated, if you wish to use your own replace the black point coefficients .csv file.
+    
+        @param path_to_tif: Path to the .tif to be used.
+        @param X_specific_point: X coordinates of a specific point in the .tif file on which you want to normalize. In RD coordinates!
+        @param Y_specific_point: Y coordinates of a specific point in the .tif file on which you want to normalize. In RD coordinates!
+    """
+
+    script_dir = os.path.dirname(__file__)
+    dark_coefficents = pd.read_csv(script_dir+"/coefficients/dark-coefficients_pd.csv")
+
+    print("-------- Dark Spot Normalisation for file: \n"+path_to_tif)
+    df = nso_manipulator.tranform_vector_to_pixel_df(path_to_tif)
+
+       
+    if X_specific_point == False:
+        blue_current,green_current,red_current,nir_current = df.min()[['blue','green','red','nir']]   
+    else:
+        blue_current,green_current,red_current,nir_current = df[(round(df['Y'],6) == round(Y_specific_point,6)) & (round(df['X'],6) == round(X_specific_point,6))]
+
+    blue_diff_add = dark_coefficents['Blue'].values[0]-blue_current
+    green_diff_add = dark_coefficents['Green'].values[0]-green_current
+    red_diff_add = dark_coefficents['Red'].values[0]-red_current
+    nir_diff_add = dark_coefficents['Nir'].values[0]-nir_current
+
+
+    src = rasterio.open(path_to_tif).read(masked=True)
+    meta = rasterio.open(path_to_tif).meta.copy()
+      
+    fig, (axrgb, axhist) = pyplot.subplots(1, 2, figsize=(14,7))
+    plot_out_image = np.clip(src[2::-1],
+                    0,2200)/2200
+
+    rasterio.plot.show(plot_out_image, ax=axrgb, title="Original")
+      
+    src[0] = src[0]+blue_diff_add
+    src[1] = src[1]+green_diff_add 
+    src[2] = src[2]+red_diff_add 
+    src[3] = src[3]+nir_diff_add 
+      
+    ahn_outpath = path_to_tif.split(".")[0]+"_dark_point_normalised.tif"
+
+      
+    print("Saving file to:")
+    print(ahn_outpath)
+     
+    plot_out_image_2 = np.clip(src[2::-1],
+                    0,2200)/2200
+    
+    rasterio.plot.show(plot_out_image_2, ax=axhist, title="Multi-date Dark Point Relative Normalisation")
+    pyplot.show()
+      
+    with rasterio.open(ahn_outpath, 'w', **meta) as outds:        
+        outds.write(src)
