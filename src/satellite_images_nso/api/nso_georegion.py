@@ -6,6 +6,7 @@ import glob
 import geopandas as gpd
 import json
 from satellite_images_nso.__logger import logger_nso
+from satellite_images_nso.__normalisation import normalisation
 import shutil
 
 
@@ -99,9 +100,14 @@ class nso_georegion:
             logger.info("Cropped file is found at: "+cropped_path)
             logger.info("The NDVI picture is found at: "+nvdi_path)
             logger.info("NDVI numpy arrat i found at: "+nvdi_matrix)
+
+            print("Cropped file is found at: "+str(cropped_path ))
+            print("The NDVI picture is found at: "+nvdi_path)
+            print("NDVI numpy arrat i found at: "+nvdi_matrix)
             return cropped_path, nvdi_path, nvdi_matrix
+            
                       
-    def execute_link(self, link, calculate_nvdi = True, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True):
+    def execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True, relative_normalize = False):
         """ 
             Executes the download, croppend 67and the calculating of the NVDI for a specific link.
         
@@ -123,7 +129,12 @@ class nso_georegion:
             nso_api.download_link(link,download_archive_name, self.username, self.password)
             extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
   
-            cropped_path, nvdi_path , nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi )
+            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder)
+            
+            # Multi date normalize the file.
+            if relative_normalize == True:
+                normalisation.multidate_normalisation_75th_percentile(cropped_path)
+            
         except Exception as e: 
             logger.info("Error in downloading and or cropping: "+str(e))
             print("Error in downloading and or cropping: "+str(e))
