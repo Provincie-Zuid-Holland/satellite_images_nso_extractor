@@ -107,7 +107,7 @@ class nso_georegion:
             return cropped_path, nvdi_path, nvdi_matrix
             
                       
-    def execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True, relative_normalize = False):
+    def execute_link(self, link, calculate_nvdi = True,  delete_zip_file = True, delete_source_files = True, check_if_file_exists = True, relative_75th_normalize = False):
         """ 
             Executes the download, croppend 67and the calculating of the NVDI for a specific link.
         
@@ -126,23 +126,30 @@ class nso_georegion:
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
 
+            logger.info("Starting download to: "+download_archive_name)
+            print("Starting download to: "+download_archive_name)
             nso_api.download_link(link,download_archive_name, self.username, self.password)
+
+            logger.info("Extracting files")
+            print("Extracting files")
             extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
-  
-            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder)
+
+            logger.info("Extracted folder is: "+extracted_folder)
+            print("Extracted folder is: "+extracted_folder)
+            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi)
             
             # Multi date normalize the file.
-            if relative_normalize == True:
+            if relative_75th_normalize == True:
                 normalisation.multidate_normalisation_75th_percentile(cropped_path)
             
+            logger.info("Succesfully cropped .tif file")
+            print("Succesfully cropped .tif file")
         except Exception as e: 
             logger.info("Error in downloading and or cropping: "+str(e))
             print("Error in downloading and or cropping: "+str(e))
             
         if delete_source_files == True and 'extracted_folder' in globals():
             shutil.rmtree(extracted_folder)
-
-        logger.info("Succesfully cropped .tif file")
 
         return cropped_path, nvdi_path, nvdi_matrix
 
