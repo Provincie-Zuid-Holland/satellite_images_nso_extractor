@@ -187,7 +187,7 @@ def multidate_normalisation_75th_percentile(path_to_tif):
         outds.write(src)
 
 
-def multi_date_dark_spot_normalisation(path_to_tif, X_specific_point = False, Y_specific_point =False):
+def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False, X_specific_point = False, Y_specific_point =False, ):
     """
         Black point normalisation based on the most darkest point in the landsat image.
         Save a new .tif file with the normalisation.
@@ -216,16 +216,27 @@ def multi_date_dark_spot_normalisation(path_to_tif, X_specific_point = False, Y_
 
        
     if X_specific_point == False:
-        blue_current,green_current,red_current,nir_current = df.min()[['blue','green','red','nir']]   
+
+        if  satellite_image_name != False:
+            print(dark_spot_coefficents['filename'])
+            print(satellite_image_name)
+            dark_spot_coefficents_file = dark_spot_coefficents[dark_spot_coefficents['filename'].str.contains(satellite_image_name)]
+            blue_diff_add = dark_spot_coefficents_file['blue_coefficients'].values[0]
+            green_diff_add = dark_spot_coefficents_file['green_coefficients'].values[0]
+            red_diff_add = dark_spot_coefficents_file['red_coefficients'].values[0]
+            nir_diff_add = dark_spot_coefficents_file['nir_coefficients'].values[0]
+
+
     else:
         blue_current,green_current,red_current,nir_current = df[(round(df['Y'],6) == round(Y_specific_point,6)) & (round(df['X'],6) == round(X_specific_point,6))]
+        blue_diff_add = dark_spot_coefficents['blue_coefficients'].values[0]-blue_current
+        green_diff_add = dark_spot_coefficents['green_coefficients'].values[0]-green_current
+        red_diff_add = dark_spot_coefficents['red_coefficients'].values[0]-red_current
+        nir_diff_add = dark_spot_coefficents['nir_coefficients'].values[0]-nir_current
 
-    blue_diff_add = dark_spot_coefficents['Blue'].values[0]-blue_current
-    green_diff_add = dark_spot_coefficents['Green'].values[0]-green_current
-    red_diff_add = dark_spot_coefficents['Red'].values[0]-red_current
-    nir_diff_add = dark_spot_coefficents['Nir'].values[0]-nir_current
+   
 
-
+    print(blue_diff_add, green_diff_add, red_diff_add, nir_diff_add )
     src = rasterio.open(path_to_tif).read(masked=True)
     meta = rasterio.open(path_to_tif).meta.copy()
       
