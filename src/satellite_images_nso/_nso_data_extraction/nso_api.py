@@ -26,6 +26,26 @@ import sys
 logger = logger_nso.init_logger()
 
 
+def download_file(url, local_filename, user_n, pass_n):
+    """
+        Method for downloading files in chunk
+    """
+    
+    # NOTE the stream=True parameter below
+    with requests.get(url, auth = HTTPBasicAuth(user_n, pass_n), stream=True) as r:
+        logger.info("Downloading file: "+url)
+        print("Downloading file: "+url)
+        r.raise_for_status()
+     
+        with open(local_filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192): 
+                # If you have chunk encoded response uncomment if
+                # and set chunk_size parameter to None.
+                #if chunk: 
+                f.write(chunk)
+    return local_filename
+
+
 
 def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3,):
     """
@@ -82,17 +102,32 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
         @param absolute_path: the filename and path where the file will get downloaded.
     """
 
-    # Check if file is already downloaded.
-    if os.path.isfile(absolute_path) is True:
-        logger.info(absolute_path+" is already downloaded in \n" )
-        print("File already downloaded: \n"+absolute_path)
-    else:    
-        r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
-        #retrieving data from the URL using get method
-        with open(absolute_path, 'wb') as f:
-            #giving a name and saving it in any required format
-            #opening the file in write mode
-            f.write(r.content)
+    try:
+        # Check if file is already downloaded.
+        if os.path.isfile(absolute_path) is True:
+            logger.info(absolute_path+" is already downloaded in \n" )
+            print("File already downloaded: \n"+absolute_path)
+        else:    
+            
+            #r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
+            download_file(link, absolute_path, user_n, pass_n)
+            
+            #logger.info("Status code from the request: "+r.status_code)
+            #print("Status code from the request: "+r.status_code)
+            #logger.info("This is the text: "+r.text)
+            #print("This is the text: "+r.text)
+
+            #Retrieving data from the URL using get method
+            #with open(absolute_path, 'wb') as f:
+                #giving a name and saving it in any required format
+                #opening the file in write mode
+            #    f.write(r.content)
+            #f.close()
+            #r.close()
+    except Exception as e:
+        logger.info("Error downloading file: "+str(e))
+        print("Error downloading file: "+str(e))  # This is the correct syntax
+        raise SystemExit(e)
 
 def unzip_delete(path,delete = True): 
     """
