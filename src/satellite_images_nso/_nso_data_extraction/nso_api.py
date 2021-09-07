@@ -28,7 +28,11 @@ logger = logger_nso.init_logger()
 
 def download_file(url, local_filename, user_n, pass_n):
     """
+<<<<<<< HEAD
         Method for downloading files in chunk
+=======
+        Method for downloading files in chunks mostly data from the NSO is too large to fit into memory with a normal   
+>>>>>>> pzh
     """
     
     # NOTE the stream=True parameter below
