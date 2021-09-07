@@ -148,8 +148,11 @@ class nso_georegion:
             logger.info("Error in downloading and or cropping: "+str(e))
             print("Error in downloading and or cropping: "+str(e))
             
-        if delete_source_files == True and 'extracted_folder' in globals():
-            shutil.rmtree(extracted_folder)
+        if delete_source_files == True:
+            try:
+                shutil.rmtree(extracted_folder)
+            except Exception as e: 
+                print("Failed to delete source files: "+str(e))
 
         return cropped_path, nvdi_path, nvdi_matrix
 
