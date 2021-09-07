@@ -33,6 +33,7 @@ We here have our custom coefficients, make your own coefficients for your own im
 @author: Michael de Winter.
 """
 from satellite_images_nso._manipulation import nso_manipulator
+from satellite_images_nso.__logger import logger_nso
 import pandas as pd
 from matplotlib import pyplot
 import rasterio
@@ -42,9 +43,18 @@ import glob
 import os
 import io
 import requests
+import platform
+import time
 
 
-def get_season_for_month(month):
+"""
+    Helper functions.
+"""
+
+logger = logger_nso.init_logger()
+
+
+def __get_season_for_month(month):
     """
         This method get the season for a specific month for a number of a month.
 
@@ -64,6 +74,40 @@ def get_season_for_month(month):
         season_str = "Fall"
     return season_str, season
 
+def __creation_date(path_to_file):
+    """
+    Try to get the date that a file was created, falling back to when it was
+    last modified if that isn't possible.
+    See http://stackoverflow.com/a/39501288/1709587 for explanation.
+    """
+    if platform.system() == 'Windows':
+        return os.path.getctime(path_to_file)
+    else:
+        stat = os.stat(path_to_file)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            return stat.st_mtime  
+
+def __is_file_older_than_x_days(file, days=1): 
+    """
+    
+    Comparison check to see if a file is older than a  couple of days.
+
+    @param file: Path to a file to check if it's older than specific date.
+    @param days: The days which are older to check.
+    """
+    file_time = __creation_date(file) 
+    # Check against 24 hours 
+    return ((time.time() - file_time) / 3600 > 24*days) 
+
+"""
+     End helper functions.
+""" 
+
+
 def extract_multi_date_normalisation_coefficients(path_to_tif_files):
     """ 
         This method generates coefficients for a folder of .tif files.
@@ -82,7 +126,7 @@ def extract_multi_date_normalisation_coefficients(path_to_tif_files):
         count = 0
         for file in glob.glob(path_to_tif_files+"*"):
             if ".csv" not in file:
-                season = get_season_for_month(file.split("/")[-1][4:6])[0]
+                season = __get_season_for_month(file.split("/")[-1][4:6])[0]
 
                 if season == season_cur:
                     df = nso_manipulator.tranform_vector_to_pixel_df(file)
@@ -132,23 +176,31 @@ def multidate_normalisation_75th_percentile(path_to_tif):
         @return: returns a .tif file with 75th percentile normalisation.
     """
 
-    season = get_season_for_month(path_to_tif.split("/")[-1][4:6])[0]
-    
-    # Check the PZH blob storage for the most recent multi data coefficients.
-    url="https://a804bee12d94d498fbfe55e2.blob.core.windows.net/satellite-images-nso/coefficients/Multi-date-index-coefficients_pd.csv"
-    s=requests.get(url).content
-    if s is not None and s != '':
-        print("Downloading most recent coefficients")
-        multidate_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
-    else:
+
+    script_dir = os.path.dirname(__file__)
+    coefficients = script_dir+"/coefficients/Multi-date-index-coefficients_pd.csv"
+    multidate_coefficents = ""
+
+    if __is_file_older_than_x_days(coefficients,1) == True:
+      
+        # Check the PZH blob storage for the most recent multi data coefficients.
+        url="https://a804bee12d94d498fbfe55e2.blob.core.windows.net/satellite-images-nso/coefficients/Multi-date-index-coefficients_pd.csv"
+        s=requests.get(url).content
+
+        if s is not None and s != '':
+            print("Downloading most recent coefficients")
+            logger.info("Downloading most recent coefficients")
+            multidate_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
+    if multidate_coefficents == "":
         print("Using local coefficients")
-        script_dir = os.path.dirname(__file__)
+        logger.info("Using local coefficients")
         multidate_coefficents = pd.read_csv(script_dir+"/coefficients/Multi-date-index-coefficients_pd.csv")
 
+    season = __get_season_for_month(path_to_tif.split("/")[-1][4:6])[0]
     multidate_coefficents = multidate_coefficents[multidate_coefficents['Season'] == season]
-
-
+ 
     print("-------- Multi-date Relative Normalisation for file: \n"+path_to_tif)
+
     df = nso_manipulator.tranform_vector_to_pixel_df(path_to_tif)
     blue_mean_current, green_mean_current, red_mean_current, nir_mean_current =  df[['blue','green','red','nir']].quantile(0.75)
     
@@ -199,32 +251,49 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
         @param Y_specific_point: Y coordinates of a specific point in the .tif file on which you want to normalize. In RD coordinates!
     """
 
+    script_dir = os.path.dirname(__file__)
+    coefficients = script_dir+"/coefficients/dark-spot-coefficients_pd.csv"
+   
+    dark_spot_coefficents = ""
 
-     # Check the PZH blob storage for the most recent multi data coefficients.
-    url="https://a804bee12d94d498fbfe55e2.blob.core.windows.net/satellite-images-nso/coefficients/dark-spot-coefficients_pd.csv"
-    s=requests.get(url).content
-    if s is not None and s != '':
-        print("Downloading most recent coefficients")
-        dark_spot_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
-    else:
+    if __is_file_older_than_x_days(coefficients,1) == True:
+      
+        # Check the PZH blob storage for the most recent multi data coefficients.
+        url="https://a804bee12d94d498fbfe55e2.blob.core.windows.net/satellite-images-nso/coefficients/dark-spot-coefficients_pd.csv"
+        s=requests.get(url).content
+        if s is not None and s != '':
+            print("Downloading most recent coefficients")
+            logger.info("Downloading most recent coefficients")
+            dark_spot_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
+
+    if dark_spot_coefficents == "":
         print("Using local coefficients")
+        logger.info("Using local coefficients")
         script_dir = os.path.dirname(__file__)
         dark_spot_coefficents = pd.read_csv(script_dir+"/coefficients/dark-spot-coefficients_pd.csv")
-
+    
     print("-------- Dark Spot Normalisation for file: \n"+path_to_tif)
     df = nso_manipulator.tranform_vector_to_pixel_df(path_to_tif)
 
-       
+    blue_diff_add = 0
+    green_diff_add = 0
+    red_diff_add = 0
+    nir_diff_add = 0
+
     if X_specific_point == False:
 
         if  satellite_image_name != False:
-            print(dark_spot_coefficents['filename'])
+          
             print(satellite_image_name)
             dark_spot_coefficents_file = dark_spot_coefficents[dark_spot_coefficents['filename'].str.contains(satellite_image_name)]
-            blue_diff_add = dark_spot_coefficents_file['blue_coefficients'].values[0]
-            green_diff_add = dark_spot_coefficents_file['green_coefficients'].values[0]
-            red_diff_add = dark_spot_coefficents_file['red_coefficients'].values[0]
-            nir_diff_add = dark_spot_coefficents_file['nir_coefficients'].values[0]
+            if dark_spot_coefficents_file.empty:
+                print("No coefficients found for satellite image! Defaulting to nothing!")
+                logger.info("No coefficients found for satellite image! Defaulting to nothing!")
+            else:
+                blue_diff_add = dark_spot_coefficents_file['blue_coefficients'].values[0]
+                green_diff_add = dark_spot_coefficents_file['green_coefficients'].values[0]
+                red_diff_add = dark_spot_coefficents_file['red_coefficients'].values[0]
+                nir_diff_add = dark_spot_coefficents_file['nir_coefficients'].values[0]
 
 
     else:
