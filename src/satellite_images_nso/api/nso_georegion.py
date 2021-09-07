@@ -154,11 +154,6 @@ class nso_georegion:
             except Exception as e: 
                 print("Failed to delete source files: "+str(e))
 
-<<<<<<< HEAD
-        logger.info("Succesfully cropped .tif file")
-
-=======
->>>>>>> 0445b71112c9f95c1ec723a6fc406e07b42a2d2d
         return cropped_path, nvdi_path, nvdi_matrix
 
 
