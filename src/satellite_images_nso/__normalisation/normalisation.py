@@ -325,6 +325,8 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
       
     print("Saving file to:")
     print(ahn_outpath)
+    logger.info("Saving file to:")
+    logger.info(ahn_outpath)
      
     plot_out_image_2 = np.clip(src[2::-1],
                     0,2200)/2200
