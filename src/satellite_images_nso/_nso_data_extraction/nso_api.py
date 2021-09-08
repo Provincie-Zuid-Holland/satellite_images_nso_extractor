@@ -27,8 +27,15 @@ logger = logger_nso.init_logger()
 
 
 def download_file(url, local_filename, user_n, pass_n):
-    """
-        Method for downloading files in chunk
+    """s
+        Method for downloading files in chunks mostly data from the NSO is too large to fit into memory with a normal download.
+
+
+        @param url: The url to do the get request from.
+        @param local_filename: The filename when it's stored locally.
+        @param user_n: When authentication is needed the username.
+        @param pass_n: When authentication is needed the password.
+        @return the localfile
     """
     
     # NOTE the stream=True parameter below
@@ -47,7 +54,7 @@ def download_file(url, local_filename, user_n, pass_n):
 
 
 
-def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3,):
+def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3):
     """
         This functions retrieves download links for satellite image corresponding to the region in the geojson.
 
@@ -132,6 +139,10 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
 def unzip_delete(path,delete = True): 
     """
         Unzip a zip file and delete the .zip file.
+
+        @param path: Path to the zip file.
+        @param delete: Whether to delete the original .zip file or not.
+        @return path to folder of the unzipped directory.
     """
     with zipfile.ZipFile(path, 'r') as zip_ref:
         zip_ref.extractall(path.replace(".zip",""))
@@ -146,9 +157,11 @@ def check_if_geojson_in_region(row,projected_shape):
     """
         This method checks if the geojson is fully in the TCI raster.
 
-        TODO: For now it's only fully in the georegion on which the cloud coverage is calculated.      
+        TODO: Cloudcoverage for the cropped file, now it's still calculated on the full LandSate image.
+             
         @param src_TCI_raster_dataset: The rasterio opened TCI raster.
         @param projected_shape: The geojson warped to the src of the copernicus crs.
+        @return return_statement: Whether or not the geojson is fully in the LandSat image.
     """
     
     return_statement = False 
