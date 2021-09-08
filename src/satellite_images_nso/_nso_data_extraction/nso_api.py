@@ -28,11 +28,7 @@ logger = logger_nso.init_logger()
 
 def download_file(url, local_filename, user_n, pass_n):
     """
-<<<<<<< HEAD
-        Method for downloading files in chunk
-=======
         Method for downloading files in chunks mostly data from the NSO is too large to fit into memory with a normal   
->>>>>>> pzh
     """
     
     # NOTE the stream=True parameter below
@@ -51,7 +47,7 @@ def download_file(url, local_filename, user_n, pass_n):
 
 
 
-def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3,):
+def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3):
     """
         This functions retrieves download links for satellite image corresponding to the region in the geojson.
 
