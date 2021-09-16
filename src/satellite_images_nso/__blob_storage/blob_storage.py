@@ -2,8 +2,16 @@ from typing import Container
 from azure.storage.blob import ContainerClient
 import pandas as pd
 from os import path
+"""
+
+Class for working with Azure blob storage.
+
+Used for downloading and checking if files where already uploaded to blobstorage.
 
 
+@Author: Michael de Winter, Jeroen Esseveld
+
+"""
 class blob_container:
 
     def __init__(self, connection_string: str, container_name: str):
