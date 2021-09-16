@@ -1,7 +1,7 @@
 from typing import Container
 from azure.storage.blob import ContainerClient
 import pandas as pd
-
+from os import path
 
 
 class blob_container:
@@ -42,3 +42,11 @@ class blob_container:
 
     def get_container(self):
         return self.container
+    
+    def check_new_tiff_file(owned_files, nso_files):
+        """
+            Check whether NSO provides new tiff files with respect to the list of stored tiff files.
+        """
+        owned_files = "#".join([path.basename(file) for file in owned_files])
+        nso_files = [path.basename(file) for file in nso_files]
+        return list(filter(lambda x: x not in owned_files, nso_files))
