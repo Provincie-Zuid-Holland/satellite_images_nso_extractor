@@ -2,13 +2,22 @@ from typing import Container
 from azure.storage.blob import ContainerClient
 import pandas as pd
 
+"""
+    Various functions to upload files to a Azure blob storage.
+    Not needed in the main project but can be used as a example to upload to Azure blob storages.
 
+
+    @author Michael de Winter
+"""
 
 class blob_container:
 
     def __init__(self, connection_string: str, container_name: str):
         """
             Init a blob storage container.
+
+            @param connection_string: The connection string for the blob storage.
+            @param container_name: The name of the container.
         """
 
         self.container = ContainerClient.from_connection_string(conn_str=connection_string,\
@@ -36,6 +45,12 @@ class blob_container:
 
 
     def upload_file_rm_blob(self,path_to_file, name):
+        """
+            Uploads a file to a blob storage.
+
+            @path_to_file: File path to the file, which needs to be uploaded.
+            @name: The name of the file when uploaded in the blob storage.
+        """
 
         with open(path_to_file, "rb") as data:      
             self.container.upload_blob(name,data)
