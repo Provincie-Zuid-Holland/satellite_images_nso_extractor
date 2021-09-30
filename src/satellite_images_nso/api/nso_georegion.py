@@ -44,9 +44,15 @@ class nso_georegion:
         self.path_to_geojson = correct_file_path(path_to_geojson)
         # Name needs to be included in the geojson name.
         self.region_name = path_to_geojson.split("/")[len(path_to_geojson.split("/"))-1].split('.')[0]
-        # georegion is a variable which contains the coordinates in the geojson, which should be WGS!
-        self.georegion = self.__getFeatures(self.path_to_geojson)[0]
-        if len(self.georegion) == 0 :
+
+        self.georegion = False
+        try:
+            # georegion is a variable which contains the coordinates in the geojson, which should be WGS!
+            self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+        except Exception as e:
+            print(e)
+
+        if self.georegion == False :
             raise Exception("Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session")
 
         self.output_folder = correct_file_path(output_folder)
@@ -62,10 +68,16 @@ class nso_georegion:
             @param path: The path to a geojson.
             @return coordinates which rasterio wants to have.
         """
-        return [json.loads(gpd.read_file(path).to_json())['features'][0]['geometry']['coordinates']]
+        json_loaded = json.loads(gpd.read_file(path).to_json())
+
+        if json_loaded['features'][0]['geometry']['type']  == 'MultiPolygon':
+            logger.info("Caution multiploygons are not well supported!")
+            print("Caution multiploygons are not well supported!")
+
+        return [json_loaded['features'][0]['geometry']['coordinates']]
 
 
-    def retrieve_download_links(self,start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3):
+    def retrieve_download_links(self,start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3 ,strict_region = True):
         """
             This functions retrieves download links for area chosen in the geojson for the nso.
 
@@ -73,10 +85,10 @@ class nso_georegion:
             @param start_date: From when satelliet date needs to be looked at.
             @param end_date: the end date of the period which needs to be looked at
             @param max_meters: Maximum resolution which needs to be looked at.
-
+            @param strict_region: A filter applied to links which have to fully contain the region in the geojson.
             @return: the found download links.
         """
-        return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3)
+        return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters =3 ,strict_region = True)
 
     def crop_and_calculate_nvdi(self,path, calculate_nvdi):
         """
@@ -148,8 +160,11 @@ class nso_georegion:
             logger.info("Error in downloading and or cropping: "+str(e))
             print("Error in downloading and or cropping: "+str(e))
             
-        if delete_source_files == True and 'extracted_folder' in globals():
-            shutil.rmtree(extracted_folder)
+        if delete_source_files == True:
+            try:
+                shutil.rmtree(extracted_folder)
+            except Exception as e: 
+                print("Failed to delete source files: "+str(e))
 
         return cropped_path, nvdi_path, nvdi_matrix
 
