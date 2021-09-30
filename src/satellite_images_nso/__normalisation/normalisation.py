@@ -79,6 +79,8 @@ def __creation_date(path_to_file):
     Try to get the date that a file was created, falling back to when it was
     last modified if that isn't possible.
     See http://stackoverflow.com/a/39501288/1709587 for explanation.
+
+    @param: File path for a file to be checked.
     """
     if platform.system() == 'Windows':
         return os.path.getctime(path_to_file)
@@ -200,6 +202,7 @@ def multidate_normalisation_75th_percentile(path_to_tif):
     multidate_coefficents = multidate_coefficents[multidate_coefficents['Season'] == season]
  
     print("-------- Multi-date Relative Normalisation for file: \n"+path_to_tif)
+    logger.info("-------- Multi-date Relative Normalisation for file: \n"+path_to_tif)
 
     df = nso_manipulator.tranform_vector_to_pixel_df(path_to_tif)
     blue_mean_current, green_mean_current, red_mean_current, nir_mean_current =  df[['blue','green','red','nir']].quantile(0.75)
@@ -228,7 +231,9 @@ def multidate_normalisation_75th_percentile(path_to_tif):
       
     print("Saving file to:")
     print(ahn_outpath)
-     
+    logger.info("Saving file to:")
+    logger.info(ahn_outpath)
+
     plot_out_image_2 = np.clip(src[2::-1],
                     0,2200)/2200
     
@@ -247,6 +252,7 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
         The coefficients are again pre calculated, if you wish to use your own replace the black point coefficients .csv file.
     
         @param path_to_tif: Path to the .tif to be used.
+        @param satellite_image_name: Name of the satellite image to get coefficients for. We have calculate coefficients for a couple satellite images for normalisation based on the darkest spot in common with all these images.
         @param X_specific_point: X coordinates of a specific point in the .tif file on which you want to normalize. In RD coordinates!
         @param Y_specific_point: Y coordinates of a specific point in the .tif file on which you want to normalize. In RD coordinates!
     """
@@ -273,6 +279,8 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
         dark_spot_coefficents = pd.read_csv(script_dir+"/coefficients/dark-spot-coefficients_pd.csv")
     
     print("-------- Dark Spot Normalisation for file: \n"+path_to_tif)
+    logger.info("-------- Dark Spot Normalisation for file: \n"+path_to_tif)
+
     df = nso_manipulator.tranform_vector_to_pixel_df(path_to_tif)
 
     blue_diff_add = 0
@@ -325,6 +333,8 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
       
     print("Saving file to:")
     print(ahn_outpath)
+    logger.info("Saving file to:")
+    logger.info(ahn_outpath)
      
     plot_out_image_2 = np.clip(src[2::-1],
                     0,2200)/2200
