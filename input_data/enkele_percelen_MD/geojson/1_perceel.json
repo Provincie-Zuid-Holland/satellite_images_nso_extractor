@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "MI_PRINX": 57609, "Nr_Planeen": "414", "Planeenhei": "Noordrand van Rotterdam", "Activiteit": "MAAIEN EN AFVOEREN", "Jaar": "2021", "Geometrie": "Geometrie: 07/E08 BV N13.01 Vochtig weidevogelgrasland", "Planning": "Na 15 juni; 1, 2 of 3 keer maaien en afvoeren verplicht, 1 november kaal opleveren", "Verslagleg": null, "Afwijking": 0.0, "Oppervlakt": 1.5174, "vergelijki": "1A" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 4.431064939395022, 51.963601281671835 ], [ 4.431400947646808, 51.963293316976589 ], [ 4.428948467113755, 51.962288348561572 ], [ 4.427756481800187, 51.961804304061083 ], [ 4.427076317064407, 51.96152556772568 ], [ 4.427011596934391, 51.96149904392675 ], [ 4.426918476032861, 51.961460890483551 ], [ 4.426579855451738, 51.961772497606134 ], [ 4.426702705504221, 51.961807828938774 ], [ 4.426762099245607, 51.961832367841296 ], [ 4.428099010065981, 51.962384669370685 ], [ 4.429021156455303, 51.962762323793228 ], [ 4.429940340519313, 51.963141780469719 ], [ 4.431064939395022, 51.963601281671835 ] ] ] } }
+]
+}
