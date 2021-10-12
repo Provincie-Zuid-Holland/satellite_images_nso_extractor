@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "heel_geojson_perceel",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": null }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 4.304031008278276, 51.945073089797575 ], [ 4.363065449742698, 51.968108586068695 ], [ 4.466379809793538, 51.973651518777004 ], [ 4.420278517225428, 51.955112477659156 ], [ 4.311372095848447, 51.939513816217719 ], [ 4.304031008278276, 51.945073089797575 ] ] ] ] } }
+]
+}
