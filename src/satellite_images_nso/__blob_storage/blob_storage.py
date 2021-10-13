@@ -26,7 +26,7 @@ class blob_container:
     def create_df_current_tiff_files(self,blob_url,folder =""):
         """
             Create a pandas dataframe of the current .tif stored in the blob storage.
-            Basically it stores meta data about the cut off .tif images in the databases.
+            Basically it stores meta data about the cropped .tif images in the databases.
         """
         urls = []
         filenames = []

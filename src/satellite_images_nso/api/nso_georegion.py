@@ -55,7 +55,10 @@ class nso_georegion:
         if self.georegion == False :
             raise Exception("Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session")
 
-        self.output_folder = correct_file_path(output_folder)
+        if os.path.isdir(output_folder)  == True:
+            self.output_folder = correct_file_path(output_folder)
+        else:
+            raise ValueError('Output directory does not exists')
        
         self.username = username
         self.password = password
