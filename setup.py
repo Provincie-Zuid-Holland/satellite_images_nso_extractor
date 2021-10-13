@@ -8,7 +8,7 @@ setup(
     version="1.1.15",
     author="Michael de Winter",
     author_email="m.r.dewinter88@live.nl",
-    description="Satellie extraction and cutter",
+    description="Satellie extraction and cropper",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ProvZH/satellite_images_nso",

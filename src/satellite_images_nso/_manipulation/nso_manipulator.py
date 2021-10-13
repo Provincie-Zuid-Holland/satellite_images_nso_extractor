@@ -20,16 +20,16 @@ import shutil
 from satellite_images_nso.__logger import logger_nso
 
 """
-    This is a python class for making various manipulationg such as making cuts out of .tif files, nvdi calculations and exporting to geopandas.
+    This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
 
     @author: Michael de Winter.
 """
 
 logger = logger_nso.init_logger()
 
-def __make_the_cut(load_shape, raster_path, raster_path_cropped):
+def __make_the_crop(load_shape, raster_path, raster_path_cropped):
     """
-        This cuts the sattelite image with a chosen shape.
+        This crops the sattelite image with a chosen shape.
 
         TODO: Make this accept a object of geopandas or shapely and crs independant.
         @param load_schape: path to a geojson shape file.
@@ -127,7 +127,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
 
 def run(raster_path,  load_shape, output_folder , calculate_nvdi):
     """
-        Main run method, combines the cutting of the file based on the shape and calculates the NVDI index.
+        Main run method, combines the cropping of the file based on the shape and calculates the NVDI index.
 
         @param raster_path: path to a raster file.
         @param load_shape: path the file that needs to be cropped.
@@ -140,7 +140,7 @@ def run(raster_path,  load_shape, output_folder , calculate_nvdi):
     nvdi_output_classes_png_output_path = ""
 
     raster_path_cropped = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped.tif")
-    __make_the_cut(load_shape,raster_path,raster_path_cropped)
+    __make_the_crop(load_shape,raster_path,raster_path_cropped)
     
     # Path fix and move.
     raster_path_cropped = raster_path_cropped.replace("\\", "/") 

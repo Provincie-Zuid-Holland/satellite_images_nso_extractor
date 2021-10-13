@@ -12,13 +12,13 @@ def tranform_vector_to_pixel_gpdf(path_to_vector):
 
 def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
     """ 
-        Public wrapper around the nso manipulator to make a cut out of a NSO satellite image.
+        Public wrapper around the nso manipulator to make a crop out of a NSO satellite image.
 
         @oaram shape_file: Path to a geojson file.
-        @param path_to_tiff_file: Path to a tiff file to be cut.
-        @param output_path: Where the cut should be stored.
+        @param path_to_tiff_file: Path to a tiff file to be cropped.
+        @param output_path: Where the crop should be stored.
     """
-    return nso_manipulator.__make_the_cut(shape_file, path_to_tiff_file, output_path)
+    return nso_manipulator.__make_the_crop(shape_file, path_to_tiff_file, output_path)
 
 
 def get_season_for_month(month):
