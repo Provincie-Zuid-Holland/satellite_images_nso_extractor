@@ -43,7 +43,7 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped):
     if geo_file.crs != 'epsg:28992':
         geo_file = geo_file.to_crs(epsg=28992)
 
-    out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True)
+    out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True, filled=True)
     out_meta = src.meta
 
     out_meta.update({"driver": "GTiff",
