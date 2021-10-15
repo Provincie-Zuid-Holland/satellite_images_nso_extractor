@@ -66,13 +66,14 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped):
           transform=src.transform)
 
 
-def tranform_vector_to_pixel_df(path_to_vector):
+def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     """
     Maps a rasterio satellite vector object to a geo pandas dataframe per pixel. 
     With the corresponding x and y coordinates and NVDI.
 
 
     @param path_to_vector: path to a vector which be read with rasterio.
+    @param add_ndvi_column: WWether or not to add a ndvi column to the pandas dataframe.
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
 
@@ -108,6 +109,10 @@ def tranform_vector_to_pixel_df(path_to_vector):
 
     df = pd.DataFrame(data=data)
     geometry = gpd.points_from_xy(df.X, df.Y)
+
+    if add_ndvi_column == True:
+       df['nvdi'] = calculate_nvdi.normalized_diff(src.read()[3], src.read()[2])
+
     gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
     return gdf
 
