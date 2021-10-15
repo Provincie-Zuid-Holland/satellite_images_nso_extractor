@@ -55,7 +55,10 @@ class nso_georegion:
         if self.georegion == False :
             raise Exception("Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session")
 
-        self.output_folder = correct_file_path(output_folder)
+        if os.path.isdir(output_folder)  == True:
+            self.output_folder = correct_file_path(output_folder)
+        else:
+            raise ValueError('Output directory does not exists')
        
         self.username = username
         self.password = password
@@ -77,7 +80,7 @@ class nso_georegion:
         return [json_loaded['features'][0]['geometry']['coordinates']]
 
 
-    def retrieve_download_links(self,start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3 ,strict_region = True):
+    def retrieve_download_links(self, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters=3 , strict_region = True):
         """
             This functions retrieves download links for area chosen in the geojson for the nso.
 
@@ -90,7 +93,7 @@ class nso_georegion:
         """
         return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters =3 ,strict_region = True)
 
-    def crop_and_calculate_nvdi(self,path, calculate_nvdi):
+    def crop_and_calculate_nvdi(self, path, calculate_nvdi):
         """
             Function for the crop and the calculating of the NVDI index.
             Can be used as a standalone if you have already unzipped the file.
@@ -156,6 +159,7 @@ class nso_georegion:
             
             logger.info("Succesfully cropped .tif file")
             print("Succesfully cropped .tif file")
+
         except Exception as e: 
             logger.info("Error in downloading and or cropping: "+str(e))
             print("Error in downloading and or cropping: "+str(e))

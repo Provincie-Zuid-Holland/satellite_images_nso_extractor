@@ -240,7 +240,7 @@ def download_file(url, local_filename, user_n, pass_n):
 
 
 
-def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3, strict_region = True):
+def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters=3, strict_region = True, max_diff = 10000):
     """
         This functions retrieves download links for satellite image corresponding to the region in the geojson.
 
@@ -248,7 +248,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
         @param start_date: From when satelliet date needs to be looked at.
         @param end_date: the end date of the period which needs to be looked at
         @param max_meters: Maximum resolution which needs to be looked at.
-        @param strict_region: A filter applied to links which have to fully contain the region in the geojson
+        @param strict_region: A filter applied to links to only fully contain the region.
         @return: the found download links.
     """
 
@@ -284,7 +284,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01"
                     check_region = False
 
                     try:
-                       check_region = check_if_geojson_in_region(row,geojson_coordinates )
+                       check_region = check_if_geojson_in_region(row, geojson_coordinates, max_diff)
                     except Exception as e:
                           print(str(e)+" This error can be normal!" )
                           logger.info(str(e)+" This error can be normal!") 
@@ -350,28 +350,33 @@ def unzip_delete(path,delete = True):
     return path.replace(".zip","")
 
 
-def check_if_geojson_in_region(row,projected_shape):
+def check_if_geojson_in_region(row, geojson, max_diff = 10000 ):
     """
         This method checks if the geojson is fully in the TCI raster.
 
         TODO: For now it's only fully in the georegion on which the cloud coverage is calculated.      
-        @param src_TCI_raster_dataset: The rasterio opened TCI raster.
-        @param projected_shape: The geojson warped to the src of the copernicus crs.
+        @param row: the row of found satellite images which contain the geojson.
+        @param geojson: The selected region in the geojson.
+        @parak max_diff: The cutoff of max pixel distance between the regions.
     """
     
     return_statement = False 
     
     row_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in row['geometry']['coordinates'][0]])
-    geojson_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in projected_shape[0]])
+    geojson_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in geojson[0]])
     geojson_shape_xy = geojson_shape.boundary.xy
 
     xy_intersection = geojson_shape.intersection(row_shape).boundary.xy
     
     try:
+        # This checks if pixels values are the same for both of the shapes.
+        # If this isn't the case there should be min or max fluctations based on pixels which is filter with a threshold value. 
         difference_array = np.array(geojson_shape_xy) -  np.array(xy_intersection)
        
-        if max(difference_array.min(), difference_array.max(), key=abs) < 10000:
+       
+        if max(difference_array.min(), difference_array.max(), key=abs) < max_diff:
             return_statement = True
+
     except Exception as e: 
             print(e)
             print(row)
