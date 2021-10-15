@@ -1,13 +1,13 @@
 # Rename to nso_manipulator for more apporiate name.
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 
-def tranform_vector_to_pixel_gpdf(path_to_vector):
+def tranform_vector_to_pixel_gpdf(path_to_vector, add_ndvi_column = False):
     """
         Public wrapper around the nso manipulator for transforming a vector to a pixel geoDataFrame.
 
         @path_to_vector: Path to a .tiff file.
     """
-    return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector)
+    return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False)
 
 
 def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
