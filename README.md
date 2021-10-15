@@ -4,8 +4,13 @@ NSO provides free satellite images from the Netherlands, a downside however is t
 This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region.
 
 This python code crops a selected region out of the original satellite image based on a geojson, provided that the selected region is smaller than the original file.
+<<<<<<< HEAD
 And then saves this cutout thus reducing the unnecessary saved data. 
 A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) of the cutout region.
+=======
+And then saves this cropped image thus reducing the unnecessary saved data. 
+A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) of the cropped region.
+>>>>>>> github
 Also a option is for relative multidate normalisation is included for atmospheric correction. 
 
 This image gives a illustration: 
@@ -22,7 +27,11 @@ For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
+<<<<<<< HEAD
 1. First get a GeoJSON file of the region you want to cut. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that. Note the coordinates have to be in WGS84! ( Which should be standard for a geojson.) 
+=======
+1. First get a GeoJSON file of the region you want to be cropped. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that. Note the coordinates have to be in WGS84! ( Which should be standard for a geojson.) 
+>>>>>>> github
 2. Make a instance of nso_geojsonregion with instance of the geojson region you have, where you want to store the cropped files and the NSO account based on step 0.
 2. Retrieve download links for the specific region you want to have.
 3. Download the found links.
@@ -60,7 +69,11 @@ for link in links:
 # The output will stored in the designated output folder.
 georegion.execute_link(links_group[0])
 # The parameters are : execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True)
+<<<<<<< HEAD
 # With the parameters you can decide if you want to keep the original satellite files, such  as wether to keep the downloaded zip file or the extracted source files from which the cutout will be made.
+=======
+# With the parameters you can decide if you want to keep the original satellite files, such  as wether to keep the downloaded zip file or the extracted source files from which the crop will be made.
+>>>>>>> github
 
 
 # This function reads a .tif file, which is a format the satellite data is stored in,  and converts it to a pixel based geopandas dataframe.
