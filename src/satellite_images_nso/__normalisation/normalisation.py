@@ -254,7 +254,7 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
     script_dir = os.path.dirname(__file__)
     coefficients = script_dir+"/coefficients/dark-spot-coefficients_pd.csv"
    
-    dark_spot_coefficents = ""
+    dark_spot_coefficents = pd.DataFrame()
 
     if __is_file_older_than_x_days(coefficients,1) == True:
       
@@ -266,7 +266,7 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
             logger.info("Downloading most recent coefficients")
             dark_spot_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
 
-    if dark_spot_coefficents == "":
+    if dark_spot_coefficents.empty:
         print("Using local coefficients")
         logger.info("Using local coefficients")
         script_dir = os.path.dirname(__file__)
