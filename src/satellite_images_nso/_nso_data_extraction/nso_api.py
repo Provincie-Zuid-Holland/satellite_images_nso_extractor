@@ -149,7 +149,7 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
         print("Error downloading file: "+str(e))  # This is the correct syntax
         raise SystemExit(e)
 
-def unzip_delete(path,delete = True): 
+def unzip_delete(path,delete): 
     """
         Unzip a zip file and delete the .zip file.
     """
@@ -159,6 +159,7 @@ def unzip_delete(path,delete = True):
     if delete == True:
         os.remove(path)
 
+    zip_ref.close()
     return path.replace(".zip","")
 
 
