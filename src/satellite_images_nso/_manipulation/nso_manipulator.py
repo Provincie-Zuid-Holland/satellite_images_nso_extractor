@@ -78,26 +78,26 @@ def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     """
 
     gpf = ""
-    with rasterio.Env():
-            with rasterio.open(path_to_vector) as src:
-                crs = src.crs
+    
+    src =  rasterio.open(path_to_vector)
+    crs = src.crs
 
-                # create 1D coordinate arrays (coordinates of the pixel center)
-                xmin, ymax = np.around(src.xy(0.00, 0.00), 9)  # src.xy(0, 0)
-                xmax, ymin = np.around(src.xy(src.height-1, src.width-1), 9)  # src.xy(src.width-1, src.height-1)
-                x = np.linspace(xmin, xmax, src.width)
-                y = np.linspace(ymax, ymin, src.height)  # max -> min so coords are top -> bottom
+    # create 1D coordinate arrays (coordinates of the pixel center)
+    xmin, ymax = np.around(src.xy(0.00, 0.00), 9)  # src.xy(0, 0)
+    xmax, ymin = np.around(src.xy(src.height-1, src.width-1), 9)  # src.xy(src.width-1, src.height-1)
+    x = np.linspace(xmin, xmax, src.width)
+    y = np.linspace(ymax, ymin, src.height)  # max -> min so coords are top -> bottom
 
-                # create 2D arrays
-                xs, ys = np.meshgrid(x, y)
-                blue = src.read(1)
-                green = src.read(2)
-                red = src.read(3)
-                nir = src.read(4)
+    # create 2D arrays
+    xs, ys = np.meshgrid(x, y)
+    blue = src.read(1)
+    green = src.read(2)
+    red = src.read(3)
+    nir = src.read(4)
                 
-                # Apply NoData mask
-                mask = src.read_masks(1) > 0
-                xs, ys, blue, green, red, nir = xs[mask], ys[mask], blue[mask], green[mask], red[mask], nir[mask]
+    # Apply NoData mask
+    mask = src.read_masks(1) > 0
+    xs, ys, blue, green, red, nir = xs[mask], ys[mask], blue[mask], green[mask], red[mask], nir[mask]
 
     data = {"X": pd.Series(xs.ravel()),
             "Y": pd.Series(ys.ravel()),
@@ -111,9 +111,14 @@ def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     geometry = gpd.points_from_xy(df.X, df.Y)
 
     if add_ndvi_column == True:
-       df['nvdi'] = calculate_nvdi.normalized_diff(src.read()[3], src.read()[2])
-
+       df['ndvi'] = calculate_nvdi.normalized_diff(src.read()[3][mask], src.read()[2][mask])
+       df = df[['blue','green','red','nir','ndvi',"X","Y", 'geometry']]
+    else:
+        df = df[['blue','green','red','nir',"X","Y", 'geometry']]
+        
     gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
+    src.close()
+    
     return gdf
 
 
