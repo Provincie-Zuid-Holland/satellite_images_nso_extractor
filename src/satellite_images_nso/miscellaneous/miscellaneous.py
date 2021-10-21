@@ -1,6 +1,8 @@
 
 import rasterio
 from rasterio.merge import merge
+import numpy as np
+from matplotlib import pyplot as plt
 
 def merge_tif_files(tiff_lst, out_fp):
     """ 
@@ -39,10 +41,12 @@ def plot_tif_file(path_to_tif_file):
 
         @param path_to_tif_file: path to the tif file.
     """
-    src = rasterio.open(file)
+    src = rasterio.open(path_to_tif_file)
     plot_out_image = np.clip(src.read()[2::-1],
                     0,2200)/2200 # out_image[2::-1] selects the first three items, reversed
 
     plt.figure(figsize=(10,10))
     rasterio.plot.show(plot_out_image,
           transform=src.transform)
+    
+    

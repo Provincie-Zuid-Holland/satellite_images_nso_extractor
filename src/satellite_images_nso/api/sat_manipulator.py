@@ -7,7 +7,7 @@ def tranform_vector_to_pixel_gpdf(path_to_vector, add_ndvi_column = False):
 
         @path_to_vector: Path to a .tiff file.
     """
-    return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False)
+    return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column)
 
 
 def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
@@ -23,8 +23,7 @@ def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
 
 def get_season_for_month(month):
     """
-        A function that retrieves the season for a month/
-
+        A function that retrieves the season for a month
         @param a int month     
     """
     
