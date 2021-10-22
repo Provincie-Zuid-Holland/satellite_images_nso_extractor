@@ -3,6 +3,8 @@ import rasterio
 from rasterio.merge import merge
 import numpy as np
 from matplotlib import pyplot as plt
+import pandas as pd 
+
 
 def merge_tif_files(tiff_lst, out_fp):
     """ 
@@ -49,4 +51,17 @@ def plot_tif_file(path_to_tif_file):
     rasterio.plot.show(plot_out_image,
           transform=src.transform)
     
+
+def switch_crs(list_lat, list_long,crs_from, crs_to):
+    df = pd.DataFrame(
+    {
+     'Latitude_orginal': list_lat,
+     'Longitude_orginal': list_long})
+    
+    gdf = gpd.GeoDataFrame(
+    df, geometry=gpd.points_from_xy(df.Longitude_orginal, df.Latitude_orginal))
+    gdf = gdf.set_crs(crs_from, allow_override=True)
+    gdf = gdf.to_crs(epsg=crs_to)
+    
+    return gdf
     
