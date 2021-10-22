@@ -336,3 +336,31 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
       
     with rasterio.open(ahn_outpath, 'w', **meta) as outds:        
         outds.write(src)
+
+    def plot_tif_with_RGBI_coefficitiens(path_to_tif, blue_diff_add, red_diff_add, green_diff_add, nir_diff_add):
+        print(path_to_tif)
+        print(blue_diff_add, green_diff_add, red_diff_add, nir_diff_add )
+        src = rasterio.open(path_to_tif).read(masked=True)
+        meta = rasterio.open(path_to_tif).meta.copy()
+
+        fig, (axrgb, axhist) = pyplot.subplots(1, 2, figsize=(14,7))
+        plot_out_image = np.clip(src[2::-1],
+                            0,2200)/2200
+
+        rasterio.plot.show(plot_out_image, ax=axrgb, title="Original")
+
+        src[0] = src[0]+blue_diff_add
+        src[1] = src[1]+green_diff_add 
+        src[2] = src[2]+red_diff_add 
+        src[3] = src[3]+nir_diff_add 
+
+        outpath = path_to_tif.split(".")[0]+"_dark_point_normalised.tif"
+
+        plot_out_image_2 = np.clip(src[2::-1],
+                            0,2200)/2200
+
+        rasterio.plot.show(plot_out_image_2, ax=axhist, title="Multi-date Dark Point Relative Normalisation")
+        pyplot.show()
+
+        with rasterio.open(outpath, 'w', **meta) as outds:        
+            outds.write(src)
