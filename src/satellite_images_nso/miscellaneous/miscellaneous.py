@@ -4,7 +4,7 @@ from rasterio.merge import merge
 import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd 
-
+import geopandas as gpd
 
 def merge_tif_files(tiff_lst, out_fp):
     """ 
@@ -52,11 +52,12 @@ def plot_tif_file(path_to_tif_file):
           transform=src.transform)
     
 
-def switch_crs(list_lat, list_long,crs_from, crs_to):
+def switch_crs(list_lat, list_long, crs_from, crs_to):
     df = pd.DataFrame(
     {
      'Latitude_orginal': list_lat,
-     'Longitude_orginal': list_long})
+     'Longitude_orginal': list_long}
+     )
     
     gdf = gpd.GeoDataFrame(
     df, geometry=gpd.points_from_xy(df.Longitude_orginal, df.Latitude_orginal))
