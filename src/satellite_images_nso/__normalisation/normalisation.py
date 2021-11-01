@@ -337,7 +337,13 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
     with rasterio.open(ahn_outpath, 'w', **meta) as outds:        
         outds.write(src)
 
-    def plot_tif_with_RGBI_coefficitiens(path_to_tif, blue_diff_add, red_diff_add, green_diff_add, nir_diff_add):
+    def plot_tif_with_RGBI_coefficients(path_to_tif,  red_diff_add, green_diff_add, blue_diff_add, nir_diff_add):
+        """
+            This method changes RGBI values based on coefficients of RGBI values.
+
+            @param path_to_tif: The .tif file which RGBI value have to be altered.
+            @param  
+        """
         print(path_to_tif)
         print(blue_diff_add, green_diff_add, red_diff_add, nir_diff_add )
         src = rasterio.open(path_to_tif).read(masked=True)
