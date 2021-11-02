@@ -7,11 +7,14 @@ def tranform_vector_to_pixel_gpdf(path_to_vector, add_ndvi_column = False):
 
         @path_to_vector: Path to a .tiff file.
     """
+
     return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column)
+
 
 
 def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
     """ 
+
         Public wrapper around the nso manipulator to make a crop out of a NSO satellite image.
 
         @oaram shape_file: Path to a geojson file.
@@ -19,6 +22,7 @@ def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
         @param output_path: Where the crop should be stored.
     """
     return nso_manipulator.__make_the_crop(shape_file, path_to_tiff_file, output_path)
+
 
 
 def get_season_for_month(month):
