@@ -52,7 +52,17 @@ def plot_tif_file(path_to_tif_file):
           transform=src.transform)
     
 
-def switch_crs(list_lat, list_long, crs_from, crs_to):
+def switch_crs(list_coor_x, list_coor_y, crs_from, crs_to):
+    """
+        This function changes the crs of a given list of coordinates.
+
+        @param list_coor_x: A list of X coordinates.
+        @param list_coor_y: A list of Y coordinates.
+        @param crs_from: the current crs the coordinates are in.
+        @param crs_to: the crs with the coordinates have to be coverted to.
+        @return gdf: A geopandas dataframe with the coordinates in them. 
+    """
+
     df = pd.DataFrame(
     {
      'Latitude_orginal': list_lat,
