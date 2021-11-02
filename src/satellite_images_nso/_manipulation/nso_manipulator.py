@@ -112,10 +112,10 @@ def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
 
     if add_ndvi_column == True:
        df['ndvi'] = calculate_nvdi.normalized_diff(src.read()[3][mask], src.read()[2][mask])
-       df = df[['blue','green','red','nir','ndvi',"X","Y", 'geometry']]
+       df = df[['blue','green','red','nir','ndvi',"X","Y"]]
     else:
-        df = df[['blue','green','red','nir',"X","Y", 'geometry']]
-        
+        df = df[['blue','green','red','nir',"X","Y"]]
+
     gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
     src.close()
     
