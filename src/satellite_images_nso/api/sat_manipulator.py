@@ -1,34 +1,20 @@
 # Rename to nso_manipulator for more apporiate name.
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 
-<<<<<<< HEAD
-def tranform_vector_to_pixel_gpdf(path_to_vector):
-=======
 def tranform_vector_to_pixel_gpdf(path_to_vector, add_ndvi_column = False):
->>>>>>> github
     """
         Public wrapper around the nso manipulator for transforming a vector to a pixel geoDataFrame.
 
         @path_to_vector: Path to a .tiff file.
     """
-<<<<<<< HEAD
-    return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector)
-=======
-    return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False)
->>>>>>> github
+
+    return nso_manipulator.tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column)
+
 
 
 def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
     """ 
-<<<<<<< HEAD
-        Public wrapper around the nso manipulator to make a cut out of a NSO satellite image.
 
-        @oaram shape_file: Path to a geojson file.
-        @param path_to_tiff_file: Path to a tiff file to be cut.
-        @param output_path: Where the cut should be stored.
-    """
-    return nso_manipulator.__make_the_cut(shape_file, path_to_tiff_file, output_path)
-=======
         Public wrapper around the nso manipulator to make a crop out of a NSO satellite image.
 
         @oaram shape_file: Path to a geojson file.
@@ -36,13 +22,12 @@ def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
         @param output_path: Where the crop should be stored.
     """
     return nso_manipulator.__make_the_crop(shape_file, path_to_tiff_file, output_path)
->>>>>>> github
+
 
 
 def get_season_for_month(month):
     """
-        A function that retrieves the season for a month/
-
+        A function that retrieves the season for a month
         @param a int month     
     """
     
