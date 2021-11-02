@@ -3,11 +3,8 @@ import rasterio
 from rasterio.merge import merge
 import numpy as np
 from matplotlib import pyplot as plt
-<<<<<<< HEAD
-=======
 import pandas as pd 
 import geopandas as gpd
->>>>>>> main
 
 def merge_tif_files(tiff_lst, out_fp):
     """ 
@@ -77,8 +74,5 @@ def switch_crs(list_coor_x, list_coor_y, crs_from, crs_to):
     gdf = gdf.set_crs(crs_from, allow_override=True)
     gdf = gdf.to_crs(epsg=crs_to)
     
-<<<<<<< HEAD
-=======
     return gdf
     
->>>>>>> main
