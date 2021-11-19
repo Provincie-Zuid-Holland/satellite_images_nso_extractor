@@ -41,4 +41,5 @@ def get_season_for_month(month):
         season_str = "Summer"
     if season == 4 :
         season_str = "Fall"
+
     return season_str, season
