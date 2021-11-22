@@ -20,26 +20,16 @@ import shutil
 from satellite_images_nso.__logger import logger_nso
 
 """
-<<<<<<< HEAD
-    This is a python class for making various manipulationg such as making cuts out of .tif files, nvdi calculations and exporting to geopandas.
-=======
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
->>>>>>> github
 
     @author: Michael de Winter.
 """
 
 logger = logger_nso.init_logger()
 
-<<<<<<< HEAD
-def __make_the_cut(load_shape, raster_path, raster_path_cropped):
-    """
-        This cuts the sattelite image with a chosen shape.
-=======
 def __make_the_crop(load_shape, raster_path, raster_path_cropped):
     """
         This crops the sattelite image with a chosen shape.
->>>>>>> github
 
         TODO: Make this accept a object of geopandas or shapely and crs independant.
         @param load_schape: path to a geojson shape file.
@@ -53,11 +43,7 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped):
     if geo_file.crs != 'epsg:28992':
         geo_file = geo_file.to_crs(epsg=28992)
 
-<<<<<<< HEAD
-    out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True)
-=======
     out_image, out_transform = rasterio.mask.mask(src,geo_file['geometry'], crop=True, filled=True)
->>>>>>> github
     out_meta = src.meta
 
     out_meta.update({"driver": "GTiff",
@@ -80,21 +66,14 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped):
           transform=src.transform)
 
 
-<<<<<<< HEAD
-def tranform_vector_to_pixel_df(path_to_vector):
-=======
 def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
->>>>>>> github
     """
     Maps a rasterio satellite vector object to a geo pandas dataframe per pixel. 
     With the corresponding x and y coordinates and NVDI.
 
 
     @param path_to_vector: path to a vector which be read with rasterio.
-<<<<<<< HEAD
-=======
     @param add_ndvi_column: WWether or not to add a ndvi column to the pandas dataframe.
->>>>>>> github
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
 
@@ -130,8 +109,6 @@ def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
 
     df = pd.DataFrame(data=data)
     geometry = gpd.points_from_xy(df.X, df.Y)
-<<<<<<< HEAD
-=======
 
     if add_ndvi_column == True:
        df['ndvi'] = calculate_nvdi.normalized_diff(src.read()[3][mask], src.read()[2][mask])
@@ -139,7 +116,6 @@ def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     else:
         df = df[['blue','green','red','nir',"X","Y"]]
 
->>>>>>> github
     gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
     src.close()
     
@@ -161,11 +137,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
 
 def run(raster_path,  load_shape, output_folder , calculate_nvdi):
     """
-<<<<<<< HEAD
-        Main run method, combines the cutting of the file based on the shape and calculates the NVDI index.
-=======
         Main run method, combines the cropping of the file based on the shape and calculates the NVDI index.
->>>>>>> github
 
         @param raster_path: path to a raster file.
         @param load_shape: path the file that needs to be cropped.
@@ -178,11 +150,7 @@ def run(raster_path,  load_shape, output_folder , calculate_nvdi):
     nvdi_output_classes_png_output_path = ""
 
     raster_path_cropped = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped.tif")
-<<<<<<< HEAD
-    __make_the_cut(load_shape,raster_path,raster_path_cropped)
-=======
     __make_the_crop(load_shape,raster_path,raster_path_cropped)
->>>>>>> github
     
     # Path fix and move.
     raster_path_cropped = raster_path_cropped.replace("\\", "/") 

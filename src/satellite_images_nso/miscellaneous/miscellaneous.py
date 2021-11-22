@@ -65,8 +65,8 @@ def switch_crs(list_coor_x, list_coor_y, crs_from, crs_to):
 
     df = pd.DataFrame(
     {
-     'Latitude_orginal': list_lat,
-     'Longitude_orginal': list_long}
+     'Latitude_orginal': list_coor_x,
+     'Longitude_orginal': list_coor_y}
      )
     
     gdf = gpd.GeoDataFrame(
