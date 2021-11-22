@@ -47,7 +47,7 @@ def download_file(url, local_filename, user_n, pass_n):
 
 
 
-def retrieve_download_links(georegion, user_n, pass_n, start_date , end_date , max_meters, strict_region , max_diff ):
+def retrieve_download_links(georegion, user_n, pass_n, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"),max_meters=3, strict_region = True):
     """
         This functions retrieves download links for satellite image corresponding to the region in the geojson.
 
@@ -55,14 +55,13 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date , end_date , m
         @param start_date: From when satelliet date needs to be looked at.
         @param end_date: the end date of the period which needs to be looked at
         @param max_meters: Maximum resolution which needs to be looked at.
-        @param strict_region: A filter applied to links to only fully contain the region.
-        @param max_diff: The percentage that a satellite image has to have of the selected geojson region.
+        @param strict_region: A filter applied to links which have to fully contain the region in the geojson
         @return: the found download links.
     """
 
-    # FOR DEBUGGING !!!!!!!This blocks the large print output from the request.
-    #save_stdout = sys.stdout
-    #sys.stdout = open(os.devnull, 'w')
+    # This blocks the large print output from the request.
+    save_stdout = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
 
     geojson_coordinates = georegion
    
@@ -86,23 +85,19 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date , end_date , m
         try:  
             if row['properties']['downloads'] is not None:
 
-
-                print("Cloudcover check:")
                 # Check for cloudcoverage. TODO: Use a variable for it.
                 if row['properties']['cloudcover'] is None or float(row['properties']['cloudcover']) < 30.0 :
                    # This checks to see if the geojson is in the full region. TODO: Make it optional and propertional
-                    print("Passed cloud check")
                     check_region = False
-                    print("Going into region check:")
+
                     try:
-  
-                       check_region = check_if_geojson_in_region(row, geojson_coordinates, max_diff)
+                       check_region = check_if_geojson_in_region(row,geojson_coordinates )
                     except Exception as e:
                           print(str(e)+" This error can be normal!" )
                           logger.info(str(e)+" This error can be normal!") 
 
                     if  check_region == True or strict_region == False:
-                        print("Passed region check")                
+                        print("Passed check")                
                         for download in row['properties']['downloads']:
                             links.append(download['href'] )
                 
@@ -110,7 +105,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date , end_date , m
             print(str(e)+" This error can be normal!" )
             logger.info(str(e)+" This error can be normal!")
 
-    #sys.stdout = save_stdout
+    sys.stdout = save_stdout
     return links
 
 
@@ -129,6 +124,7 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
             print("File already downloaded: \n"+absolute_path)
         else:    
             
+            # Uncommit for logging purposes
             #r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
             download_file(link, absolute_path, user_n, pass_n)
             
@@ -149,7 +145,7 @@ def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool =
         print("Error downloading file: "+str(e))  # This is the correct syntax
         raise SystemExit(e)
 
-def unzip_delete(path,delete): 
+def unzip_delete(path,delete = True): 
     """
         Unzip a zip file and delete the .zip file.
     """
@@ -159,44 +155,31 @@ def unzip_delete(path,delete):
     if delete == True:
         os.remove(path)
 
-    zip_ref.close()
     return path.replace(".zip","")
 
 
-def check_if_geojson_in_region(row, geojson, max_diff ):
+def check_if_geojson_in_region(row,projected_shape):
     """
         This method checks if the geojson is fully in the TCI raster.
 
         TODO: For now it's only fully in the georegion on which the cloud coverage is calculated.      
-        @param row: the row of found satellite images which contain the geojson.
-        @param geojson: The selected region in the geojson.
-        @parak max_diff: The cutoff of max pixel distance between the regions.
+        @param src_TCI_raster_dataset: The rasterio opened TCI raster.
+        @param projected_shape: The geojson warped to the src of the copernicus crs.
     """
     
     return_statement = False 
     
-    print("Max_diff in method"+str(max_diff))
     row_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in row['geometry']['coordinates'][0]])
-    geojson_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in geojson[0]])
+    geojson_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in projected_shape[0]])
     geojson_shape_xy = geojson_shape.boundary.xy
 
     xy_intersection = geojson_shape.intersection(row_shape).boundary.xy
-
-    geojson_shape_xy = np.array(geojson_shape_xy)
-    xy_intersection = np.array(xy_intersection)
-
+    
     try:
-     
-        print( geojson_shape_xy)
-        print(geojson_shape_xy)
-        # This checks if pixels values are the same for both of the shapes.
-        # If this isn't the case there should be min or max fluctations based on pixels which is filter with a threshold value. 
-        difference_array =  np.intersect1d(geojson_shape_xy, xy_intersection)
-
-        # Check if the difference is under a certain percentage.
-        if  difference_array.shape[0]/geojson_shape_xy.flatten().shape[0] >= max_diff:
+        difference_array = np.array(geojson_shape_xy) -  np.array(xy_intersection)
+       
+        if max(difference_array.min(), difference_array.max(), key=abs) < 10000:
             return_statement = True
-
     except Exception as e: 
             print(e)
             print(row)
