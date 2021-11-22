@@ -1,16 +1,18 @@
 # Introduction 
 This python code is intended to automate/make easier the data extraction and cropping of satellite data from the netherlands space office (NSO).
 NSO provides free satellite images from the Netherlands, but a downside however is that the NSO provides very large regions and as such a very large data size files.
-This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region.
+This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region and as such cropping is needed.
 
 If you only need a few satellite files the data portal of the NSO should be enough: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
-Depending on your purpose however, for example machine learning, you want to have as much satellite images (in a time series) as possible, for which this python code is intended.
+Although you still need to crop the satellite image by hand.
+
+Depending on your purpose however, for example machine learning, you want to have as much satellite images (in a time series) and automate as possible, for which this python code is also intended.
 
 This python code does the following steps, which can be done in a loop.
 1. Searches the NSO for satellite images which contain the selected area. Parameters can used for how strict this containment should be.
 2. Crops the satellite image, found in step 1, to the selected area.
 3. A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) or normalisation of the cropped region.
-4. Saves to cropped satellite image to a .tif file with A option to also save it as a geopandas dataframe.
+4. Saves the cropped satellite image to a .tif file with A option to also save it as a geopandas dataframe.
 
 
 
