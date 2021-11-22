@@ -127,12 +127,12 @@ class nso_georegion:
         """ 
             Executes the download, croppend 67and the calculating of the NVDI for a specific link.
         
-            @param link: Link to a file from the NSO.
-            @param geojson_path: Path to a geojson with the selected region.
+            @param link: Link to a file from the NSO.           
             @param calculate_nvdi: Wether or not to also calculate the NDVI for the cropped region.
             @param delete_zip_file: whether or not to keep the original .zip file.
             @param delete_source_files: whether or not to keep the extracted files.
-            @param check_if_file_exists: check wether the file is already downloaded or stored somewhere.
+            @param check_if_file_exists: check whether the file is already downloaded or stored somewhere.
+            @param relative_75th_normalize: Whether normalization has to be applied.
         """
 
         cropped_path = ""
