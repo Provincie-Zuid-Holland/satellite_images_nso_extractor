@@ -1,12 +1,20 @@
 # Introduction 
 This python code is intended to automate/make easier the data extraction and cropping of satellite data from the netherlands space office (NSO).
-NSO provides free satellite images from the Netherlands, a downside however is that the NSO provides a very large region and as such a very large data file.
-This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region.
+NSO provides free satellite images from the Netherlands, but a downside however is that the NSO provides very large regions and as such a very large data size files.
+This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region and as such cropping is needed.
 
-This python code crops a selected region out of the original satellite image based on a geojson, provided that the selected region is smaller than the original file.
-And then saves this cropped image thus reducing the unnecessary saved data. 
-A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) of the cropped region.
-Also a option is for relative multidate normalisation is included for atmospheric correction. 
+If you only need a few satellite files the data portal of the NSO should be enough: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
+Although you still need to crop the satellite image by hand.
+
+Depending on your purpose however, for example machine learning, you want to have as much satellite images (in a time series) and automate as possible, for which this python code is also intended.
+
+This python code does the following steps, which can be done in a loop.
+1. Searches the NSO for satellite images which contain the selected area. Parameters can used for how strict this containment should be.
+2. Crops the satellite image, found in step 1, to the selected area.
+3. A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) or normalisation of the cropped region.
+4. Saves the cropped satellite image to a .tif file with A option to also save it as a geopandas dataframe.
+
+
 
 This image gives a illustration: 
 ![Alt text](example.png?raw=true "Title")
@@ -22,9 +30,9 @@ For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
-1. First get a GeoJSON file of the region you want to be cropped. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that. Note the coordinates have to be in WGS84! ( Which should be standard for a geojson.) 
-2. Make a instance of nso_geojsonregion with instance of the geojson region you have, where you want to store the cropped files and the NSO account based on step 0.
-2. Retrieve download links for the specific region you want to have.
+1. First get a GeoJSON file of the selected region you want to study and be cropped to. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that. Note the coordinates have to be in WGS84! ( Which should be standard for a geojson.) 
+2. Make a instance of nso_georegion with instance of the geojson region you have, where you want to store the cropped files and the NSO account based on step 0.
+2. Retrieve download links of satellite images which contain the selected region, parameters can be set to how strict this containment should be. 
 3. Download the found links.
 
 # Example code.
@@ -32,21 +40,23 @@ For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/
 ```python
 # This the way the import nso.
 import satellite_images_nso.api.nso_georegion as nso
-# The sat_manipulator gives other handy transmations on satellite data.
+# The sat_manipulator gives other handy transmations on satellite data .tif files to a geopandas dataframe.
 import satellite_images_nso.api.sat_manipulator as sat_manipulator
 
 path_geojson = "/src/example/example.geojson"
-# The first parameter is the path to the geojson, the second the map where the cropped satellite data will be installed
-georegion = nso.nso_georegion(path_geojson,"/src/output/",\
+output_folder = "./src/output/"
+# The first parameter is the path to the geojson, the second the map where the cropped satellite data will be downloaded, the third is your NSO usernamen and the last your NSO password.
+georegion = nso.nso_georegion(path_geojson,output_folder,\
 ***REMOVED***YOUR_USER_NAME_HERE,\
                              YOUR_PASSWORD_HERE)
 
-# This method fetches all the download links to all the satelliet images which contain the region in the geojson.
-# Filter out for which satellite you want to download links from! SV for example stands for the Suoerview satellite
-links = georegion.retrieve_download_links()
+# This method fetches all the download links with all the satelliet images the NSO has which contain the region in the given geojson.
+# Max_diff parameters represents the amount of percentage the selected region has to be in the satellite image. 
+# So 1 is the the selected region has to be fully in the satellite images while 0.7 donates only 70% of the selected region is in the 
+links = georegion.retrieve_download_links(max_diff = 0.7)
 
 
-# This example filters out only 50 cm RGB Infrared Superview satellite imagery in the summer.
+# This example filters out only 50 cm RGB Infrared Superview satellite imagery in the summer from all the links
 season = "Summer"
 links_group = []
 for link in links:
@@ -57,14 +67,13 @@ for link in links:
 
 
 # Downloads a satelliet image from the NSO, make a crop out of it so it fits the geojson region and calculate the NVDI index.
-# The output will stored in the designated output folder.
+# The output will stored in the output folder.
+# The parameters are : execute_link(self, link, calculate_nvdi = True,  delete_zip_file = True, delete_source_files = True, check_if_file_exists = True, relative_75th_normalize = False)
+# description of these parameters can be found in the code.
 georegion.execute_link(links_group[0])
-# The parameters are : execute_link(self, link, delete_zip_file = True, delete_source_files = True, check_if_file_exists = True)
-# With the parameters you can decide if you want to keep the original satellite files, such  as wether to keep the downloaded zip file or the extracted source files from which the crop will be made.
 
-
-# This function reads a .tif file, which is a format the satellite data is stored in,  and converts it to a pixel based geopandas dataframe.
-# For machine learning purposes.
+# This function reads a .tif file, which is a format in which the satellite data is stored in, and converts it to a pixel based geopandas dataframe.
+# Mainly for machine learning purposes.
 path_to_vector = "path/to/folder/*.tif"
 geo_df_pixel = sat_manipulator.tranform_vector_to_pixel_gpdf(path_to_vector)
 ```
@@ -73,11 +82,7 @@ See also the jupyter notebook in src/nso_notebook_example.ipynb
 
 Install this package with: `pip install satellite_images_nso`
 
-Be sure you've installed GDAL already on your computer. Other python dependencies will install automatically (Fiona>=1.8.13, GDAL>=3.0.4, geopandas>=0.9.0, rasterio>=1.1.3 Shapely>=1.7.0).
-Or look into the requirements.txt file.
-
-If you don't have gdal installed on your computer or if it doesn't work follow the instruction below.
-
+Be sure you have installed the required packages, follow the instructions below.
 ## Install GDAL on Windows
 If you are a Windows user you have to install the GDAL dependency yourself via a wheels.
 
@@ -127,4 +132,8 @@ Michael de Winter
 Daniel Overdevest
 
 Yilong Wen
+
+# Contact
+
+Contact us at vdwh@pzh.nl
 
