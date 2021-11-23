@@ -94,6 +94,7 @@ class nso_georegion:
         """
         return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff)
 
+
     def crop_and_calculate_nvdi(self, path, calculate_nvdi):
         """
             Function for the crop and the calculating of the NVDI index.
