@@ -66,7 +66,7 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped):
           transform=src.transform)
 
 
-def tranform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
+def transform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     """
     Maps a rasterio satellite vector object to a geo pandas dataframe per pixel. 
     With the corresponding x and y coordinates and NVDI.

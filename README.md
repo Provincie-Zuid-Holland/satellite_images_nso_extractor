@@ -78,6 +78,11 @@ path_to_vector = "path/to/folder/*.tif"
 geo_df_pixel = sat_manipulator.tranform_vector_to_pixel_gpdf(path_to_vector)
 ```
 See also the jupyter notebook in src/nso_notebook_example.ipynb
+
+# Class diagram.
+
+![Alt text](class_diagram.PNG?raw=true "Title")
+
 # Installation.
 
 Install this package with: `pip install satellite_images_nso`
