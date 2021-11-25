@@ -21,7 +21,6 @@ This image gives a illustration:
 
 
 
-
 If you only need a few satellite files the data portal of the NSO should be enough: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
 Although you still need to crop the satellite image by hand.
 
