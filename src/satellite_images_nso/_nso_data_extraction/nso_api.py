@@ -111,7 +111,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date , end_date , m
             logger.info(str(e)+" This error can be normal!")
 
     #sys.stdout = save_stdout
-    return links
+    return set(links)
 
 
 def download_link(link, absolute_path, user_n, pass_n, file_exists_check: bool = False):
@@ -167,7 +167,9 @@ def check_if_geojson_in_region(row, geojson, max_diff ):
     """
         This method checks if the geojson is fully in the TCI raster.
 
-        TODO: For now it's only fully in the georegion on which the cloud coverage is calculated.      
+        TODO: For now it's only fully in the georegion on which the cloud coverage is calculated. 
+        TODO: The geojson region might be split in 2 different photo's, this is for further work now.     
+        
         @param row: the row of found satellite images which contain the geojson.
         @param geojson: The selected region in the geojson.
         @parak max_diff: The cutoff of max pixel distance between the regions.
@@ -175,7 +177,7 @@ def check_if_geojson_in_region(row, geojson, max_diff ):
     
     return_statement = False 
     
-    print("Max_diff in method"+str(max_diff))
+    print("Max_diff in method "+str(max_diff))
     row_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in row['geometry']['coordinates'][0]])
     geojson_shape = shapely.geometry.Polygon([[coordx[0],coordx[1]] for coordx in geojson[0]])
     geojson_shape_xy = geojson_shape.boundary.xy
