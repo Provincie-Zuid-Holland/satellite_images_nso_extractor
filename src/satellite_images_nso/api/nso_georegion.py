@@ -30,6 +30,11 @@ def correct_file_path(path):
 
 
 class nso_georegion:
+    """
+        A class used to bind the output folder, a chosen a georegion and a NSO account together in one object.
+        On this object most of the operations are done.
+        
+    """
 
     def __init__(self, path_to_geojson: str, output_folder: str, username: str, password: str):
         """
@@ -84,7 +89,6 @@ class nso_georegion:
         """
             This functions retrieves download links for area chosen in the geojson for the nso.
 
-            @param georegion: Polygon with the stored georegion.
             @param start_date: From when satelliet date needs to be looked at.
             @param end_date: the end date of the period which needs to be looked at
             @param max_meters: Maximum resolution which needs to be looked at.
