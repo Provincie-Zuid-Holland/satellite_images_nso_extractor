@@ -57,7 +57,7 @@ class nso_georegion:
         except Exception as e:
             print(e)
 
-        if self.georegion == False :
+        if self.georegion == False:
             raise Exception("Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session")
 
         if os.path.isdir(output_folder)  == True:
