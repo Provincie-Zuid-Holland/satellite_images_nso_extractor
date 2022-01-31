@@ -1,0 +1,1 @@
+"C:\ProgramData\Anaconda3\python.exe"  "C:\repos\satellite-images-nso\src\scheduling\coepelduynen_schedule_SV_50cm_RGBI.py"
