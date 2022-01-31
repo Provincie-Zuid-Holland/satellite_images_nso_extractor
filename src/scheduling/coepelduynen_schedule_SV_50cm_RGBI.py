@@ -6,10 +6,12 @@ from matplotlib import pyplot as plt
 from rasterio.plot import show
 import glob
 import settings
+import logging
+from azure.storage.blob import ContainerClient
 
 """ 
 
-Schedule NSO satellite images for Coepelduynen.
+Schedule NSO satellite images for SV 50 cm RGBI Coepelduynen.
 
 
 @author: Michael de Winter
@@ -17,6 +19,24 @@ Schedule NSO satellite images for Coepelduynen.
 
 """
 
+logging.basicConfig(level=logging.DEBUG)
+
+
+
+logger = logging.getLogger('schedule_nso_tif')
+logger.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler('schedule_nso_tif.log')
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+
+container = ContainerClient.from_connection_string(conn_str=settings.BLOB_CONNECTION_STRING,\
+***REMOVED***                     container_name=settings.BLOB_CONTAINER) 
+
+def upload_file_rm_blob(path_to_file, name, overwrite=True):
+
+        with open(path_to_file, "rb") as data:      
+            container.upload_blob(name,data,overwrite=overwrite)
 
 
 def init():
@@ -30,13 +50,17 @@ def init():
 
 
   links = georegion.retrieve_download_links( max_diff = 0.9)
-  return links
+  return links, georegion
 
 
 def check_downloaded_tif_files(output_path):
   """
   Check .tif files which are already downloaded.
+  Depends on being the files being stored locally instead of in a blob storage.
   
+
+  @param output_path: Path where the .tif files are stored.
+  @return done_files: files which are already done.
   """
   done_files = []
 
@@ -47,8 +71,14 @@ def check_downloaded_tif_files(output_path):
     
   return done_files
 
-def filter_links(links):
+def filter_links(links, done_files):
+  """
+  Filter links based on the found files.
 
+  @param links: the download links for the georegions found.
+  @param done_files: .tif files already downloaded.
+  @return filter_links: links which are not already downloaded.
+  """
   SV_links = []
   for link in links:
       if 'SV' in link and '50cm' in link and "RGBI" in link:
@@ -60,8 +90,18 @@ def filter_links(links):
 
 if __name__ == '__main__':
 
-  links = init()
+  links,georegion = init()
 
-  check_downloaded_tif_files(settings.output_path_coepelduynen)
+  done_files = check_downloaded_tif_files(settings.output_path_coepelduynen)
 
-  filter_links(
+  SV_links = filter_links(links, done_files)
+
+  if len(SV_links) >0:
+    logger.info("Found new links")
+    for link in SV_links:
+      logger.info(link)
+      cropped_location, no, no2 = georegion.execute_link(link, calculate_nvdi = False)
+      logger.info("Uploading")
+      upload_file_rm_blob(cropped_location, settings.BLOB_STORAGE_PATH)
+  else:
+      logger.info("No new links")
