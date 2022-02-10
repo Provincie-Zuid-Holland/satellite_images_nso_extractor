@@ -98,6 +98,8 @@ class nso_georegion:
         """
         return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff)
 
+    def retrieve_wms_links(self, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters=3 , strict_region = True, max_diff = 0.8):
+        return nso_api.retrieve_wms_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff)
 
     def crop_and_calculate_nvdi(self, path, calculate_nvdi):
         """
