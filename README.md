@@ -7,9 +7,9 @@ This leads to a unnecessary large amount of data especially if you only want to 
 
 This python code does the following steps, which can be done in a loop.
 1. Searches the NSO for satellite images which contain a selected geoarea. Parameters can used for how strict this containment should be.
-2. Downlaods, unzip and crops the satellite image, found in step 1, to the selected area.
-3. A option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) or normalisation of the cropped region.
-4. Saves the cropped satellite image to a .tif file with A option to also save it as a geopandas dataframe. And deleting the unused data.
+2. Downloads, unzips and crops the satellite image, found in step 1, to the selected area.
+3. An option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) or normalisation of the cropped region.
+4. Saves the cropped satellite image to a .tif file with the option to also save it as a geopandas dataframe. And deletes the unused data.
 
 
 
@@ -21,7 +21,7 @@ This image gives a illustration:
 
 
 
-If you only need a few satellite files the data portal of the NSO should be enough: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
+If you only need a few satellite files, the data portal of the NSO should be enough: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
 Although you still need to crop the satellite image by hand.
 
 Depending on your purpose however, for example machine learning, you want to have as much satellite images (in a time series) and automate as possible, for which this python code is also intended.
@@ -37,7 +37,7 @@ For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/
 2. Retrieve download links of satellite images which contain the selected region, parameters can be set to how strict this containment should be. 
 3. Download, unzip and crop the found links.
 
-# Example code.
+# Example code
 
 ```python
 # This the way the import nso.
@@ -68,9 +68,9 @@ for link in links:
 
 
 
-# Downloads a satelliet image from the NSO, make a crop out of it so it fits the geojson region and calculate the NVDI index.
+# Downloads a satellite image from the NSO, makes a crop out of it so it fits the geojson region and calculates the NVDI index.
 # The output will stored in the output folder.
-# The parameters are : execute_link(self, link, calculate_nvdi = True,  delete_zip_file = True, delete_source_files = True, check_if_file_exists = True, relative_75th_normalize = False)
+# The parameters are : execute_link(self, link, calculate_nvdi = True,  delete_zip_file = True, delete_source_files = True, check_if_file_exists = True, relative_75th_normalize = False, plot=True)
 # description of these parameters can be found in the code.
 georegion.execute_link(links_group[0])
 
@@ -81,16 +81,38 @@ geo_df_pixel = sat_manipulator.tranform_vector_to_pixel_gpdf(path_to_vector)
 ```
 See also the jupyter notebook in src/nso_notebook_example.ipynb
 
-# Class diagram.
+# Class diagram
 
 ![Alt text](class_diagram.PNG?raw=true "Title")
 
-# Installation.
+# Installation
 
 Install this package with: `pip install satellite_images_nso`
 
 Be sure you have installed the required packages, follow the instructions below.
-## Install GDAL on Windows
+
+## Package installation
+If you are a Windows user you have to install the dependencies via wheels. The wheels for the following dependencies should be downloaded from https://www.lfd.uci.edu/~gohlke/pythonlibs/:
+- gdal
+- rasterio
+- fiona
+- shapely
+- geopandas
+ These should be installed in de following order: first GDAL, then Fiona and then raterio. After these you can install the rest.
+
+ Download the wheels according to your system settings. For instance, wheel rasterio‑1.2.10‑cp39‑cp39‑win_amd64.whl is used with the 64-bit version of Windows and a 3.9 version of python. Install the wheel with pip install XXX.XX.XX.whl.
+
+By installing the above packages, the following needed packages will be in principle automatically installed as well:
+- earthpy
+- matplotlib
+- numpy
+- objectpath
+- pandas
+- requests
+- setuptools
+- pyproj
+
+<!-- ## Install GDAL on Windows
 If you are a Windows user you have to install the GDAL dependency yourself via a wheels.
 
 Instead install these wheels with pip install XXX.XX.XX.whl.
@@ -100,8 +122,7 @@ Go to https://www.lfd.uci.edu/~gohlke/pythonlibs/ for the wheels of these depenc
 Depencencies are : "Fiona>=1.8.13", "GDAL>=3.0.4", "geopandas>=0.9.0","rasterio>=1.1.3","Shapely>=1.7.0"
 NOTE: You can't use normal pip for the installation of any of these depencies or else they won't find GDAL. So use all the .whl files!
 Then follow the fourth solution on this stackoverflow question:
-https://gis.stackexchange.com/questions/2276/installing-gdal-with-python-on-windows
-
+https://gis.stackexchange.com/questions/2276/installing-gdal-with-python-on-windows -->
 
 # Install GDAL on Databricks
 If you are using databricks use this code to set up a init script which installs GDAL.
@@ -129,9 +150,6 @@ See: https://hub.docker.com/r/dockerhubpzh/satellite_images_nso_docker
 
 # Local development
 Run `rebuild.bat` to build and install package on local computer.
-
-
-
 
 # Author
 Michael de Winter
