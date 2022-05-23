@@ -102,6 +102,6 @@ if __name__ == '__main__':
       logger.info(link)
       cropped_location, no, no2 = georegion.execute_link(link, calculate_nvdi = False)
       logger.info("Uploading")
-      upload_file_rm_blob(cropped_location, settings.BLOB_STORAGE_PATH)
+      upload_file_rm_blob(cropped_location, cropped_location.split("/")[-1])
   else:
       logger.info("No new links")
