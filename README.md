@@ -1,12 +1,12 @@
 # Introduction 
-This python code is intended to automate/make easier the data extraction and cropping of satellite data from the netherlands space office (NSO).
+This python code is intended to automate/make easier the data extraction and cropping of satellite image data from the netherlands space office (NSO).
 NSO provides free satellite images from the Netherlands, but a downside is that the NSO does not provide satellite images fitted to a specific area but only a large overlapping region.
-This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region and as such cropping is needed, which this package provides.
+This leads to a unnecessary large amount of data especially if you only want to study a smaller specific region and as such cropping is needed, which is what this package provides.
 
 
 
-This python code does the following steps, which can be done in a loop.
-1. Searches the NSO for satellite images which contain a selected geoarea. Parameters can used for how strict this containment should be.
+This python code does the following steps:
+1. Searches the NSO for satellite images which contain a selected geoarea in .geojson file. Parameters can used for how strict this containment should be.
 2. Downloads, unzips and crops the satellite image, found in step 1, to the selected area.
 3. An option can also be set for calculating the Normalized difference vegetation index (NVDI, used in for example crop analysis) or normalisation of the cropped region.
 4. Saves the cropped satellite image to a .tif file with the option to also save it as a geopandas dataframe. And deletes the unused data.
@@ -93,11 +93,15 @@ Be sure you have installed the required packages, follow the instructions below.
 
 ## Package installation
 If you are a Windows user you have to install the dependencies via wheels. The wheels for the following dependencies should be downloaded from https://www.lfd.uci.edu/~gohlke/pythonlibs/:
-- gdal
-- rasterio
-- fiona
-- shapely
-- geopandas
+
+
+
+- [![GDAL>=3.0.4 ](https://img.shields.io/badge/GDAL-%3E%3D3.0.4-blue)](https://gdal.org/)
+-  [![Fiona>=1.8.13 ](https://img.shields.io/badge/Fiona-%3E%3D1.8.13-green)](https://pypi.org/project/Fiona/)
+- [![rasterio>=1.1.3 ](https://img.shields.io/badge/rasterio-%3E%3D1.1.3-blue)](https://rasterio.readthedocs.io/en/latest/)
+-  [![Shapely>=1.7.0 ](https://img.shields.io/badge/Shapely-%3E%3D1.7.0-green)](https://shapely.readthedocs.io/en/stable/manual.html)
+- [![geopandas>=0.9.0](https://img.shields.io/badge/geopandas-%3E%3D0.9.0-blue)](https://geopandas.org/en/stable/)
+
  These should be installed in de following order: first GDAL, then Fiona and then raterio. After these you can install the rest.
 
  Download the wheels according to your system settings. For instance, wheel rasterio‑1.2.10‑cp39‑cp39‑win_amd64.whl is used with the 64-bit version of Windows and a 3.9 version of python. Install the wheel with pip install XXX.XX.XX.whl.
@@ -111,6 +115,10 @@ By installing the above packages, the following needed packages will be in princ
 - requests
 - setuptools
 - pyproj
+
+
+Or else check out this stack overflow post:
+https://gis.stackexchange.com/questions/2276/installing-gdal-with-python-on-windows 
 
 <!-- ## Install GDAL on Windows
 If you are a Windows user you have to install the GDAL dependency yourself via a wheels.
