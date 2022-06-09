@@ -33,7 +33,6 @@ We here have our custom coefficients, make your own coefficients for your own im
 @author: Michael de Winter.
 """
 from satellite_images_nso._manipulation import nso_manipulator
-from satellite_images_nso.__logger import logger_nso
 import pandas as pd
 from matplotlib import pyplot
 import rasterio
@@ -45,14 +44,11 @@ import io
 import requests
 import platform
 import time
-
+import logging
 
 """
     Helper functions.
 """
-
-logger = logger_nso.init_logger()
-
 
 def __get_season_for_month(month):
     """
@@ -189,11 +185,11 @@ def multidate_normalisation_75th_percentile(path_to_tif):
 
         if s is not None and s != '':
             print("Downloading most recent coefficients")
-            logger.info("Downloading most recent coefficients")
+            logging.info("Downloading most recent coefficients")
             multidate_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
     if multidate_coefficents == "":
         print("Using local coefficients")
-        logger.info("Using local coefficients")
+        logging.info("Using local coefficients")
         multidate_coefficents = pd.read_csv(script_dir+"/coefficients/Multi-date-index-coefficients_pd.csv")
 
     season = __get_season_for_month(path_to_tif.split("/")[-1][4:6])[0]
@@ -263,12 +259,12 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
         s=requests.get(url).content
         if s is not None and s != '':
             print("Downloading most recent coefficients")
-            logger.info("Downloading most recent coefficients")
+            logging.info("Downloading most recent coefficients")
             dark_spot_coefficents = pd.read_csv(io.StringIO(s.decode('utf-8')))
 
     if dark_spot_coefficents.empty:
         print("Using local coefficients")
-        logger.info("Using local coefficients")
+        logging.info("Using local coefficients")
         script_dir = os.path.dirname(__file__)
         dark_spot_coefficents = pd.read_csv(script_dir+"/coefficients/dark-spot-coefficients_pd.csv")
     
@@ -288,7 +284,7 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
             dark_spot_coefficents_file = dark_spot_coefficents[dark_spot_coefficents['filename'].str.contains(satellite_image_name)]
             if dark_spot_coefficents_file.empty:
                 print("No coefficients found for satellite image! Defaulting to nothing!")
-                logger.info("No coefficients found for satellite image! Defaulting to nothing!")
+                logging.info(f'No coefficients found for satellite image {satellite_image_name}! Defaulting to nothing!')
             else:
                 blue_diff_add = dark_spot_coefficents_file['blue_coefficients'].values[0]
                 green_diff_add = dark_spot_coefficents_file['green_coefficients'].values[0]
@@ -325,8 +321,7 @@ def multi_date_dark_spot_normalisation(path_to_tif, satellite_image_name = False
       
     print("Saving file to:")
     print(ahn_outpath)
-    logger.info("Saving file to:")
-    logger.info(ahn_outpath)
+    logging.info(f'Saving file to {ahn_outpath}')
      
     plot_out_image_2 = np.clip(src[2::-1],
                     0,2200)/2200

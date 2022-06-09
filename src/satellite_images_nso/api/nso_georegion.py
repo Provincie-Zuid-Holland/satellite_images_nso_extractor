@@ -5,10 +5,14 @@ from datetime import date
 import glob
 import geopandas as gpd
 import json
-from satellite_images_nso.__logger import logger_nso
 from satellite_images_nso.__normalisation import normalisation
 import shutil
+import logging
 
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(funcName)s %(message)s',
+                    filename='Logging_test.log'
+                    )  # to see log in console remove filename
 
 """
     This class constructs a nso georegion object.
@@ -19,15 +23,12 @@ import shutil
     Author: Michael de Winter
 """
 
-logger = logger_nso.init_logger()
-
 def correct_file_path(path):
     " File path does not need to end with /"
     path = path.replace("\\","/")
     if path.endswith("/"):
         return path[:-1]
     return path
-
 
 class nso_georegion:
     """
@@ -57,7 +58,7 @@ class nso_georegion:
         except Exception as e:
             print(e)
 
-        if self.georegion == False:
+        if self.georegion == False :
             raise Exception("Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session")
 
         if os.path.isdir(output_folder)  == True:
@@ -79,7 +80,7 @@ class nso_georegion:
         json_loaded = json.loads(gpd.read_file(path).to_json())
 
         if json_loaded['features'][0]['geometry']['type']  == 'MultiPolygon':
-            logger.info("Caution multiploygons are not well supported!")
+            logging.info("Caution multiploygons are not well supported!")
             print("Caution multiploygons are not well supported!")
 
         return [json_loaded['features'][0]['geometry']['coordinates']]
@@ -98,8 +99,6 @@ class nso_georegion:
         """
         return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff)
 
-    def retrieve_wms_links(self, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters=3 , strict_region = True, max_diff = 0.8):
-        return nso_api.retrieve_wms_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff)
 
     def crop_and_calculate_nvdi(self, path, calculate_nvdi):
         """
@@ -115,14 +114,13 @@ class nso_georegion:
                 true_path = x
         
         if ".tif" not in true_path:
-            logger.info(true_path+" Error:  .tif not found") 
+            logging.error(true_path+" Error:  .tif not found")
             raise Exception(".tif not found")
         else: 
-
             cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, calculate_nvdi )
-            logger.info("Cropped file is found at: "+cropped_path)
-            logger.info("The NDVI picture is found at: "+nvdi_path)
-            logger.info("NDVI numpy arrat i found at: "+nvdi_matrix)
+            logging.info("Cropped file is found at: "+cropped_path)
+            logging.info("The NDVI picture is found at: "+nvdi_path)
+            logging.info("NDVI numpy arrat i found at: "+nvdi_matrix)
 
             print("Cropped file is found at: "+str(cropped_path ))
             print("The NDVI picture is found at: "+nvdi_path)
@@ -149,33 +147,38 @@ class nso_georegion:
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
 
-            logger.info("Starting download to: "+download_archive_name)
-            print("Starting download to: "+download_archive_name)
-            nso_api.download_link(link,download_archive_name, self.username, self.password)
+            logging.info("Starting download to: "+ download_archive_name)
+            print("Starting download to: "+ download_archive_name)
+            nso_api.download_link(link, download_archive_name, self.username, self.password)
+            logging.info("Downloaded: "+ download_archive_name)
 
-            logger.info("Extracting files")
+            logging.info("Extracting files")
             print("Extracting files")
             extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
-
-            logger.info("Extracted folder is: "+extracted_folder)
+            logging.info("Extracted folder is: "+extracted_folder)
             print("Extracted folder is: "+extracted_folder)
-            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi)
             
+            logging.info("Calculating nvdi")
+            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi)
+            logging.info("Done with calculating nvdi")
+
             # Multi date normalize the file.
             if relative_75th_normalize == True:
                 normalisation.multidate_normalisation_75th_percentile(cropped_path)
             
-            logger.info("Succesfully cropped .tif file")
+            logging.info(f'Succesfully cropped .tif file')
             print("Succesfully cropped .tif file")
 
         except Exception as e: 
-            logger.info("Error in downloading and or cropping: "+str(e))
+            logging.error("Error in downloading and or cropping: "+str(e))
             print("Error in downloading and or cropping: "+str(e))
             
         if delete_source_files == True:
             try:
                 shutil.rmtree(extracted_folder)
-            except Exception as e: 
+                logging.info('Deleted source files')
+            except Exception as e:
+                logging.error("Failed to delete source files: "+str(e))
                 print("Failed to delete source files: "+str(e))
 
         return cropped_path, nvdi_path, nvdi_matrix
