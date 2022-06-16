@@ -86,7 +86,7 @@ class nso_georegion:
         return [json_loaded['features'][0]['geometry']['coordinates']]
 
 
-    def retrieve_download_links(self, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters=3 , strict_region = True, max_diff = 0.8):
+    def retrieve_download_links(self, start_date = "2014-01-01", end_date =date.today().strftime("%Y-%m-%d"), max_meters=3 , strict_region = True, max_diff = 0.8, cloud_coverage_whole = 30):
         """
             This functions retrieves download links for area chosen in the geojson for the nso.
 
@@ -95,9 +95,10 @@ class nso_georegion:
             @param max_meters: Maximum resolution which needs to be looked at.
             @param strict_region: A filter applied to links which have to fully contain the region in the geojson.
             @param max_diff: The percentage that a satellite image has to have of the selected geojson region.
+            @param cloud_coverage_whole: level percentage of clouds to filter out of the whole satellite image, so 30 means the percentage has to be less or equal to 30.
             @return: the found download links.
         """
-        return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff)
+        return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff, cloud_coverage_whole )
 
 
     def crop_and_calculate_nvdi(self, path, calculate_nvdi, plot):
