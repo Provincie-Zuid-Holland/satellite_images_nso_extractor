@@ -15,7 +15,7 @@ import logging
     @author: Michael de Winter.
 """
 
-def __make_the_crop(load_shape, raster_path, raster_path_cropped):
+def __make_the_crop(load_shape, raster_path, raster_path_cropped,plot):
     """
         This crops the sattelite image with a chosen shape.
 
@@ -24,7 +24,6 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped):
         @param raster_path_wgs: path to the raster .tiff file.
         @param raster_path_cropped: path were the cropped raster will be stored.
     """
-    print('cropping file')
     geo_file = gpd.read_file(load_shape)
     src = rasterio.open(raster_path)
     print('raster path opened')
@@ -44,15 +43,17 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped):
             dest.write(out_image)
             dest.close()
 
-    # print("Plotting data for:"+raster_path_cropped+"-----------------------------------------------------")
-    # # TODO: Make this optional to plot.
-    # src = rasterio.open(raster_path_cropped)
-    # plot_out_image = np.clip(src.read()[2::-1],
-    #                 0,2200)/2200 # out_image[2::-1] selects the first three items, reversed
+    if plot:
+        print("Plotting data for:"+raster_path_cropped+"-----------------------------------------------------")
+        # TODO: Make this optional to plot.
+        src = rasterio.open(raster_path_cropped)
+        plot_out_image = np.clip(src.read()[2::-1],
+                        0,2200)/2200 # out_image[2::-1] selects the first three items, reversed
 
-    # plt.figure(figsize=(10,10))
-    # rasterio.plot.show(plot_out_image,
-    #       transform=src.transform)
+        plt.figure(figsize=(10,10))
+        rasterio.plot.show(plot_out_image,
+            transform=src.transform)
+        logging.info(f'Plotted cropped image {raster_path_cropped}')
 
 
 def transform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
@@ -110,8 +111,21 @@ def transform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     
     return gdf
 
+def move_tiff (raster_path_cropped,raster_path_cropped_moved):
+    """
+    Moves cropped tiff file to the main folder.
 
-def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
+    @param raster_path_cropped: path to the cropped tiff file
+    @param raster_path_cropped_moved: path to be moved to
+
+    """
+    try:
+        shutil.move(raster_path_cropped,raster_path_cropped_moved)
+        logging.info(f'Moving tiff file to {raster_path_cropped_moved}')
+    except:
+        logging.error(f'Failed to move tiff to {raster_path_cropped_moved}')
+
+def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi,plot):
     """
         Function which calculates the NVDI index, used in a external package.
 
@@ -122,9 +136,9 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi):
     data_ndvi = calculate_nvdi.normalized_diff(src.read()[3], src.read()[2])
     data_ndvi.dump(raster_path_nvdi)
 
-    return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi)
+    return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi,plot)
 
-def run(raster_path, load_shape, output_folder, calculate_nvdi):
+def run(raster_path, load_shape, output_folder, calculate_nvdi,plot):
     """
         Main run method, combines the cropping of the file based on the shape and calculates the NVDI index.
 
@@ -139,9 +153,9 @@ def run(raster_path, load_shape, output_folder, calculate_nvdi):
     print(f'cropping file {raster_path}')
     logging.info(f'cropping file {raster_path}')
     raster_path_cropped = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped.tif")
-    __make_the_crop(load_shape,raster_path,raster_path_cropped)
+    __make_the_crop(load_shape,raster_path,raster_path_cropped,plot)
     print(f'finished cropping {raster_path}')
-    logging.info(f'cropping file {raster_path}')
+    logging.info(f'Finished cropping file {raster_path}')
     # Path fix and move.
     raster_path_cropped = raster_path_cropped.replace("\\", "/") 
     raster_path_cropped_moved = output_folder+"/"+raster_path_cropped.split("/")[len(raster_path_cropped.split("/"))-1]
@@ -149,7 +163,7 @@ def run(raster_path, load_shape, output_folder, calculate_nvdi):
 
     if calculate_nvdi == True:
         raster_path_nvdi = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped_nvdi")
-        nvdi_output_classes_png_output = __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi)
+        nvdi_output_classes_png_output = __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi,plot)
 
         raster_path_nvdi = raster_path_nvdi.replace("\\", "/")
         raster_path_nvdi_path = output_folder+"/"+raster_path_nvdi.split("/")[len(raster_path_nvdi.split("/"))-1]
@@ -157,18 +171,21 @@ def run(raster_path, load_shape, output_folder, calculate_nvdi):
         nvdi_output_classes_png_output = nvdi_output_classes_png_output.replace("\\","/")
         nvdi_output_classes_png_output_path = output_folder+"/"+nvdi_output_classes_png_output.split("/")[len(nvdi_output_classes_png_output.split("/"))-1]
 
-        logging.info("Writing png to this ndvi array path: "+raster_path_nvdi_path)
-        shutil.move(raster_path_nvdi,raster_path_nvdi_path)
-        logging.info("Writing png to this png classes path: "+nvdi_output_classes_png_output_path)
-        shutil.move(nvdi_output_classes_png_output,nvdi_output_classes_png_output_path)
-        
-        # Finally move the .tif file.
-        shutil.move(raster_path_cropped,raster_path_cropped_moved)
-        
-        return raster_path_cropped_moved, raster_path_nvdi_path , nvdi_output_classes_png_output_path
-    else:
-        shutil.move(raster_path_cropped,raster_path_cropped_moved)
-        return raster_path_cropped_moved, raster_path_nvdi_path  , nvdi_output_classes_png_output_path
+        try:
+            shutil.move(raster_path_nvdi,raster_path_nvdi_path)
+            logging.info("Moving file to this ndvi array path: "+raster_path_nvdi_path)
+        except:
+            logging.error(f'Failed to move file to {raster_path_nvdi_path}')
+            
+        try:
+            shutil.move(nvdi_output_classes_png_output,nvdi_output_classes_png_output_path)
+            logging.info("Moving file to this file classes path: "+nvdi_output_classes_png_output_path)
+        except:
+            logging.error(f'Failed to move file to {nvdi_output_classes_png_output_path}')
+
+    move_tiff(raster_path_cropped,raster_path_cropped_moved)
+
+    return raster_path_cropped_moved, raster_path_nvdi_path, nvdi_output_classes_png_output_path
 
 
 

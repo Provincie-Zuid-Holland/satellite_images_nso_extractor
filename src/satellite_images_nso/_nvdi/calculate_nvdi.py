@@ -4,6 +4,7 @@ import pandas as pd
 import earthpy.plot as ep
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
+import logging
 
 """
     This class is used for various NVDI calculations.
@@ -39,6 +40,7 @@ def normalized_diff(b1: np.array, b2: np.array) -> np.array:
         The element-wise result of (b1-b2) / (b1+b2) calculation. Inf values
         are set to nan. Array returned as masked if result includes nan values.
     """
+    logging.info('Calculating NDVI')
     if not (b1.shape == b2.shape):
         raise ValueError("Both arrays should have the same dimensions")
     
@@ -104,22 +106,24 @@ def enhanced_vegetation_index(red: np.array, blue: np.array, nir: np.array, L: f
         
     return evi
 
-
-def make_ndvi_plot(path, title, save_figure =True):
+def make_ndvi_plot(path, title, plot, save_figure =True):
     """ Plot NVDI data 
     
     @path: path to the numpy array with the NVDI data.
     @title: A title on the plot.
+    @plot: bool for whether to see the plots in de output or not
     """
-    
     data_ndvi = np.load(path, allow_pickle=True)
-    ep.plot_bands(data_ndvi, 
-              figsize=(28, 12),
-              cmap='RdYlGn',
-              scale=False,
-              vmin=-1, vmax=1,
-              title=title)
-    plt.show()
+    #plot ndvi
+    if plot:
+        ep.plot_bands(data_ndvi, 
+                figsize=(28, 12),
+                cmap='RdYlGn',
+                scale=False,
+                vmin=-1, vmax=1,
+                title=title)
+        plt.show()
+        logging.info('Plotted NDVI image')
     
     # Create classes and apply to NDVI results
     ndvi_class_bins = [-np.inf, 0, 0.1, 0.25, 0.4, np.inf]
@@ -131,7 +135,7 @@ def make_ndvi_plot(path, title, save_figure =True):
     )
     np.unique(ndvi_class)
 
-     # Define color map
+    # Define color map
     nbr_colors = ["gray", "y", "yellowgreen", "g", "darkgreen"]
     nbr_cmap = ListedColormap(nbr_colors)
 
@@ -143,31 +147,33 @@ def make_ndvi_plot(path, title, save_figure =True):
         "Moderate Vegetation",
         "High Vegetation",
     ]
+    legend_titles = ndvi_cat_names
 
-    # Get list of classes
-    classes = np.unique(ndvi_class)
-    classes = classes.tolist()
-    # The mask returns a value of none in the classes. remove that
-    classes = classes[0:5]
-
-    # Plot your data
+    #plot ndvi classes
     fig, ax = plt.subplots(figsize=(28, 12))
     im = ax.imshow(ndvi_class, cmap=nbr_cmap)
-
-    ep.draw_legend(im_ax=im, classes=classes)
+    ep.draw_legend(im_ax=im, titles=legend_titles)
     ax.set_title(
-        title+" Normalized Difference Vegetation Index (NDVI) Classes",
+        " Normalized Difference Vegetation Index (NDVI) Classes",
         fontsize=14,
     )
     ax.set_axis_off()
-    
-   
-    # Auto adjust subplot to fit figure size
+
+    #Auto adjust subplot to fit figure size
     plt.tight_layout()
-    
-    
-    if save_figure is True:
-        plt.savefig(path.replace("\\","/")+"_classes.png")
-    
-    return path.replace("\\","/")+"_classes.png"
+
+    #save fig
+    path_corr=path.replace("\\","/")+"_classes.png"
+    plt.savefig(path_corr)
+    logging.info(f'Saved ndvi classes figure {path_corr}')
+    print(f'Saved figure {path_corr}')
+
+    #plot figure
+    if plot:
+        print('Plotting NDVI classes image')
+        plt.show()
+    else:
+        plt.close()
+
+    return path_corr
 
