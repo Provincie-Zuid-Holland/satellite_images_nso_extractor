@@ -8,6 +8,8 @@ import json
 from satellite_images_nso.__normalisation import normalisation
 import shutil
 import logging
+import numpy as np
+import rasterio
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(funcName)s %(message)s',
@@ -175,9 +177,17 @@ class nso_georegion:
             cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi,plot)
             logging.info("Done with cropping and calculating nvdi")
 
-            # Multi date normalize the file.
-            if relative_75th_normalize == True:
-                normalisation.multidate_normalisation_75th_percentile(cropped_path)
+            with rasterio.open(cropped_path, 'r') as tif_file:
+                data = tif_file.read()
+                cloud_percentage = self.percentage_cloud(data)
+                
+                if cloud_percentage <= 0.10:
+                    logging.info(f"Image contains less than 10% clouds")
+                    print(f"Image contains less than 10% clouds")
+                    
+                    # Multi date normalize the file.
+                    if relative_75th_normalize == True:
+                        normalisation.multidate_normalisation_75th_percentile(cropped_path)
             
             logging.info(f'Succesfully cropped .tif file and added NDVI')
             print("Succesfully cropped .tif file and added NDVI")
@@ -223,7 +233,48 @@ class nso_georegion:
         """
         return self.region_name
 
-  
+    def normalize_min_max(self, kernel):
+        """
+        
+            Normalize tif file with min max scaler.
+            @param kernel: a kernel to normalize 
+
+        """
+
+        copy_kernel = np.zeros(shape=kernel.shape)
+        for x in range(0, kernel.shape[0]):
+            copy_kernel[x] = (kernel[x] - np.min(kernel[x])) / (np.max(kernel[x]) - np.min(kernel[x]))*255
+        
+        return copy_kernel
+
+    def percentage_cloud(self, kernel, initial_threshold=145, initial_mean=29.441733905207673):
+
+        """
+
+            Create mask from tif file on first band.
+
+            @param kernel: a kernel to detect percentage clouds on
+            @param initial_threshold: an initial threshold for creating a mask  
+            @param initial_mean: an initial pixel mean value of the selected band
+        
+        """
+        
+        kernel = self.normalize_min_max(self.data)
+        new_threshold = round((initial_threshold*kernel[0].mean())/(initial_threshold*initial_mean) * initial_threshold,0)
+        copy_kernel = kernel[0].copy().copy()
+        for x in range(len(kernel[0])):
+            for y in range(len(kernel[0][x])):
+                if kernel[0][x][y] == 0:
+                    copy_kernel[x][y] = 1
+                elif kernel[0][x][y] <= new_threshold:
+                    if kernel[0][x][y] > 0:
+                        copy_kernel[x][y] = 2
+                else:
+                    copy_kernel[x][y] = 3
+        
+        percentage = round((copy_kernel == 3).sum() / (copy_kernel == 2).sum(),4)
+
+        return percentage
 
 
 
