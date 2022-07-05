@@ -8,8 +8,10 @@ import json
 from satellite_images_nso.__normalisation import normalisation
 import shutil
 import logging
+import numpy as np
+import rasterio
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(funcName)s %(message)s',
                     filename='Logging_test.log'
                     )  # to see log in console remove filename
@@ -101,7 +103,7 @@ class nso_georegion:
         return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff, cloud_coverage_whole )
 
 
-    def crop_and_calculate_nvdi(self, path, calculate_nvdi):
+    def crop_and_calculate_nvdi(self, path, calculate_nvdi, plot):
         """
             Function for the crop and the calculating of the NVDI index.
             Can be used as a standalone if you have already unzipped the file.
@@ -118,20 +120,34 @@ class nso_georegion:
             logging.error(true_path+" Error:  .tif not found")
             raise Exception(".tif not found")
         else: 
-            cropped_path, nvdi_path, nvdi_matrix =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, calculate_nvdi )
-            logging.info("Cropped file is found at: "+cropped_path)
-            logging.info("The NDVI picture is found at: "+nvdi_path)
-            logging.info("NDVI numpy arrat i found at: "+nvdi_matrix)
+            cropped_path, nvdi_matrix, nvdi_path  =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, calculate_nvdi, plot)
+            logging.info(f'Cropped file is found at: {cropped_path}')
+            logging.info(f'The NDVI picture is found at: {nvdi_path}')
+            logging.info(f'NDVI numpy array is found at: {nvdi_matrix}')
 
             print("Cropped file is found at: "+str(cropped_path ))
             print("The NDVI picture is found at: "+nvdi_path)
-            print("NDVI numpy arrat i found at: "+nvdi_matrix)
+            print("NDVI numpy array is found at: "+nvdi_matrix)
+
             return cropped_path, nvdi_path, nvdi_matrix
             
-                      
-    def execute_link(self, link, calculate_nvdi = True,  delete_zip_file = True, delete_source_files = True, check_if_file_exists = True, relative_75th_normalize = False):
+    def delete_extracted (self,extracted_folder):
+        """
+        Deletes extracted folder
+
+        @param extracted_folder: path to the extracted folder
+
+        """
+        try:
+            shutil.rmtree(extracted_folder)
+            logging.info(f'Deleted extracted folder {extracted_folder}')
+        except Exception as e:
+            logging.error(f'Failed to delete extracted folder {extracted_folder} '+str(e))
+            print("Failed to delete extracted folder: "+str(e))
+
+    def execute_link(self, link, calculate_nvdi = True,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False,plot=True): #check_if_file_exists = True, 
         """ 
-            Executes the download, croppend 67and the calculating of the NVDI for a specific link.
+            Executes the download, crops and the calculates the NVDI for a specific link.
         
             @param link: Link to a file from the NSO.           
             @param calculate_nvdi: Wether or not to also calculate the NDVI for the cropped region.
@@ -142,8 +158,6 @@ class nso_georegion:
         """
 
         cropped_path = ""
-        nvdi_path = ""
-        nvdi_matrix = ""
 
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
@@ -159,32 +173,37 @@ class nso_georegion:
             logging.info("Extracted folder is: "+extracted_folder)
             print("Extracted folder is: "+extracted_folder)
             
-            logging.info("Calculating nvdi")
-            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi)
-            logging.info("Done with calculating nvdi")
+            logging.info("Cropping and calculating nvdi")
+            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi,plot)
+            logging.info("Done with cropping and calculating nvdi")
 
-            # Multi date normalize the file.
-            if relative_75th_normalize == True:
-                normalisation.multidate_normalisation_75th_percentile(cropped_path)
+            with rasterio.open(cropped_path, 'r') as tif_file:
+                data = tif_file.read()
+                cloud_percentage = self.percentage_cloud(data)
+                
+                if cloud_percentage <= 0.10:
+                    logging.info(f"Image contains less than 10% clouds")
+                    print(f"Image contains less than 10% clouds")
+                    
+                    # Multi date normalize the file.
+                    if relative_75th_normalize == True:
+                        normalisation.multidate_normalisation_75th_percentile(cropped_path)
             
-            logging.info(f'Succesfully cropped .tif file')
-            print("Succesfully cropped .tif file")
+            logging.info(f'Succesfully cropped .tif file and added NDVI')
+            print("Succesfully cropped .tif file and added NDVI")
 
         except Exception as e: 
-            logging.error("Error in downloading and or cropping: "+str(e))
-            print("Error in downloading and or cropping: "+str(e))
+            logging.error("Error in downloading and/or cropping: "+str(e))
+            print("Error in downloading and/or cropping: "+str(e))
             
-        if delete_source_files == True:
-            try:
-                shutil.rmtree(extracted_folder)
-                logging.info('Deleted source files')
-            except Exception as e:
-                logging.error("Failed to delete source files: "+str(e))
-                print("Failed to delete source files: "+str(e))
+        if delete_source_files:
+            self.delete_extracted(extracted_folder)
+        
+        print('Ready')
+        logging.info('Ready')
 
-        return cropped_path, nvdi_path, nvdi_matrix
-
-
+        # return cropped_path, nvdi_path, nvdi_matri
+        
     def check_already_downloaded_links(self):
         """
             Check which links have already been dowloaded.
@@ -214,7 +233,48 @@ class nso_georegion:
         """
         return self.region_name
 
-  
+    def normalize_min_max(self, kernel):
+        """
+        
+            Normalize tif file with min max scaler.
+            @param kernel: a kernel to normalize 
+
+        """
+
+        copy_kernel = np.zeros(shape=kernel.shape)
+        for x in range(0, kernel.shape[0]):
+            copy_kernel[x] = (kernel[x] - np.min(kernel[x])) / (np.max(kernel[x]) - np.min(kernel[x]))*255
+        
+        return copy_kernel
+
+    def percentage_cloud(self, kernel, initial_threshold=145, initial_mean=29.441733905207673):
+
+        """
+
+            Create mask from tif file on first band.
+
+            @param kernel: a kernel to detect percentage clouds on
+            @param initial_threshold: an initial threshold for creating a mask  
+            @param initial_mean: an initial pixel mean value of the selected band
+        
+        """
+        
+        kernel = self.normalize_min_max(self.data)
+        new_threshold = round((initial_threshold*kernel[0].mean())/(initial_threshold*initial_mean) * initial_threshold,0)
+        copy_kernel = kernel[0].copy().copy()
+        for x in range(len(kernel[0])):
+            for y in range(len(kernel[0][x])):
+                if kernel[0][x][y] == 0:
+                    copy_kernel[x][y] = 1
+                elif kernel[0][x][y] <= new_threshold:
+                    if kernel[0][x][y] > 0:
+                        copy_kernel[x][y] = 2
+                else:
+                    copy_kernel[x][y] = 3
+        
+        percentage = round((copy_kernel == 3).sum() / (copy_kernel == 2).sum(),4)
+
+        return percentage
 
 
 
