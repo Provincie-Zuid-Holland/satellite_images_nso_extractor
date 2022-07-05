@@ -109,7 +109,7 @@ def retrieve_download_links(georegion, user_n, pass_n, start_date , end_date , m
     return set(links)
 
 
-def download_link(link, absolute_path, user_n, pass_n): #, file_exists_check: bool = False
+def download_link(link, absolute_path, user_n, pass_n):
     """
         Method for downloading satelliet data from a link.
 
@@ -120,8 +120,8 @@ def download_link(link, absolute_path, user_n, pass_n): #, file_exists_check: bo
     try:
         # Check if file is already downloaded.
         if os.path.isfile(absolute_path) is True:
-            logging.info(absolute_path+" is already downloaded in \n" )
-            print("File already downloaded: \n"+absolute_path)
+            logging.info(f'{absolute_path} is already downloaded' )
+            print("File already downloaded: "+absolute_path)
         else:    
             
             #r = requests.get(link,auth = HTTPBasicAuth(user_n, pass_n))
@@ -148,15 +148,21 @@ def unzip_delete(path,delete):
     """
         Unzip a zip file and delete the .zip file.
     """
-    with zipfile.ZipFile(path, 'r') as zip_ref:
-        zip_ref.extractall(path.replace(".zip",""))
+    try:
+        with zipfile.ZipFile(path, 'r') as zip_ref:
+            zip_ref.extractall(path.replace(".zip",""))
+        zip_ref.close()
+    except:
+        logging.error(f'Could not extract {path}')
     
     if delete == True:
-        os.remove(path)
+        try:
+            os.remove(path)
+            logging.info('Deleted zip file')
+        except:
+            logging.error('Unable to delete zip')
 
-    zip_ref.close()
     return path.replace(".zip","")
-
 
 def check_if_geojson_in_region(row, geojson, max_diff):
     """
