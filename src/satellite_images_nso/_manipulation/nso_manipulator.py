@@ -56,6 +56,83 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped,plot):
         logging.info(f'Plotted cropped image {raster_path_cropped}')
 
 
+def add_height_NDVI(tif_input_file, height_tif_file):
+  """
+
+  Adds height(From a lidar data source) and Normalized difference vegetation index (NDVI) as extra bands to a .tif file.
+
+  Exports a new .tif file with _ndvi_height.tif behind it's original file name.
+
+  @param tif_input_file: The tif file where 2 extra bands need to be added.
+  @param height_tif_file: The tif file in 2d which shall be added to the tif input file.
+  """
+
+  inds = rasterio.open(tif_input_file, 'r') 
+  meta = inds.meta
+  meta.update(count = 6)   
+  tile = inds.read() # TODO is this behaviour similar to inds.read() ? MW: yes
+  ndvi = generate_ndvi_channel(tile)
+  #normalized_tile = np.array(normalise(tile, channel_normalisation, meta["width"], meta["height"]))  
+   
+  vegetation_height_data, vegetation_height_transform = get_ahn_data(height_tif_file)
+  heightChannel = generate_vegetation_height_channel(vegetation_height_data, vegetation_height_transform, inds.meta["transform"], meta["width"], meta["height"])
+  tile = np.append(tile, [heightChannel], axis=0)
+  tile = np.append(tile, [ndvi], axis=0)
+          
+  file_to = tif_input_file.replace(".tif","_ndvi_height.tif")#.split("/")[-1]
+  print(file_to)
+  
+ 
+  with rasterio.open(file_to, 'w', **meta) as outds:        
+                outds.write_band(1,tile[0])
+                outds.write_band(2,tile[1])
+                outds.write_band(3,tile[2])
+                outds.write_band(4,tile[3])
+                outds.write_band(5,ndvi)
+                outds.write_band(6,heightChannel)
+
+  return file_to 
+
+def get_ahn_data(ahn_input_file):
+  """
+  Generates columns from the height data file. 
+  Which can then be added as a band.
+
+  @param ahn_input_file: Path to a .tif file with height data.
+  @return a column with height data and the transformation.
+  """
+  inds = rasterio.open(ahn_input_file, 'r')        
+  vegetation_height_data = inds.read(1)
+  vegetation_height_transform = inds.meta["transform"]
+
+  return vegetation_height_data, vegetation_height_transform
+
+def generate_vegetation_height_channel(vegetation_height_data, vegetation_height_transform, target_transform, target_width, target_height):
+        """
+        Function to convert a .tif, which was created from a .laz file, into a band which can be used in a raster file with other bands.
+        
+        @param vegetation_height_data: numpy array from the ahn .tif file.
+        @param vegetation_height_transform: transform from the ahn .tif meta data.
+        @param target_transform: transform from the satellite .tif meta data.
+        @param target_width: The width from the satellite .tif file.
+        @param target_height: The height from the satellite .tif file.
+
+        @return a ndvi channel
+        """
+        print("Generating vegetation height channel...")
+        channel = np.array([[0] * target_width] * target_height, dtype=np.uint8)
+        src_height, src_width = vegetation_height_data.shape[0], vegetation_height_data.shape[1]
+        for y in tqdm.tqdm(range(target_height)):
+            for x in range(target_width):
+                rd_x, rd_y = rasterio.transform.xy(target_transform, y, x)
+                vh_y, vh_x = rasterio.transform.rowcol(vegetation_height_transform, rd_x, rd_y)
+                if vh_x < 0 or vh_x >= src_width or \
+                    vh_y < 0 or vh_y >= src_height:
+                    continue
+                # print(rd_x, rd_y, x, y, vh_x, vh_y)
+                channel[y][x] = vegetation_height_data[vh_y][vh_x]
+        return channel
+
 def transform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     """
     Maps a rasterio satellite vector object to a geo pandas dataframe per pixel. 

@@ -7,6 +7,7 @@ data/*
 geo_database.ipynb
 tests/example.py
 
+src/scheduling/coepelduynen/settings.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -144,3 +145,4 @@ log.txt
 Makefile
 make.bat
 source/*
+

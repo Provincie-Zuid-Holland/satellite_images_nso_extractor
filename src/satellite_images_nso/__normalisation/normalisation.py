@@ -1,4 +1,7 @@
 """
+
+POSSIBLY REDUNDANT BECAUSE OF CONTRAST MODEL WHICH SOLVES NORMALIZATION!
+
 This is for normalisation of satellite images.
 Which is import because of atmospheric corretion.
 
