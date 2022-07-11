@@ -162,10 +162,14 @@ class nso_georegion:
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
 
-            logging.info("Starting download to: "+ download_archive_name)
-            print("Starting download to: "+ download_archive_name)
-            nso_api.download_link(link, download_archive_name, self.username, self.password)
-            logging.info("Downloaded: "+ download_archive_name)
+            if os.path.isfile(download_archive_name):
+                logging.info("File already found, skipping download")
+                print("File already found skipping download")
+            else:
+                logging.info("Starting download to: "+ download_archive_name)
+                print("Starting download to: "+ download_archive_name)
+                nso_api.download_link(link, download_archive_name, self.username, self.password)
+                logging.info("Downloaded: "+ download_archive_name)
 
             logging.info("Extracting files")
             print("Extracting files")
