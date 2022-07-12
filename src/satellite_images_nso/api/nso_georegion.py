@@ -10,10 +10,11 @@ import shutil
 import logging
 import numpy as np
 import rasterio
+import sys
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(funcName)s %(message)s',
-                    filename='Logging_test.log'
+                    filename='Logging_nso_download.log'
                     )  # to see log in console remove filename
 
 """
@@ -145,7 +146,7 @@ class nso_georegion:
             logging.error(f'Failed to delete extracted folder {extracted_folder} '+str(e))
             print("Failed to delete extracted folder: "+str(e))
 
-    def execute_link(self, link, calculate_nvdi = True,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False,plot=True): #check_if_file_exists = True, 
+    def execute_link(self, link, calculate_nvdi = False,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False,plot=True, in_image_cloud_percentage= False, auto_skip_done_cropped_files = False): #check_if_file_exists = True, 
         """ 
             Executes the download, crops and the calculates the NVDI for a specific link.
         
@@ -155,13 +156,29 @@ class nso_georegion:
             @param delete_source_files: whether or not to keep the extracted files.
             @param check_if_file_exists: check whether the file is already downloaded or stored somewhere.
             @param relative_75th_normalize: Whether normalization has to be applied.
+            @param plot: Rather or not to plot the resulting image from cropping.
+            @param in_image_cloud_percentage:
         """
 
         cropped_path = ""
 
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
+           
+             
+            # Check if file is already cropped
+            cropped_path = download_archive_name.replace(".zip","*cropped.tif")
+            if os.path.isfile([file for file in glob.glob(cropped_path)][0].replace("\\","/")):
+                if auto_skip_done_cropped_files is True:
+                    sys.exit()
+                else:
+                    x = input("File is already cropped, continue?")
+                    if x == "no":
+                        sys.exit()
 
+
+             
+            # Check if download has already been done.
             if os.path.isfile(download_archive_name):
                 logging.info("File already found, skipping download")
                 print("File already found skipping download")
@@ -182,12 +199,14 @@ class nso_georegion:
             logging.info("Done with cropping and calculating nvdi")
 
             with rasterio.open(cropped_path, 'r') as tif_file:
-                data = tif_file.read()
-                cloud_percentage = self.percentage_cloud(data)
+
+                if in_image_cloud_percentage is True:
+                    data = tif_file.read()
+                    cloud_percentage = self.percentage_cloud(data)
                 
-                if cloud_percentage <= 0.10:
-                    logging.info(f"Image contains less than 10% clouds")
-                    print(f"Image contains less than 10% clouds")
+                    if cloud_percentage <= 0.10:
+                        logging.info(f"Image contains less than 10% clouds")
+                        print(f"Image contains less than 10% clouds")
                     
                     # Multi date normalize the file.
                     if relative_75th_normalize == True:
