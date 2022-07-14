@@ -136,6 +136,7 @@ def get_ahn_data(ahn_input_file):
   vegetation_height_data = inds.read(1)
   vegetation_height_transform = inds.meta["transform"]
 
+  inds.close()
   return vegetation_height_data, vegetation_height_transform
 
 
@@ -164,7 +165,9 @@ def add_height_NDVI(tif_input_file):
                 outds.write_band(4,tile[3])
                 outds.write_band(5,ndvi)
                 outds.write_band(6,heightChannel)
-
+                outds.close()
+  
+  inds.close()
   return file_to      
   
 

@@ -18,6 +18,7 @@ def merge_tif_files(tiff_lst, out_fp):
     for tiff in tiff_lst:
         src = rasterio.open(tiff)
         src_files_to_mosaic.append(src)
+        src.close()
 
     # Merge
     mosaic, out_trans = merge(src_files_to_mosaic)
@@ -35,6 +36,7 @@ def merge_tif_files(tiff_lst, out_fp):
     # Write the mosaic raster to disk
     with rasterio.open(out_fp, "w", **out_meta) as dest:
         dest.write(mosaic)
+        dest.close()
 
     
 def plot_tif_file(path_to_tif_file):
@@ -50,6 +52,8 @@ def plot_tif_file(path_to_tif_file):
     plt.figure(figsize=(10,10))
     rasterio.plot.show(plot_out_image,
           transform=src.transform)
+    
+    src.close()
     
 
 def switch_crs(list_coor_x, list_coor_y, crs_from, crs_to):
