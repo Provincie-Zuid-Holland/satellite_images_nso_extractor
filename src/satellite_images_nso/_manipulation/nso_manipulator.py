@@ -39,6 +39,8 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped,plot):
                  "width": out_image.shape[2],
                  "transform": out_transform})
     print('convert to RD')
+
+    src.close()
     with rasterio.open(raster_path_cropped, "w", **out_meta) as dest:
             dest.write(out_image)
             dest.close()
@@ -54,6 +56,7 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped,plot):
         rasterio.plot.show(plot_out_image,
             transform=src.transform)
         logging.info(f'Plotted cropped image {raster_path_cropped}')
+        src.close()
 
 
 def add_height_NDVI(tif_input_file, height_tif_file):
@@ -82,6 +85,7 @@ def add_height_NDVI(tif_input_file, height_tif_file):
   file_to = tif_input_file.replace(".tif","_ndvi_height.tif")#.split("/")[-1]
   print(file_to)
   
+  inds.close()
  
   with rasterio.open(file_to, 'w', **meta) as outds:        
                 outds.write_band(1,tile[0])
@@ -90,6 +94,7 @@ def add_height_NDVI(tif_input_file, height_tif_file):
                 outds.write_band(4,tile[3])
                 outds.write_band(5,ndvi)
                 outds.write_band(6,heightChannel)
+                outds.close()
 
   return file_to 
 
@@ -105,6 +110,7 @@ def get_ahn_data(ahn_input_file):
   vegetation_height_data = inds.read(1)
   vegetation_height_transform = inds.meta["transform"]
 
+  inds.close()
   return vegetation_height_data, vegetation_height_transform
 
 def generate_vegetation_height_channel(vegetation_height_data, vegetation_height_transform, target_transform, target_width, target_height):
@@ -188,7 +194,7 @@ def transform_vector_to_pixel_df(path_to_vector, add_ndvi_column = False):
     
     return gdf
 
-def move_tiff (raster_path_cropped,raster_path_cropped_moved):
+def move_tiff(raster_path_cropped,raster_path_cropped_moved):
     """
     Moves cropped tiff file to the main folder.
 
@@ -213,6 +219,7 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi,plot):
     data_ndvi = calculate_nvdi.normalized_diff(src.read()[3], src.read()[2])
     data_ndvi.dump(raster_path_nvdi)
 
+    src.close()
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi,plot)
 
 def run(raster_path, load_shape, output_folder, calculate_nvdi,plot):

@@ -161,71 +161,82 @@ class nso_georegion:
         """
 
         cropped_path = ""
+        nvdi_path = "" 
+        nvdi_matrix = ""
 
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
            
-             
+      
             # Check if file is already cropped
-            cropped_path = download_archive_name.replace(".zip","*cropped.tif")
-            if os.path.isfile([file for file in glob.glob(cropped_path)][0].replace("\\","/")):
-                if auto_skip_done_cropped_files is True:
-                    sys.exit()
-                else:
-                    x = input("File is already cropped, continue?")
-                    if x == "no":
-                        sys.exit()
+            cropped_path = download_archive_name.replace(".zip","*cropped.tif")           
+            found_files = [file for file in glob.glob(cropped_path)]
 
+            if len(found_files) >0:
+                if os.path.isfile(found_files[0].replace("\\","/")):
+                    if auto_skip_done_cropped_files is True:
+                        logging.info('File already cropped')
+                        print('File already cropped')
+                        return "File already cropped"
+                    else:
+                        logging.info('File already cropped')
+                        print("File is already cropped")
+                        x = input("File is already cropped, continue?")
+                        if x == "no":                          
+                            return "File already cropped"        
 
-             
             # Check if download has already been done.
             if os.path.isfile(download_archive_name):
-                logging.info("File already found, skipping download")
-                print("File already found skipping download")
+                    logging.info("Zip file already found, skipping download")
+                    print("Zip file found skipping download")
             else:
-                logging.info("Starting download to: "+ download_archive_name)
-                print("Starting download to: "+ download_archive_name)
-                nso_api.download_link(link, download_archive_name, self.username, self.password)
-                logging.info("Downloaded: "+ download_archive_name)
+                    logging.info("Starting download to: "+ download_archive_name)
+                    print("Starting download to: "+ download_archive_name)
+                    nso_api.download_link(link, download_archive_name, self.username, self.password)
+                    logging.info("Downloaded: "+ download_archive_name)
 
             logging.info("Extracting files")
             print("Extracting files")
             extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
             logging.info("Extracted folder is: "+extracted_folder)
             print("Extracted folder is: "+extracted_folder)
-            
+                
             logging.info("Cropping and calculating nvdi")
             cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi,plot)
             logging.info("Done with cropping and calculating nvdi")
 
-            with rasterio.open(cropped_path, 'r') as tif_file:
+            if in_image_cloud_percentage is True:
 
-                if in_image_cloud_percentage is True:
-                    data = tif_file.read()
-                    cloud_percentage = self.percentage_cloud(data)
-                
-                    if cloud_percentage <= 0.10:
-                        logging.info(f"Image contains less than 10% clouds")
-                        print(f"Image contains less than 10% clouds")
+                with rasterio.open(cropped_path, 'r') as tif_file:        
+                        data = tif_file.read()
+                        cloud_percentage = self.percentage_cloud(data)
                     
-                    # Multi date normalize the file.
-                    if relative_75th_normalize == True:
-                        normalisation.multidate_normalisation_75th_percentile(cropped_path)
-            
+                        if cloud_percentage <= 0.10:
+                            logging.info(f"Image contains less than 10% clouds")
+                            print(f"Image contains less than 10% clouds")
+                        
+                        # Multi date normalize the file.
+                        if relative_75th_normalize == True:
+                            normalisation.multidate_normalisation_75th_percentile(cropped_path)
+                        
+                        tif_file.close()
+                
             logging.info(f'Succesfully cropped .tif file and added NDVI')
             print("Succesfully cropped .tif file and added NDVI")
+             
+            if delete_source_files:
+                self.delete_extracted(extracted_folder)
 
         except Exception as e: 
             logging.error("Error in downloading and/or cropping: "+str(e))
             print("Error in downloading and/or cropping: "+str(e))
             
-        if delete_source_files:
-            self.delete_extracted(extracted_folder)
+       
         
         print('Ready')
         logging.info('Ready')
 
-        # return cropped_path, nvdi_path, nvdi_matri
+        return cropped_path, nvdi_path, nvdi_matrix
         
     def check_already_downloaded_links(self):
         """
