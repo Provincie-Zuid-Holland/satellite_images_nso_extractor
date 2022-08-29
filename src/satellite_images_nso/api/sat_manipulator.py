@@ -8,7 +8,6 @@ As such it's just a place holder.
 
 I have more of a Java background so i am not sure if this is also the correct way in python to make private functions public.
 
-
 @author: Michael de Winter
 
 """
