@@ -5,6 +5,7 @@ import pandas as pd
 from rasterio.warp import Resampling, transform_geom, calculate_default_transform, reproject
 import numpy as np
 import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
+import satellite_images_nso.__lidar.ahn as ahn
 from matplotlib import pyplot as plt
 import shutil
 import logging
@@ -74,7 +75,7 @@ def add_height_NDVI(tif_input_file, height_tif_file):
   meta = inds.meta
   meta.update(count = 6)   
   tile = inds.read() # TODO is this behaviour similar to inds.read() ? MW: yes
-  ndvi = generate_ndvi_channel(tile)
+  ndvi = ahn.generate_ndvi_channel(tile)
   #normalized_tile = np.array(normalise(tile, channel_normalisation, meta["width"], meta["height"]))  
    
   vegetation_height_data, vegetation_height_transform = get_ahn_data(height_tif_file)
