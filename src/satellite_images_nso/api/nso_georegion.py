@@ -146,7 +146,7 @@ class nso_georegion:
             logging.error(f'Failed to delete extracted folder {extracted_folder} '+str(e))
             print("Failed to delete extracted folder: "+str(e))
 
-    def execute_link(self, link, calculate_nvdi = False,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False,plot=True, in_image_cloud_percentage= False, auto_skip_done_cropped_files = False): #check_if_file_exists = True, 
+    def execute_link(self, link, calculate_nvdi = False,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False,plot=True, add_ndvi_and_height = False): #check_if_file_exists = True, 
         """ 
             Executes the download, crops and the calculates the NVDI for a specific link.
         
@@ -157,7 +157,8 @@ class nso_georegion:
             @param check_if_file_exists: check whether the file is already downloaded or stored somewhere.
             @param relative_75th_normalize: Whether normalization has to be applied.
             @param plot: Rather or not to plot the resulting image from cropping.
-            @param in_image_cloud_percentage:
+            @param add_ndvi_and_height: Wether or not to add ndvi and height as 2 new bands, input should be a file location to the height file. TODO: Split height and ndvi.
+            TODO: @param in_image_cloud_percentage: Calculate the cloud percentage in a picture.
         """
 
         cropped_path = ""
@@ -235,6 +236,9 @@ class nso_georegion:
         
         print('Ready')
         logging.info('Ready')
+
+        if add_ndvi_and_height != False:
+                cropped_path = nso_manipulator.add_height_NDVI(cropped_path, add_ndvi_and_height)
 
         return cropped_path, nvdi_path, nvdi_matrix
         
