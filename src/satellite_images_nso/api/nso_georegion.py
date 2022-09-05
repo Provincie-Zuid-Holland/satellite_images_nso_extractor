@@ -132,7 +132,7 @@ class nso_georegion:
 
             return cropped_path, nvdi_path, nvdi_matrix
             
-    def delete_extracted (self,extracted_folder):
+    def delete_extracted(self,extracted_folder):
         """
         Deletes extracted folder
 
@@ -146,7 +146,7 @@ class nso_georegion:
             logging.error(f'Failed to delete extracted folder {extracted_folder} '+str(e))
             print("Failed to delete extracted folder: "+str(e))
 
-    def execute_link(self, link, calculate_nvdi = False,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False,plot=True, add_ndvi_and_height = False): #check_if_file_exists = True, 
+    def execute_link(self, link, calculate_nvdi = False,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False, plot=True, in_image_cloud_percentage = False, auto_skip_done_cropped_files = False, add_ndvi_and_height = False): #check_if_file_exists = True, 
         """ 
             Executes the download, crops and the calculates the NVDI for a specific link.
         
@@ -157,6 +157,7 @@ class nso_georegion:
             @param check_if_file_exists: check whether the file is already downloaded or stored somewhere.
             @param relative_75th_normalize: Whether normalization has to be applied.
             @param plot: Rather or not to plot the resulting image from cropping.
+            @param auto_skip_done_cropped_files: Skip cropping if there is already a file with exists with the cropped file name.
             @param add_ndvi_and_height: Wether or not to add ndvi and height as 2 new bands, input should be a file location to the height file. TODO: Split height and ndvi.
             TODO: @param in_image_cloud_percentage: Calculate the cloud percentage in a picture.
         """
@@ -229,8 +230,10 @@ class nso_georegion:
                 self.delete_extracted(extracted_folder)
 
         except Exception as e: 
+            
             logging.error("Error in downloading and/or cropping: "+str(e))
             print("Error in downloading and/or cropping: "+str(e))
+            raise Exception("Error in downloading and/or cropping: "+str(e) )
             
        
         

@@ -9,6 +9,7 @@ import satellite_images_nso.__lidar.ahn as ahn
 from matplotlib import pyplot as plt
 import shutil
 import logging
+import tqdm
 
 """
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
@@ -16,7 +17,7 @@ import logging
     @author: Michael de Winter.
 """
 
-def __make_the_crop(load_shape, raster_path, raster_path_cropped,plot):
+def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
     """
         This crops the sattelite image with a chosen shape.
 
@@ -75,7 +76,7 @@ def add_height_NDVI(tif_input_file, height_tif_file):
   meta = inds.meta
   meta.update(count = 6)   
   tile = inds.read() # TODO is this behaviour similar to inds.read() ? MW: yes
-  ndvi = ahn.generate_ndvi_channel(tile)
+  ndvi = calculate_nvdi.generate_ndvi_channel(tile)
   #normalized_tile = np.array(normalise(tile, channel_normalisation, meta["width"], meta["height"]))  
    
   vegetation_height_data, vegetation_height_transform = get_ahn_data(height_tif_file)
@@ -238,6 +239,8 @@ def run(raster_path, load_shape, output_folder, calculate_nvdi,plot):
     print(f'cropping file {raster_path}')
     logging.info(f'cropping file {raster_path}')
     raster_path_cropped = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped.tif")
+    print("New cropped filename: "+raster_path_cropped)
+    logging.info("New cropped filename: "+raster_path_cropped)
     __make_the_crop(load_shape,raster_path,raster_path_cropped,plot)
     print(f'finished cropping {raster_path}')
     logging.info(f'Finished cropping file {raster_path}')
