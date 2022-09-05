@@ -5,7 +5,7 @@ import earthpy.plot as ep
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 import logging
-
+import tqdm
 """
     This class is used for various NVDI calculations.
 
@@ -21,6 +21,20 @@ def aggregate_ndvi_habitat(ndvi_geo_df: gpd.geodataframe.GeoDataFrame) -> pd.Ser
     """
     return ndvi_geo_df['ndvi'].agg(['mean', 'std', 'min', 'max', 'count'])
 
+def generate_ndvi_channel(tile):
+        """
+        Generate ndvi channel from 2 bands.
+        
+        @param tile: rgbi tile to calculate to the NDVI from.
+        @return a NDVI channel.
+        """
+        print("Generating NDVI channel...")
+        red = tile[2]
+        nir = tile[3]
+        ndvi = []
+        for i in tqdm.tqdm(range(len(red))):
+            ndvi.append((nir[i]-red[i])/(nir[i]+red[i]+1e-10)*255)
+        return np.array(ndvi, dtype=np.uint8)
     
 def normalized_diff(b1: np.array, b2: np.array) -> np.array:
     """Take two n-dimensional numpy arrays and calculate the normalized
