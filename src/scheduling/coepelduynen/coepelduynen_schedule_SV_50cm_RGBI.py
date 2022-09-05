@@ -1,4 +1,5 @@
-import satellite_images_nso.api.nso_georegion as nso
+from sre_constants import SUCCESS
+import satellite_images_nso.api.nso_georegion as nso_georegion
 from satellite_images_nso._nso_data_extraction import nso_api
 import rasterio
 import numpy as np
@@ -9,6 +10,8 @@ import settings
 import logging
 from azure.storage.blob import ContainerClient
 import tqdm
+import os
+import argparse
 
 """ 
 
@@ -45,7 +48,7 @@ def init():
     Set a nso georegion and retrieve links.
   """
   # This method fetches all the download links to all the satelliet images which contain region in the geojson
-  georegion = nso.nso_georegion(settings.path_geojson_coepelduynen,settings.output_path_coepelduynen,\
+  georegion = nso_georegion.nso_georegion(settings.path_geojson_coepelduynen,settings.output_path_coepelduynen,\
 ***REMOVED***  settings.nso_username,\
 ***REMOVED***settings.nso_password)
 
@@ -171,22 +174,66 @@ def add_height_NDVI(tif_input_file):
   return file_to      
   
 
+def single_link(link):
+    """
+    Execute only a single link and then upload to a blob storage.
+
+    TODO: Clean up a little bit.
+    @param link: the link to execute.
+    """
+
+    logger.info(link)
+    links,georegion = init()
+    cropped_location, no, no2 = georegion.execute_link(link, calculate_nvdi = False)
+    print(cropped_location)
+    logging.info("New cropped file found at: "+cropped_location)
+    logger.info('Adding new channels')
+    file_all_channels = add_height_NDVI(cropped_location)
+    logger.info("Uploading")
+    upload_file_rm_blob(file_all_channels, file_all_channels.split("/")[-1])
+
+
 if __name__ == '__main__':
+
+  #TODO: Test this
+  parser = argparse.ArgumentParser(description='A NSO schedule problem')
+  parser.add_argument("--single_link", help="Only execute a single link", default=False)
+
+  args = parser.parse_args()
+
+  if args.single_link is not False:
+    single_link(args.single_link)
+
 
   links,georegion = init()
 
+  
   done_files = check_downloaded_tif_files(settings.output_path_coepelduynen)
 
   SV_links = filter_links(links, done_files)
+  logger.info("Output folder "+georegion.output_folder)
+
+  # Save files to csv to check if things downloaded well
+  a = np.array(SV_links)
+  np.savetxt('to_do_files.csv', a, delimiter=',')
+
+  download_success = False
 
   if len(SV_links) >0:
     logger.info("Found new links")
     for link in SV_links:
       logger.info(link)
       cropped_location, no, no2 = georegion.execute_link(link, calculate_nvdi = False)
+      print(cropped_location)
+      logging.info("New cropped file found at: "+cropped_location)
       logger.info('Adding new channels')
       file_all_channels = add_height_NDVI(cropped_location)
       logger.info("Uploading")
       upload_file_rm_blob(file_all_channels, file_all_channels.split("/")[-1])
+    download_success = True
   else:
       logger.info("No new links")
+
+# Download to do files.
+if download_success is True:
+  os.remove('to_do_files.csv')
