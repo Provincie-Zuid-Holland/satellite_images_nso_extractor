@@ -29,12 +29,29 @@ def generate_ndvi_channel(tile):
         @return a NDVI channel.
         """
         print("Generating NDVI channel...")
-        red = tile[2]
+        red = tile[0]
         nir = tile[3]
         ndvi = []
+
+        # None numpy way.
         for i in tqdm.tqdm(range(len(red))):
-            ndvi.append((nir[i]-red[i])/(nir[i]+red[i]+1e-10)*255)
-        return np.array(ndvi, dtype=np.uint8)
+            ndvi_x = []
+            for x in range(len(red[i])):
+                upper_ndvi = (int(nir[i][x]-int(red[i][x])))
+                lower_ndvi = (int(nir[i][x])+int(red[i][x]))
+
+                if lower_ndvi == 0:
+                    ndvi_x.append(0)
+                else:
+                    ndvi_cur = upper_ndvi/lower_ndvi
+                    ndvi_cur = (ndvi_cur*100)+100
+                    ndvi_x.append(int(ndvi_cur))
+            ndvi.append(ndvi_x)
+
+        #for i in tqdm.tqdm(range(len(red))):
+        #        ndvi.append(np.nan_to_num(np.divide(np.subtract(nir[i],red[i]), np.add(nir[i],red[i]))))  
+
+        return ndvi
     
 def normalized_diff(b1: np.array, b2: np.array) -> np.array:
     """Take two n-dimensional numpy arrays and calculate the normalized
