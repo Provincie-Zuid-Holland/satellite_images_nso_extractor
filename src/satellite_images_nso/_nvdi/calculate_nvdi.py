@@ -33,24 +33,22 @@ def generate_ndvi_channel(tile):
         nir = tile[3]
         ndvi = []
 
-        # None numpy way.
+        # No more numpy way for looping through these array's which lead to not good ndvi calculation.
+        # Now we loop through each pixel directly
         for i in tqdm.tqdm(range(len(red))):
             ndvi_x = []
             for x in range(len(red[i])):
-                upper_ndvi = (int(nir[i][x]-int(red[i][x])))
+                upper_ndvi = (int(nir[i][x])-int(red[i][x]))
                 lower_ndvi = (int(nir[i][x])+int(red[i][x]))
 
                 if lower_ndvi == 0:
                     ndvi_x.append(0)
                 else:
                     ndvi_cur = upper_ndvi/lower_ndvi
+                    ndvi_cur = ndvi_cur
                     ndvi_cur = (ndvi_cur*100)+100
                     ndvi_x.append(int(ndvi_cur))
             ndvi.append(ndvi_x)
-
-        #for i in tqdm.tqdm(range(len(red))):
-        #        ndvi.append(np.nan_to_num(np.divide(np.subtract(nir[i],red[i]), np.add(nir[i],red[i]))))  
-
         return ndvi
     
 def normalized_diff(b1: np.array, b2: np.array) -> np.array:
