@@ -3,6 +3,7 @@ import satellite_images_nso.api.nso_georegion as nso_georegion
 from satellite_images_nso._nso_data_extraction import nso_api
 import rasterio
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from rasterio.plot import show
 import glob
@@ -102,12 +103,29 @@ def generate_ndvi_channel(tile):
         @return a NDVI channel.
         """
         print("Generating NDVI channel...")
-        red = tile[2]
+        red = tile[0]
         nir = tile[3]
         ndvi = []
+
+        # None numpy way.
         for i in tqdm.tqdm(range(len(red))):
-            ndvi.append((nir[i]-red[i])/(nir[i]+red[i]+1e-10)*255)
-        return np.array(ndvi, dtype=np.uint8)
+            ndvi_x = []
+            for x in range(len(red[i])):
+                upper_ndvi = (int(nir[i][x]-int(red[i][x])))
+                lower_ndvi = (int(nir[i][x])+int(red[i][x]))
+
+                if lower_ndvi == 0:
+                    ndvi_x.append(0)
+                else:
+                    ndvi_cur = upper_ndvi/lower_ndvi
+                    ndvi_cur = (ndvi_cur*100)+100
+                    ndvi_x.append(int(ndvi_cur))
+            ndvi.append(ndvi_x)
+
+        #for i in tqdm.tqdm(range(len(red))):
+        #        ndvi.append(np.nan_to_num(np.divide(np.subtract(nir[i],red[i]), np.add(nir[i],red[i]))))  
+
+        return ndvi
 
 def generate_vegetation_height_channel(vegetation_height_data, vegetation_height_transform, target_transform, target_width, target_height):
         """
@@ -166,7 +184,7 @@ def add_height_NDVI(tif_input_file):
                 outds.write_band(2,tile[1])
                 outds.write_band(3,tile[2])
                 outds.write_band(4,tile[3])
-                outds.write_band(5,ndvi)
+                outds.write_band(5,np.array(ndvi))
                 outds.write_band(6,heightChannel)
                 outds.close()
   
@@ -201,8 +219,9 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  if args.single_link is not False:
-    single_link(args.single_link)
+  print(args)
+  #if args.single_link is not False:
+   # single_link(args.single_link)
 
 
   links,georegion = init()
@@ -214,8 +233,9 @@ if __name__ == '__main__':
   logger.info("Output folder "+georegion.output_folder)
 
   # Save files to csv to check if things downloaded well
-  a = np.array(SV_links)
-  np.savetxt('to_do_files.csv', a, delimiter=',')
+  a = pd.DataFrame(SV_links)
+  print(a)
+  a.to_csv('./to_do_files.csv')
 
   download_success = False
 
@@ -223,6 +243,7 @@ if __name__ == '__main__':
     logger.info("Found new links")
     for link in SV_links:
       logger.info(link)
+      #TODO: debugger does not go into this level, so use this script to only check for new files.
       cropped_location, no, no2 = georegion.execute_link(link, calculate_nvdi = False)
       print(cropped_location)
       logging.info("New cropped file found at: "+cropped_location)
@@ -233,6 +254,12 @@ if __name__ == '__main__':
     download_success = True
   else:
       logger.info("No new links")
+  
+  if settings.only_add_ndvi_height == True:
+    file_all_channels = add_height_NDVI(settings.add_height_ndvi_file)
+    logger.info("Uploading")
+    upload_file_rm_blob(file_all_channels, file_all_channels.split("/")[-1])
+
 
 # Download to do files.
 if download_success is True:
