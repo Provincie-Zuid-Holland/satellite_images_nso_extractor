@@ -104,13 +104,13 @@ class nso_georegion:
         return nso_api.retrieve_download_links(self.georegion,self.username, self.password, start_date, end_date, max_meters,strict_region, max_diff, cloud_coverage_whole )
 
 
-    def crop_and_calculate_nvdi(self, path, calculate_nvdi, plot):
+    def crop(self, path, plot):
         """
             Function for the crop and the calculating of the NVDI index.
             Can be used as a standalone if you have already unzipped the file.
 
             @oaram path: Path to a .tif file.
-            @param calculate_nvdi: Wether or not to also calculate the NVDI index.
+          
         """       
         true_path = path
         if '.tif' not in true_path:
@@ -121,16 +121,12 @@ class nso_georegion:
             logging.error(true_path+" Error:  .tif not found")
             raise Exception(".tif not found")
         else: 
-            cropped_path, nvdi_matrix, nvdi_path  =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, calculate_nvdi, plot)
+            cropped_path  =  nso_manipulator.run(true_path, self.path_to_geojson, self.output_folder, plot)
             logging.info(f'Cropped file is found at: {cropped_path}')
-            logging.info(f'The NDVI picture is found at: {nvdi_path}')
-            logging.info(f'NDVI numpy array is found at: {nvdi_matrix}')
-
+            
             print("Cropped file is found at: "+str(cropped_path ))
-            print("The NDVI picture is found at: "+nvdi_path)
-            print("NDVI numpy array is found at: "+nvdi_matrix)
-
-            return cropped_path, nvdi_path, nvdi_matrix
+        
+            return cropped_path
             
     def delete_extracted(self,extracted_folder):
         """
@@ -146,25 +142,24 @@ class nso_georegion:
             logging.error(f'Failed to delete extracted folder {extracted_folder} '+str(e))
             print("Failed to delete extracted folder: "+str(e))
 
-    def execute_link(self, link, calculate_nvdi = False,  delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False, plot=True, in_image_cloud_percentage = False, auto_skip_done_cropped_files = False, add_ndvi_and_height = False): #check_if_file_exists = True, 
+    def execute_link(self, link, delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False, plot=True, in_image_cloud_percentage = False, auto_skip_done_cropped_files = False, add_ndvi_band = False, add_height_band = False ): #check_if_file_exists = True, 
         """ 
             Executes the download, crops and the calculates the NVDI for a specific link.
         
-            @param link: Link to a file from the NSO.           
-            @param calculate_nvdi: Wether or not to also calculate the NDVI for the cropped region.
+            @param link: Link to a file from the NSO.                    
             @param delete_zip_file: whether or not to keep the original .zip file.
             @param delete_source_files: whether or not to keep the extracted files.
             @param check_if_file_exists: check whether the file is already downloaded or stored somewhere.
-            @param relative_75th_normalize: Whether normalization has to be applied.
+            @param relative_75th_normalize: Whether normalization has to be applied. TODO: See if this can be removed.
             @param plot: Rather or not to plot the resulting image from cropping.
             @param auto_skip_done_cropped_files: Skip cropping if there is already a file with exists with the cropped file name.
-            @param add_ndvi_and_height: Wether or not to add ndvi and height as 2 new bands, input should be a file location to the height file. TODO: Split height and ndvi.
+            @param add_ndvi_band: Whether or not to add the ndvi as a new band.
+            @param add_height_band: Whether or not to height as new bands, input should be a file location to the height file.
             TODO: @param in_image_cloud_percentage: Calculate the cloud percentage in a picture.
         """
 
         cropped_path = ""
-        nvdi_path = "" 
-        nvdi_matrix = ""
+        
 
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
@@ -203,9 +198,9 @@ class nso_georegion:
             logging.info("Extracted folder is: "+extracted_folder)
             print("Extracted folder is: "+extracted_folder)
                 
-            logging.info("Cropping and calculating nvdi")
-            cropped_path, nvdi_path, nvdi_matrix = self.crop_and_calculate_nvdi(extracted_folder,calculate_nvdi,plot)
-            logging.info("Done with cropping and calculating nvdi")
+            logging.info("Cropping")
+            cropped_path, nvdi_path, nvdi_matrix = self.crop(extracted_folder,plot)
+            logging.info("Done with cropping")
 
             if in_image_cloud_percentage is True:
 
@@ -223,8 +218,8 @@ class nso_georegion:
                         
                         tif_file.close()
                 
-            logging.info(f'Succesfully cropped .tif file and added NDVI')
-            print("Succesfully cropped .tif file and added NDVI")
+            logging.info(f'Succesfully cropped .tif file')
+            print("Succesfully cropped .tif file")
              
             if delete_source_files:
                 self.delete_extracted(extracted_folder)
@@ -240,10 +235,15 @@ class nso_georegion:
         print('Ready')
         logging.info('Ready')
 
-        if add_ndvi_and_height != False:
-                cropped_path = nso_manipulator.add_height_NDVI(cropped_path, add_ndvi_and_height)
+        # Add extra channels.
+        if add_ndvi_band != False:
+                cropped_path = nso_manipulator.add_NDVI(cropped_path)
 
-        return cropped_path, nvdi_path, nvdi_matrix
+        if add_height_band != False:
+            cropped_path = nso_manipulator.add_height(cropped_path,add_height)
+        
+
+        return cropped_path
         
     def check_already_downloaded_links(self):
         """
