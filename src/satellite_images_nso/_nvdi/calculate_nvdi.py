@@ -45,11 +45,11 @@ def generate_ndvi_channel(tile):
                     ndvi_x.append(0)
                 else:
                     ndvi_cur = upper_ndvi/lower_ndvi
-                    ndvi_cur = ndvi_cur
                     ndvi_cur = (ndvi_cur*100)+100
                     ndvi_x.append(int(ndvi_cur))
+                    
             ndvi.append(ndvi_x)
-        return ndvi
+        return np.array(ndvi)
     
 def normalized_diff(b1: np.array, b2: np.array) -> np.array:
     """Take two n-dimensional numpy arrays and calculate the normalized

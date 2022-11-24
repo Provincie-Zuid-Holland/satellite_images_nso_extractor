@@ -61,7 +61,33 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
         src.close()
 
 
-def add_height_NDVI(tif_input_file, height_tif_file):
+def add_NDVI(tif_input_file):
+    """
+    Add a ndvi band to a .tif file.
+    
+    @param tif_input_file: Path to a .tif file.
+    """
+    
+    inds = rasterio.open(tif_input_file, 'r') 
+    meta = inds.meta     
+    tile = inds.read() 
+    file_to = tif_input_file.replace(".tif","_ndvi.tif")
+    meta.update(count = len(tile)+1) 
+
+    ndvi = calculate_nvdi.generate_ndvi_channel(tile)
+    inds.close()
+
+    print("Done with calculating NDVI, saving to: "+file_to)
+    with rasterio.open(file_to, 'w', **meta) as outds:
+                for band in range(0,len(tile)):
+                    outds.write_band(band+1,tile[band])        
+               
+                outds.write_band(len(tile)+1,ndvi)              
+                outds.close()
+
+    return file_to 
+
+def add_height(tif_input_file, height_tif_file):
   """
 
   Adds height(From a lidar data source) and Normalized difference vegetation index (NDVI) as extra bands to a .tif file.
@@ -80,9 +106,7 @@ def add_height_NDVI(tif_input_file, height_tif_file):
   #normalized_tile = np.array(normalise(tile, channel_normalisation, meta["width"], meta["height"]))  
    
   vegetation_height_data, vegetation_height_transform = get_ahn_data(height_tif_file)
-  heightChannel = generate_vegetation_height_channel(vegetation_height_data, vegetation_height_transform, inds.meta["transform"], meta["width"], meta["height"])
-  tile = np.append(tile, [heightChannel], axis=0)
-  tile = np.append(tile, [ndvi], axis=0)
+ 
           
   file_to = tif_input_file.replace(".tif","_ndvi_height.tif")#.split("/")[-1]
   print(file_to)
@@ -90,24 +114,18 @@ def add_height_NDVI(tif_input_file, height_tif_file):
   inds.close()
  
   with rasterio.open(file_to, 'w', **meta) as outds:        
-                outds.write_band(1,tile[0])
-                outds.write_band(2,tile[1])
-                outds.write_band(3,tile[2])
-                outds.write_band(4,tile[3])
-                outds.write_band(5,ndvi)
-                outds.write_band(6,heightChannel)
-                outds.close()
+            for band in range(0,len(tile)):
+                    outds.write_band(band+1,tile[band]) 
+          
+            outds.write_band(len(tile)+1,heightChannel)
+            outds.close()
 
   return file_to 
 
-def get_ahn_data(ahn_input_file):
-  """
-  Generates columns from the height data file. 
-  Which can then be added as a band.
 
-  @param ahn_input_file: Path to a .tif file with height data.
-  @return a column with height data and the transformation.
-  """
+
+def get_ahn_data(ahn_input_file):
+
   inds = rasterio.open(ahn_input_file, 'r')        
   vegetation_height_data = inds.read(1)
   vegetation_height_transform = inds.meta["transform"]
@@ -224,18 +242,16 @@ def __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi,plot):
     src.close()
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi,raster_path_nvdi,plot)
 
-def run(raster_path, load_shape, output_folder, calculate_nvdi,plot):
+def run(raster_path, load_shape, output_folder, plot):
     """
-        Main run method, combines the cropping of the file based on the shape and calculates the NVDI index.
+        Main run method, combines the cropping of the file based on the shape.
 
         @param raster_path: path to a raster file.
         @param load_shape: path the file that needs to be cropped.
-        @param calculate_nvdi: Wether or not to also to calculate the nvdi index.
         @return: the path where the cropped file is stored or where the nvdi is stored.
     """    
     raster_path_cropped_moved = ""
-    raster_path_nvdi_path  = ""
-    nvdi_output_classes_png_output_path = ""
+ 
     print(f'cropping file {raster_path}')
     logging.info(f'cropping file {raster_path}')
     raster_path_cropped = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped.tif")
@@ -248,32 +264,9 @@ def run(raster_path, load_shape, output_folder, calculate_nvdi,plot):
     raster_path_cropped = raster_path_cropped.replace("\\", "/") 
     raster_path_cropped_moved = output_folder+"/"+raster_path_cropped.split("/")[len(raster_path_cropped.split("/"))-1]
     
-
-    if calculate_nvdi == True:
-        raster_path_nvdi = raster_path.replace(".tif","_"+load_shape.split("/")[len(load_shape.split("/"))-1].split('.')[0]+"_cropped_nvdi")
-        nvdi_output_classes_png_output = __calculate_nvdi_function(raster_path_cropped,raster_path_nvdi,plot)
-
-        raster_path_nvdi = raster_path_nvdi.replace("\\", "/")
-        raster_path_nvdi_path = output_folder+"/"+raster_path_nvdi.split("/")[len(raster_path_nvdi.split("/"))-1]
-
-        nvdi_output_classes_png_output = nvdi_output_classes_png_output.replace("\\","/")
-        nvdi_output_classes_png_output_path = output_folder+"/"+nvdi_output_classes_png_output.split("/")[len(nvdi_output_classes_png_output.split("/"))-1]
-
-        try:
-            shutil.move(raster_path_nvdi,raster_path_nvdi_path)
-            logging.info("Moving file to this ndvi array path: "+raster_path_nvdi_path)
-        except:
-            logging.error(f'Failed to move file to {raster_path_nvdi_path}')
-            
-        try:
-            shutil.move(nvdi_output_classes_png_output,nvdi_output_classes_png_output_path)
-            logging.info("Moving file to this file classes path: "+nvdi_output_classes_png_output_path)
-        except:
-            logging.error(f'Failed to move file to {nvdi_output_classes_png_output_path}')
-
     move_tiff(raster_path_cropped,raster_path_cropped_moved)
 
-    return raster_path_cropped_moved, raster_path_nvdi_path, nvdi_output_classes_png_output_path
+    return raster_path_cropped_moved
 
 
 
