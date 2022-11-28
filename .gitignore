@@ -146,3 +146,6 @@ Makefile
 make.bat
 source/*
 
+src/settings.py
+src/__init__.py
+
