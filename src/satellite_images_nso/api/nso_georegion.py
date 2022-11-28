@@ -142,25 +142,21 @@ class nso_georegion:
             logging.error(f'Failed to delete extracted folder {extracted_folder} '+str(e))
             print("Failed to delete extracted folder: "+str(e))
 
-    def execute_link(self, link, delete_zip_file = False, delete_source_files = True, relative_75th_normalize = False, plot=True, in_image_cloud_percentage = False, auto_skip_done_cropped_files = False, add_ndvi_band = False, add_height_band = False ): #check_if_file_exists = True, 
+    def execute_link(self, link, delete_zip_file = False, delete_source_files = True,  plot=True, in_image_cloud_percentage = False,  add_ndvi_band = False, add_height_band = False ): 
         """ 
             Executes the download, crops and the calculates the NVDI for a specific link.
         
             @param link: Link to a file from the NSO.                    
-            @param delete_zip_file: whether or not to keep the original .zip file.
-            @param delete_source_files: whether or not to keep the extracted files.
-            @param check_if_file_exists: check whether the file is already downloaded or stored somewhere.
-            @param relative_75th_normalize: Whether normalization has to be applied. TODO: See if this can be removed.
+            @param delete_zip_file: whether or not to keep the original .zip file on default it will keep the file.
+            @param delete_source_files: whether or not to keep the extracted files on defualt it will delete the source files.
             @param plot: Rather or not to plot the resulting image from cropping.
-            @param auto_skip_done_cropped_files: Skip cropping if there is already a file with exists with the cropped file name.
+            @param in_image_cloud_percentage:  TODO: Calculate the cloud percentage in a picture.
             @param add_ndvi_band: Whether or not to add the ndvi as a new band.
             @param add_height_band: Whether or not to height as new bands, input should be a file location to the height file.
-            TODO: @param in_image_cloud_percentage: Calculate the cloud percentage in a picture.
+           
         """
-
         cropped_path = ""
         
-
         try:
             download_archive_name = self.output_folder+"/"+link.split("/")[len(link.split("/"))-1]+"_"+link.split("/")[len(link.split("/"))-2]+'.zip'
            
@@ -168,81 +164,83 @@ class nso_georegion:
             # Check if file is already cropped
             cropped_path = download_archive_name.replace(".zip","*cropped.tif")           
             found_files = [file for file in glob.glob(cropped_path)]
+            skip_cropping = False
 
             if len(found_files) >0:
                 if os.path.isfile(found_files[0].replace("\\","/")):
-                    if auto_skip_done_cropped_files is True:
-                        logging.info('File already cropped')
-                        print('File already cropped')
-                        return "File already cropped"
-                    else:
                         logging.info('File already cropped')
                         print("File is already cropped")
-                        x = input("File is already cropped, continue?")
-                        if x == "no":                          
-                            return "File already cropped"        
+                        skip_cropping = True
+                        cropped_path = found_files[0]
+                       # Does not work in notebook mode, input
+                       # x = input("File is already cropped, continue?")
+                       # if x == "no":                          
+                       #     return "File already cropped"        
+            if skip_cropping is False: 
 
-            # Check if download has already been done.
-            if os.path.isfile(download_archive_name):
-                    logging.info("Zip file already found, skipping download")
-                    print("Zip file found skipping download")
-            else:
-                    logging.info("Starting download to: "+ download_archive_name)
-                    print("Starting download to: "+ download_archive_name)
-                    nso_api.download_link(link, download_archive_name, self.username, self.password)
-                    logging.info("Downloaded: "+ download_archive_name)
-
-            logging.info("Extracting files")
-            print("Extracting files")
-            extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
-            logging.info("Extracted folder is: "+extracted_folder)
-            print("Extracted folder is: "+extracted_folder)
-                
-            logging.info("Cropping")
-            cropped_path, nvdi_path, nvdi_matrix = self.crop(extracted_folder,plot)
-            logging.info("Done with cropping")
-
-            if in_image_cloud_percentage is True:
-
-                with rasterio.open(cropped_path, 'r') as tif_file:        
-                        data = tif_file.read()
-                        cloud_percentage = self.percentage_cloud(data)
+                # Check if download has already been done.
+                if os.path.isfile(download_archive_name):
+                        logging.info("Zip file already found, skipping download")
+                        print("Zip file found skipping download")
+                else:
+                        logging.info("Starting download to: "+ download_archive_name)
+                        print("Starting download to: "+ download_archive_name)
+                        nso_api.download_link(link, download_archive_name, self.username, self.password)
+                        logging.info("Downloaded: "+ download_archive_name)
+          
+                logging.info("Extracting files")
+                print("Extracting files")
+                extracted_folder = nso_api.unzip_delete(download_archive_name,delete_zip_file)
+                logging.info("Extracted folder is: "+extracted_folder)
+                print("Extracted folder is: "+extracted_folder)
                     
-                        if cloud_percentage <= 0.10:
-                            logging.info(f"Image contains less than 10% clouds")
-                            print(f"Image contains less than 10% clouds")
+                logging.info("Cropping")
+                cropped_path = self.crop(extracted_folder,plot)
+                logging.info("Done with cropping")
+
+                # TODO: Function still needed to calculate clouds in a image.
+                if in_image_cloud_percentage is True:
+
+                    with rasterio.open(cropped_path, 'r') as tif_file:        
+                            data = tif_file.read()
+                            cloud_percentage = self.percentage_cloud(data)
                         
-                        # Multi date normalize the file.
-                        if relative_75th_normalize == True:
-                            normalisation.multidate_normalisation_75th_percentile(cropped_path)
-                        
-                        tif_file.close()
+                            if cloud_percentage <= 0.10:
+                                logging.info(f"Image contains less than 10% clouds")
+                                print(f"Image contains less than 10% clouds")
+                            
+                            
+                            tif_file.close()
+                    
+                logging.info(f'Succesfully cropped .tif file')
+                print("Succesfully cropped .tif file")
                 
-            logging.info(f'Succesfully cropped .tif file')
-            print("Succesfully cropped .tif file")
-             
-            if delete_source_files:
-                self.delete_extracted(extracted_folder)
+                if delete_source_files:
+                    self.delete_extracted(extracted_folder)
 
         except Exception as e: 
             
             logging.error("Error in downloading and/or cropping: "+str(e))
             print("Error in downloading and/or cropping: "+str(e))
             raise Exception("Error in downloading and/or cropping: "+str(e) )
-            
-       
-        
+                   
         print('Ready')
         logging.info('Ready')
 
         # Add extra channels.
         if add_ndvi_band != False:
+            if "ndvi" in cropped_path:
+                print("NDVI is already in it's path")
+            else:
                 cropped_path = nso_manipulator.add_NDVI(cropped_path)
 
+        # Add height from a source AHN .tif file.
         if add_height_band != False:
-            cropped_path = nso_manipulator.add_height(cropped_path,add_height)
+            if "height" in cropped_path:
+                print("Height is already in it's path")
+            else:
+                cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
         
-
         return cropped_path
         
     def check_already_downloaded_links(self):
