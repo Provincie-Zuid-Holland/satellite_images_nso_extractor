@@ -102,14 +102,14 @@ def add_height(tif_input_file, height_tif_file):
   meta = inds.meta
   meta.update(count = 6)   
   tile = inds.read() # TODO is this behaviour similar to inds.read() ? MW: yes
-  ndvi = calculate_nvdi.generate_ndvi_channel(tile)
+  
   #normalized_tile = np.array(normalise(tile, channel_normalisation, meta["width"], meta["height"]))  
    
   vegetation_height_data, vegetation_height_transform = get_ahn_data(height_tif_file)
   heightChannel = generate_vegetation_height_channel(vegetation_height_data, vegetation_height_transform, inds.meta["transform"], meta["width"], meta["height"])
  
           
-  file_to = tif_input_file.replace(".tif","_ndvi_height.tif")#.split("/")[-1]
+  file_to = tif_input_file.replace(".tif","_height.tif")
   print(file_to)
   
   inds.close()
