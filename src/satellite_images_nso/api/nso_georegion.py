@@ -114,7 +114,7 @@ class nso_georegion:
         """       
         true_path = path
         if '.tif' not in true_path:
-            for x in glob.glob(path+'/*.tif', recursive=True):
+            for x in glob.glob(path+'/**/*.tif', recursive=True):
                 true_path = x
         
         if ".tif" not in true_path:
