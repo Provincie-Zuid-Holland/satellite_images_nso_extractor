@@ -162,10 +162,14 @@ class nso_georegion:
            
       
             # Check if file is already cropped
-            cropped_path = download_archive_name.replace(".zip","*cropped.tif")           
+            cropped_path = download_archive_name.split("_")[0]+"*cropped*.tif"
+            print("Searching for: "+str(cropped_path))
+            logging.info("Searching for: "+str(cropped_path))             
             found_files = [file for file in glob.glob(cropped_path)]
             skip_cropping = False
 
+            print("Found files: "+str(found_files))
+            logging.info("Found files: "+str(found_files)) 
             if len(found_files) >0:
                 if os.path.isfile(found_files[0].replace("\\","/")):
                         logging.info('File already cropped')
@@ -227,20 +231,21 @@ class nso_georegion:
         print('Ready')
         logging.info('Ready')
 
-        # Add extra channels.
-        if add_ndvi_band != False:
-            if "ndvi" in cropped_path:
-                print("NDVI is already in it's path")
-            else:
-                cropped_path = nso_manipulator.add_NDVI(cropped_path)
+        if skip_cropping is False: 
+            # Add extra channels.
+            if add_ndvi_band != False:
+                if "ndvi" in cropped_path:
+                    print("NDVI is already in it's path")
+                else:
+                    cropped_path = nso_manipulator.add_NDVI(cropped_path)
 
-        # Add height from a source AHN .tif file.
-        if add_height_band != False:
-            if "height" in cropped_path:
-                print("Height is already in it's path")
-            else:
-                cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
-        
+            # Add height from a source AHN .tif file.
+            if add_height_band != False:
+                if "height" in cropped_path:
+                    print("Height is already in it's path")
+                else:
+                    cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
+            
         return cropped_path
         
     def check_already_downloaded_links(self):
