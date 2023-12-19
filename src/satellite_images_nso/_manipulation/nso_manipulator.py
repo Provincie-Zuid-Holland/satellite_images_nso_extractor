@@ -87,6 +87,36 @@ def add_NDVI(tif_input_file):
 
     return file_to 
 
+
+
+def add_Red_Edge_NDVI(tif_input_file):
+    """
+    Add a ndvi band to a .tif file.
+    
+    @param tif_input_file: Path to a .tif file.
+    """
+    
+    inds = rasterio.open(tif_input_file, 'r') 
+    meta = inds.meta     
+    tile = inds.read() 
+    file_to = tif_input_file.replace(".tif","_re_ndvi.tif")
+    meta.update(count = len(tile)+1) 
+
+    ndvi = calculate_nvdi.generate_red_edge_ndvi_channel(tile)
+    inds.close()
+
+    print("Done with calculating NDVI, saving to: "+file_to)
+    with rasterio.open(file_to, 'w', **meta) as outds:
+                for band in range(0,len(tile)):
+                    outds.write_band(band+1,tile[band])        
+               
+                outds.write_band(len(tile)+1,ndvi)              
+                outds.close()
+
+    return file_to 
+
+
+
 def add_height(tif_input_file, height_tif_file):
   """
 
