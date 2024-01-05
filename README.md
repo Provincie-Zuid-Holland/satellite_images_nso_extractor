@@ -90,6 +90,16 @@ conda activate satellite_images_nso_extractor
 pip install -r requirements.txt
 ```
 
+Navigate to the [satellite-images-nso-datascience repository](https://github.com/Provincie-Zuid-Holland/satellite-images-nso-datascience) and then run:
+
+```sh
+pip install .
+```
+
+# Application
+
+Copy `settings_example.py` and rename to `settings.py`. Change the variables in there as desired and then execute `nso_notebook_example.ipynb`.
+
 # Run as a docker container
 
 ```console
