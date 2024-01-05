@@ -192,7 +192,7 @@ class nso_georegion:
         add_ndvi_band=False,
         add_height_band=False,
         add_red_edge_ndvi_band=False,
-        cloud_detection_warning=True,
+        cloud_detection_warning=False,
     ):
         """
         Executes the download, crops and the calculates the NVDI for a specific link.
@@ -296,8 +296,8 @@ class nso_georegion:
             )
 
             if clouds:
-                Warning(
-                    f"Clouds have been detected in {cropped_path}. Verify if you wish to continue with segmentation for this image."
+                raise Warning(
+                    f"WARNING: Clouds have been detected in {cropped_path}. Inspect image visually before continuing to segmentation."
                 )
 
         # Add extra channels.
