@@ -184,15 +184,15 @@ class nso_georegion:
 
     def execute_link(
         self,
-        link,
-        delete_zip_file=False,
-        delete_source_files=True,
-        plot=True,
-        in_image_cloud_percentage=False,
-        add_ndvi_band=False,
-        add_height_band=None,
-        add_red_edge_ndvi_band=False,
-        cloud_detection_warning=False,
+        link: str,
+        delete_zip_file: bool = False,
+        delete_source_files: bool = True,
+        plot: bool = True,
+        in_image_cloud_percentage: bool = False,
+        add_ndvi_band: bool = False,
+        add_height_band: str = None,
+        add_red_edge_ndvi_band: bool = False,
+        cloud_detection_warning: bool = False,
     ):
         """
         Executes the download, crops and the calculates the NVDI for a specific link.
@@ -264,7 +264,7 @@ class nso_georegion:
                 logging.info("Done with cropping")
 
                 # TODO: Function still needed to calculate clouds in a image.
-                if in_image_cloud_percentage is True:
+                if in_image_cloud_percentage:
                     with rasterio.open(cropped_path, "r") as tif_file:
                         data = tif_file.read()
                         cloud_percentage = self.percentage_cloud(data)
