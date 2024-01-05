@@ -1,6 +1,17 @@
 # Rename to nso_manipulator for more apporiate name.
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 
+"""
+
+This class is used to make a public interface for some the functionalities which are intended to be private.
+As such it's just a place holder.
+
+I have more of a Java background so i am not sure if this is also the correct way in python to make private functions public.
+
+@author: Michael de Winter
+
+"""
+
 def transform_vector_to_pixel_gpdf(path_to_vector, add_ndvi_column = False):
     """
         Public wrapper around the nso manipulator for transforming a vector to a pixel geoDataFrame.
@@ -22,8 +33,6 @@ def crop_nso_satellite_image(shape_file, path_to_tiff_file, output_path):
         @param output_path: Where the crop should be stored.
     """
     return nso_manipulator.__make_the_crop(shape_file, path_to_tiff_file, output_path)
-
-
 
 def get_season_for_month(month):
     """

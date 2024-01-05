@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setup(
     name="satellite_images_nso", # Replace with your own username
-    version="1.1.16",
+    version="1.2.5",
     author="Michael de Winter",
     author_email="m.r.dewinter88@live.nl",
-    description="Satellie extraction and cropper",
+    description="NSO Satellite Extractor and cropper",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ProvZH/satellite_images_nso",
