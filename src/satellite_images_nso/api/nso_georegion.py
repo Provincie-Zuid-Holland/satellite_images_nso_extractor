@@ -76,12 +76,12 @@ class nso_georegion:
         except Exception as e:
             print(e)
 
-        if self.georegion == False:
+        if not self.georegion:
             raise Exception(
                 "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
             )
 
-        if os.path.isdir(output_folder) == True:
+        if os.path.isdir(output_folder):
             self.output_folder = correct_file_path(output_folder)
         else:
             raise ValueError("Output directory does not exists")
@@ -190,7 +190,7 @@ class nso_georegion:
         plot=True,
         in_image_cloud_percentage=False,
         add_ndvi_band=False,
-        add_height_band=False,
+        add_height_band=None,
         add_red_edge_ndvi_band=False,
         cloud_detection_warning=False,
     ):
@@ -270,12 +270,12 @@ class nso_georegion:
                         cloud_percentage = self.percentage_cloud(data)
 
                         if cloud_percentage <= 0.10:
-                            logging.info(f"Image contains less than 10% clouds")
-                            print(f"Image contains less than 10% clouds")
+                            logging.info("Image contains less than 10% clouds")
+                            print("Image contains less than 10% clouds")
 
                         tif_file.close()
 
-                logging.info(f"Succesfully cropped .tif file")
+                logging.info("Succesfully cropped .tif file")
                 print("Succesfully cropped .tif file")
 
                 if delete_source_files:
@@ -301,20 +301,20 @@ class nso_georegion:
                 )
 
         # Add extra channels.
-        if add_ndvi_band != False:
+        if add_ndvi_band:
             if "ndvi" in cropped_path:
                 print("NDVI is already in it's path")
             else:
                 cropped_path = nso_manipulator.add_NDVI(cropped_path)
 
         # Add height from a source AHN .tif file.
-        if add_height_band != False:
+        if add_height_band:
             if "height" in cropped_path:
                 print("Height is already in it's path")
             else:
                 cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
 
-        if add_red_edge_ndvi_band != False:
+        if add_red_edge_ndvi_band:
             if "re_ndvi" in cropped_path:
                 print("Red Edge NDVI is already in it's path")
             else:
