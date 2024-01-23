@@ -195,36 +195,6 @@ def add_height(tif_input_file, height_tif_file):
         destination.write_band(meta["count"], masked_height.squeeze())
     return output_file_path
 
-    # inds = rasterio.open(tif_input_file, "r")
-    # meta = inds.meta
-    # #   meta.update(count = 6)
-    # tile = inds.read()  # TODO is this behaviour similar to inds.read() ? MW: yes
-
-    # # normalized_tile = np.array(normalise(tile, channel_normalisation, meta["width"], meta["height"]))
-
-    # vegetation_height_data, vegetation_height_transform = get_ahn_data(height_tif_file)
-    # heightChannel = generate_vegetation_height_channel(
-    #     vegetation_height_data,
-    #     vegetation_height_transform,
-    #     inds.meta["transform"],
-    #     meta["width"],
-    #     meta["height"],
-    # )
-
-    # file_to = tif_input_file.replace(".tif", "_height.tif")
-    # print(file_to)
-
-    # inds.close()
-
-    # with rasterio.open(file_to, "w", **meta) as outds:
-    #     for band in range(0, len(tile)):
-    #         outds.write_band(band + 1, tile[band])
-
-    #     outds.write_band(len(tile) + 1, heightChannel)
-    #     outds.close()
-
-    # return file_to
-
 
 def get_ahn_data(ahn_input_file):
     inds = rasterio.open(ahn_input_file, "r")
