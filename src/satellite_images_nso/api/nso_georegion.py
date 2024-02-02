@@ -310,27 +310,18 @@ class nso_georegion:
                 print("NDVI is already in it's path")
             else:
                 index_channels_to_add += ["ndvi"]
-                # cropped_path = nso_manipulator.add_index_channel(
-                #     cropped_path, channel_type="ndvi"
-                # )
 
         if add_red_edge_ndvi_band:
             if "re_ndvi" in cropped_path:
                 print("Red Edge NDVI is already in it's path")
             else:
                 index_channels_to_add += ["re_ndvi"]
-                # cropped_path = nso_manipulator.add_index_channel(
-                #     cropped_path, channel_type="re_ndvi"
-                # )
 
         if add_ndwi_band:
             if "ndwi" in cropped_path:
                 print("NDWI is already in it's path")
             else:
                 index_channels_to_add += ["ndwi"]
-                # cropped_path = nso_manipulator.add_index_channel(
-                #     cropped_path, channel_type="ndwi"
-                # )
         cropped_path = nso_manipulator.add_index_channels(
             cropped_path, channel_types=index_channels_to_add
         )
