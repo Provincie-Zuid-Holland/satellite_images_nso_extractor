@@ -105,6 +105,7 @@ def add_index_channels(tif_input_file: str, channel_types: list):
     with rasterio.open(tif_input_file, "r") as dataset:
         profile = dataset.profile
         profile.update(count=dataset.count + len(channel_types))
+        descriptions = dataset.descriptions + tuple(channel_types)
         index_channels = []
 
         for channel_type in channel_types:
@@ -123,6 +124,7 @@ def add_index_channels(tif_input_file: str, channel_types: list):
                 output_dataset.write_band(band, dataset.read(band))
         for i in range(0, len(index_channels)):
             output_dataset.write_band(dataset.count + 1 + i, index_channels[i])
+        output_dataset.descriptions = descriptions
 
     return file_to
 
