@@ -40,32 +40,38 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
     @param raster_path_cropped: path were the cropped raster will be stored.
     """
     geo_file = gpd.read_file(load_shape)
-    src = rasterio.open(raster_path)
-    print("raster path opened")
-    # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-    if geo_file.crs != "epsg:28992":
-        geo_file = geo_file.to_crs(epsg=28992)
+    with rasterio.open(raster_path) as src:
+        print("raster path opened")
+        # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
+        if geo_file.crs != "epsg:28992":
+            geo_file = geo_file.to_crs(epsg=28992)
 
-    out_image, out_transform = rasterio.mask.mask(
-        src, geo_file["geometry"], crop=True, filled=True
-    )
-    out_profile = src.profile
+        out_image, out_transform = rasterio.mask.mask(
+            src, geo_file["geometry"], crop=True, filled=True
+        )
+        out_profile = src.profile
 
-    out_profile.update(
-        {
-            "driver": "GTiff",
-            "interleave": "band",
-            "tiled": True,
-            "height": out_image.shape[1],
-            "width": out_image.shape[2],
-            "transform": out_transform,
-        }
-    )
+        out_profile.update(
+            {
+                "driver": "GTiff",
+                "interleave": "band",
+                "tiled": True,
+                "height": out_image.shape[1],
+                "width": out_image.shape[2],
+                "transform": out_transform,
+            }
+        )
+        if src.count == 4:
+            # Assume Superview image
+            descriptions = ("r", "g", "b", "i")
+        elif src.count == 6:
+            # Assume PNEO image
+            descriptions = ("r", "g", "b", "n", "e", "d")
     print("convert to RD")
 
-    src.close()
     with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
         dest.write(out_image)
+        dest.descriptions = descriptions
         dest.close()
 
     if plot:
@@ -147,6 +153,7 @@ def add_height(tif_input_file, height_tif_file):
         crop_window = box(*input_src.bounds)
         profile = input_src.profile
         profile.update(count=profile["count"] + 1)
+        descriptions = input_src.descriptions + ("height",)
 
     with rasterio.open(height_tif_file, "r") as height_src:
         height_res_x = height_src.res[0]
@@ -189,6 +196,7 @@ def add_height(tif_input_file, height_tif_file):
             for i in range(1, profile["count"]):
                 destination.write_band(i, input_src.read(i))
         destination.write_band(profile["count"], masked_height.squeeze())
+        destination.descriptions = descriptions
     return output_file_path
 
 
