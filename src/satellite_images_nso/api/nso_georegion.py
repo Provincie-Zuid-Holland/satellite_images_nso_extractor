@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 import shutil
+import warnings
 from datetime import date
 
 import geopandas as gpd
@@ -299,7 +300,7 @@ class nso_georegion:
             )
 
             if clouds:
-                raise Warning(
+                warnings.warn(
                     f"WARNING: Clouds have been detected in {cropped_path}. Inspect image visually before continuing to segmentation."
                 )
 
