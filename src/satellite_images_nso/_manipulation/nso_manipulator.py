@@ -64,11 +64,9 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
 
         # WARNING: we only assume Superview or PNEO satellites here! Change for your specific satellite
         if src.count == 4:
-            # Assume Superview image
             print("Assuming Superview Satellite columns")
             descriptions = ("r", "g", "b", "i")
         elif src.count == 6:
-            # Assume PNEO image
             print("Assuming PNEO Satellite columns")
             descriptions = ("r", "g", "b", "n", "e", "d")
     print("convert to RD")
