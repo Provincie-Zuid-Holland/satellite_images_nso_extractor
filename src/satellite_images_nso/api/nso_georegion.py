@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 import shutil
+import warnings
 from datetime import date
 
 import geopandas as gpd
@@ -192,6 +193,7 @@ class nso_georegion:
         add_ndvi_band: bool = False,
         add_height_band: str = None,
         add_red_edge_ndvi_band: bool = False,
+        add_ndwi_band: bool = False,
         cloud_detection_warning: bool = False,
     ):
         """
@@ -204,23 +206,25 @@ class nso_georegion:
         @param in_image_cloud_percentage:  TODO: Calculate the cloud percentage in a picture.
         @param add_ndvi_band: Whether or not to add the ndvi as a new band.
         @param add_height_band: Whether or not to height as new bands, input should be a file location to the height file.
+        @param add_red_edge_ndvi_band: Whether or not to add the re_ndvi as a new band.
+        @param add_ndwi_band: Whether or not to add the ndwi as a new band.
         @param cloud_detection_warning: Whether to give warning when clouds have been detected
 
         """
         cropped_path = ""
 
         try:
+            start_archive_name = link.split("/")[len(link.split("/")) - 1]
+            end_archive_name = link.split("/")[len(link.split("/")) - 2]
             download_archive_name = (
-                self.output_folder
-                + "/"
-                + link.split("/")[len(link.split("/")) - 1]
-                + "_"
-                + link.split("/")[len(link.split("/")) - 2]
-                + ".zip"
+                f"{self.output_folder}/{start_archive_name}_{end_archive_name}.zip"
             )
 
             # Check if file is already cropped
-            cropped_path = download_archive_name.split("_")[0] + "*cropped*.tif"
+            cropped_path = os.path.join(
+                self.output_folder,
+                f"{start_archive_name}*cropped*.tif",
+            )
             print("Searching for: " + str(cropped_path))
             logging.info("Searching for: " + str(cropped_path))
             found_files = [file for file in glob.glob(cropped_path)]
@@ -296,16 +300,32 @@ class nso_georegion:
             )
 
             if clouds:
-                raise Warning(
+                warnings.warn(
                     f"WARNING: Clouds have been detected in {cropped_path}. Inspect image visually before continuing to segmentation."
                 )
 
         # Add extra channels.
+        index_channels_to_add = []
         if add_ndvi_band:
             if "ndvi" in cropped_path:
                 print("NDVI is already in it's path")
             else:
-                cropped_path = nso_manipulator.add_NDVI(cropped_path)
+                index_channels_to_add += ["ndvi"]
+
+        if add_red_edge_ndvi_band:
+            if "re_ndvi" in cropped_path:
+                print("Red Edge NDVI is already in it's path")
+            else:
+                index_channels_to_add += ["re_ndvi"]
+
+        if add_ndwi_band:
+            if "ndwi" in cropped_path:
+                print("NDWI is already in it's path")
+            else:
+                index_channels_to_add += ["ndwi"]
+        cropped_path = nso_manipulator.add_index_channels(
+            cropped_path, channel_types=index_channels_to_add
+        )
 
         # Add height from a source AHN .tif file.
         if add_height_band:
@@ -313,12 +333,6 @@ class nso_georegion:
                 print("Height is already in it's path")
             else:
                 cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
-
-        if add_red_edge_ndvi_band:
-            if "re_ndvi" in cropped_path:
-                print("Red Edge NDVI is already in it's path")
-            else:
-                cropped_path = nso_manipulator.add_Red_Edge_NDVI(cropped_path)
 
         return cropped_path
 

@@ -17,7 +17,11 @@ from rasterio.warp import (
 from shapely.geometry import box
 
 import satellite_images_nso.__lidar.ahn as ahn
-import satellite_images_nso._nvdi.calculate_nvdi as calculate_nvdi
+from satellite_images_nso._index_channels.calculate_index_channels import (
+    generate_ndvi_channel,
+    generate_ndwi_channel,
+    generate_red_edge_ndvi_channel,
+)
 
 """
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
@@ -36,30 +40,40 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
     @param raster_path_cropped: path were the cropped raster will be stored.
     """
     geo_file = gpd.read_file(load_shape)
-    src = rasterio.open(raster_path)
-    print("raster path opened")
-    # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-    if geo_file.crs != "epsg:28992":
-        geo_file = geo_file.to_crs(epsg=28992)
+    with rasterio.open(raster_path) as src:
+        print("raster path opened")
+        # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
+        if geo_file.crs != "epsg:28992":
+            geo_file = geo_file.to_crs(epsg=28992)
 
-    out_image, out_transform = rasterio.mask.mask(
-        src, geo_file["geometry"], crop=True, filled=True
-    )
-    out_meta = src.meta
+        out_image, out_transform = rasterio.mask.mask(
+            src, geo_file["geometry"], crop=True, filled=True
+        )
+        out_profile = src.profile
 
-    out_meta.update(
-        {
-            "driver": "GTiff",
-            "height": out_image.shape[1],
-            "width": out_image.shape[2],
-            "transform": out_transform,
-        }
-    )
+        out_profile.update(
+            {
+                "driver": "GTiff",
+                "interleave": "band",
+                "tiled": True,
+                "height": out_image.shape[1],
+                "width": out_image.shape[2],
+                "transform": out_transform,
+            }
+        )
+
+        # WARNING: we only assume Superview or PNEO satellites here! Change for your specific satellite
+        if src.count == 4:
+            print("Assuming Superview Satellite columns")
+            descriptions = ("r", "g", "b", "i")
+        elif src.count == 6:
+            print("Assuming PNEO Satellite columns")
+            descriptions = ("r", "g", "b", "n", "e", "d")
     print("convert to RD")
 
-    src.close()
-    with rasterio.open(raster_path_cropped, "w", **out_meta) as dest:
+    with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
         dest.write(out_image)
+        dest.descriptions = descriptions
         dest.close()
 
     if plot:
@@ -80,56 +94,45 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
         src.close()
 
 
-def add_NDVI(tif_input_file):
+def add_index_channels(tif_input_file: str, channel_types: list):
     """
-    Add a ndvi band to a .tif file.
+    Add various index channels to a .tif file.
 
     @param tif_input_file: Path to a .tif file.
+    @param channel_types: Valid channel_types are: ["ndvi", "re_ndvi", "ndwi"]
     """
+    if len(channel_types) == 0:
+        return tif_input_file
 
-    inds = rasterio.open(tif_input_file, "r")
-    meta = inds.meta
-    tile = inds.read()
-    file_to = tif_input_file.replace(".tif", "_ndvi.tif")
-    meta.update(count=len(tile) + 1)
+    file_to = tif_input_file
+    for channel_type in channel_types:
+        if channel_type not in ["ndvi", "re_ndvi", "ndwi"]:
+            raise ValueError(f"Unknown channel type: {channel_type}")
+        file_to = file_to.replace(".tif", f"_{channel_type}.tif")
 
-    ndvi = calculate_nvdi.generate_ndvi_channel(tile)
-    inds.close()
+    with rasterio.open(tif_input_file, "r") as dataset:
+        profile = dataset.profile
+        profile.update(count=dataset.count + len(channel_types))
+        descriptions = dataset.descriptions + tuple(channel_types)
+        index_channels = []
 
-    print("Done with calculating NDVI, saving to: " + file_to)
-    with rasterio.open(file_to, "w", **meta) as outds:
-        for band in range(0, len(tile)):
-            outds.write_band(band + 1, tile[band])
+        for channel_type in channel_types:
+            if channel_type == "ndvi":
+                index_channels += [generate_ndvi_channel(dataset)]
+            if channel_type == "re_ndvi":
+                index_channels += [generate_red_edge_ndvi_channel(dataset)]
+            if channel_type == "ndwi":
+                index_channels += [generate_ndwi_channel(dataset)]
+            print(f"Done with calculating {channel_type} channel")
 
-        outds.write_band(len(tile) + 1, ndvi)
-        outds.close()
-
-    return file_to
-
-
-def add_Red_Edge_NDVI(tif_input_file):
-    """
-    Add a ndvi band to a .tif file.
-
-    @param tif_input_file: Path to a .tif file.
-    """
-
-    inds = rasterio.open(tif_input_file, "r")
-    meta = inds.meta
-    tile = inds.read()
-    file_to = tif_input_file.replace(".tif", "_re_ndvi.tif")
-    meta.update(count=len(tile) + 1)
-
-    ndvi = calculate_nvdi.generate_red_edge_ndvi_channel(tile)
-    inds.close()
-
-    print("Done with calculating NDVI, saving to: " + file_to)
-    with rasterio.open(file_to, "w", **meta) as outds:
-        for band in range(0, len(tile)):
-            outds.write_band(band + 1, tile[band])
-
-        outds.write_band(len(tile) + 1, ndvi)
-        outds.close()
+    with rasterio.open(file_to, "w", **profile) as output_dataset:
+        print(f"Saving to {file_to}")
+        with rasterio.open(tif_input_file, "r") as dataset:
+            for band in range(1, dataset.count + 1):
+                output_dataset.write_band(band, dataset.read(band))
+        for i in range(0, len(index_channels)):
+            output_dataset.write_band(dataset.count + 1 + i, index_channels[i])
+        output_dataset.descriptions = descriptions
 
     return file_to
 
@@ -144,13 +147,15 @@ def add_height(tif_input_file, height_tif_file):
     @param tif_input_file: The tif file where 2 extra bands need to be added.
     @param height_tif_file: The tif file in 2d which shall be added to the tif input file.
     """
+    print("Adding height to tif file")
     output_file_path = tif_input_file.replace(".tif", "_height.tif")
 
     with rasterio.open(tif_input_file, "r") as input_src:
         input_res_x = input_src.res[0]
         crop_window = box(*input_src.bounds)
-        meta = input_src.meta
-        meta.update(count=meta["count"] + 1)
+        profile = input_src.profile
+        profile.update(count=profile["count"] + 1)
+        descriptions = input_src.descriptions + ("height",)
 
     with rasterio.open(height_tif_file, "r") as height_src:
         height_res_x = height_src.res[0]
@@ -188,11 +193,12 @@ def add_height(tif_input_file, height_tif_file):
     with rasterio.open(output_file_path, "r") as destination:
         masked_height, _ = rasterio.mask.mask(destination, [crop_window], crop=True)
 
-    with rasterio.open(output_file_path, "w", **meta) as destination:
+    with rasterio.open(output_file_path, "w", **profile) as destination:
         with rasterio.open(tif_input_file, "r") as input_src:
-            for i in range(1, meta["count"]):
+            for i in range(1, profile["count"]):
                 destination.write_band(i, input_src.read(i))
-        destination.write_band(meta["count"], masked_height.squeeze())
+        destination.write_band(profile["count"], masked_height.squeeze())
+        destination.descriptions = descriptions
     return output_file_path
 
 
