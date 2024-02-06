@@ -4,3 +4,5 @@ tqdm == 4.66.1
 jupyter == 1.0.0
 rasterio == 1.3.9
 earthpy == 0.9.4
+azure-identity == 1.15.0
+azure-storage-blob == 12.19.0
