@@ -3,7 +3,7 @@ import os
 import rasterio
 import tqdm
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
+from azure.storage.blob import BlobServiceClient
 from settings import account_url
 
 # Set variables

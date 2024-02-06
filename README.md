@@ -96,6 +96,10 @@ Navigate to the [satellite-images-nso-datascience repository](https://github.com
 pip install .
 ```
 
+### Additional steps for running postprocessing scripts
+
+Additionally, the postprocessing scripts use the Azure SDK, requiring Azure CLI to log in. Follow the [Microsoft Instructions](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on how to install the Azure CLI.
+
 # Application
 
 Copy `settings_example.py` and rename to `settings.py`. Change the variables in there as desired and then execute `nso_notebook_example.ipynb`.
