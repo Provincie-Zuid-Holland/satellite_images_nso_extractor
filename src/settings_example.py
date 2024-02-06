@@ -9,3 +9,6 @@ output_path = ""
 cloud_detection_model_path = None
 
 links_must_contain = []  # i.e. ["SV", "50cm", "RGBI", "2022"]
+account_url = (
+    ""  # blob storage account url, only relevant when using postprocessing scripts
+)
