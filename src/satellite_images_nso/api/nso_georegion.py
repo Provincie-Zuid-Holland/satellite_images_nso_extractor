@@ -6,12 +6,12 @@ import pickle
 import shutil
 import warnings
 from datetime import date
-
+from datetime import datetime
 import geopandas as gpd
 import numpy as np
 import rasterio
 from cloud_recognition.api import detect_clouds
-
+from rasterio.merge import merge
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 import satellite_images_nso._nso_data_extraction.nso_api as nso_api
 
@@ -31,12 +31,37 @@ logging.basicConfig(
 """
 
 
+@staticmethod
 def correct_file_path(path):
     "File path does not need to end with /"
     path = path.replace("\\", "/")
     if path.endswith("/"):
         return path[:-1]
     return path
+
+
+# Function to merge two GeoTIFF files
+@staticmethod
+def merge_tiffs(input_files, output_file):
+
+    raster_to_mosiac = []
+    # Open the input files
+    src_files_to_mosaic = [rasterio.open(file) for file in input_files]
+
+    # Merge the files
+    mosaic, out_trans = merge(src_files_to_mosaic)
+
+    output_meta = src_files_to_mosaic[0].meta.copy()
+    output_meta.update(
+        {
+            "driver": "GTiff",
+            "height": mosaic.shape[1],
+            "width": mosaic.shape[2],
+            "transform": out_trans,
+        }
+    )
+    with rasterio.open(output_file, "w", **output_meta) as dest:
+        dest.write(mosaic)
 
 
 class nso_georegion:
@@ -48,12 +73,15 @@ class nso_georegion:
 
     def __init__(
         self,
-        path_to_geojson: str,
         output_folder: str,
         username: str,
         password: str,
+        path_to_geojson: str = None,
+        coordinates: str = None,
+        previous_path_to_geojson: str = None,
+        previous_link: str = None,
         cloud_detection_model_path: str = None,
-    ):
+    ) -> None:
         """
         Init of the class.
 
@@ -63,17 +91,30 @@ class nso_georegion:
         @param password: the password of the nso account
         @cloud_detection_model_path: optional location of a .sav of a cloud detection model
         """
+        if path_to_geojson is not None:
+            self.path_to_geojson = correct_file_path(path_to_geojson)
+            # Name needs to be included in the geojson name.
+            self.region_name = path_to_geojson.split("/")[
+                len(path_to_geojson.split("/")) - 1
+            ].split(".")[0]
 
-        self.path_to_geojson = correct_file_path(path_to_geojson)
-        # Name needs to be included in the geojson name.
-        self.region_name = path_to_geojson.split("/")[
-            len(path_to_geojson.split("/")) - 1
-        ].split(".")[0]
+        elif coordinates is not None:
+            self.region_name = "fill_region"
+
+        elif previous_path_to_geojson is not None and coordinates is not None:
+            self.path_to_geojson = correct_file_path(path_to_geojson)
+            # Name needs to be included in the geojson name.
+            self.region_name = path_to_geojson.split("/")[
+                len(path_to_geojson.split("/")) - 1
+            ].split(".")[0]
 
         self.georegion = False
         try:
-            # georegion is a variable which contains the coordinates in the geojson, which should be WGS!
-            self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+            # georegion is a variable which contains the coordinates in the geojson, which should be WGS84!
+            if path_to_geojson is not None:
+                self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+            elif coordinates is not None:
+                self.georegion = coordinates
         except Exception as e:
             print(e)
 
@@ -92,6 +133,11 @@ class nso_georegion:
         if cloud_detection_model_path:
             self.cloud_detection_model = pickle.load(
                 open(cloud_detection_model_path, "rb")
+            )
+
+        if previous_link is not None:
+            self.previous_link_date = datetime.strptime(
+                previous_link.split("/")[-1].split("_")[0], "%Y%m%d"
             )
 
     def __getFeatures(self, path):
@@ -117,6 +163,7 @@ class nso_georegion:
         strict_region=True,
         max_diff=0.8,
         cloud_coverage_whole=30,
+        find_nearest_to_previous_link: bool = False,
     ):
         """
         This functions retrieves download links for area chosen in the geojson for the nso.
@@ -129,7 +176,8 @@ class nso_georegion:
         @param cloud_coverage_whole: level percentage of clouds to filter out of the whole satellite image, so 30 means the percentage has to be less or equal to 30.
         @return: the found download links.
         """
-        return nso_api.retrieve_download_links(
+
+        links = nso_api.retrieve_download_links(
             self.georegion,
             self.username,
             self.password,
@@ -140,6 +188,22 @@ class nso_georegion:
             max_diff,
             cloud_coverage_whole,
         )
+
+        if find_nearest_to_previous_link is True:
+
+            # Find the link closed to the previous link.
+            link_dates = [
+                datetime.strptime(link[0].split("/")[-1].split("_")[0], "%Y%m%d")
+                for link in links
+            ]
+            links = links[
+                min(
+                    range(len(link_dates)),
+                    key=lambda i: abs(link_dates[i] - self.previous_link_date),
+                )
+            ]
+
+        return links
 
     def crop(self, path, plot):
         """
@@ -159,7 +223,7 @@ class nso_georegion:
             raise Exception(".tif not found")
         else:
             cropped_path = nso_manipulator.run(
-                true_path, self.path_to_geojson, self.output_folder, plot
+                true_path, self.georegion, self.region_name, self.output_folder, plot
             )
             logging.info(f"Cropped file is found at: {cropped_path}")
 
@@ -195,6 +259,8 @@ class nso_georegion:
         add_red_edge_ndvi_band: bool = False,
         add_ndwi_band: bool = False,
         cloud_detection_warning: bool = False,
+        fill_with_nearest_date: bool = False,
+        fill_coordinates: [] = [],
     ):
         """
         Executes the download, crops and the calculates the NVDI for a specific link.
@@ -333,6 +399,31 @@ class nso_georegion:
                 print("Height is already in it's path")
             else:
                 cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
+
+        if fill_with_nearest_date:
+            print(
+                "-----Filling satellite image with data from the nearest other satellite----"
+            )
+            nearest_georegion = nso_georegion(
+                coordinates=fill_coordinates,
+                previous_link=link,
+                output_folder=self.output_folder,
+                username=self.username,
+                password=self.password,
+            )
+
+            nearest_link = nearest_georegion.retrieve_download_links(
+                find_nearest_to_previous_link=True
+            )
+
+            cropped_path_fill = nearest_georegion.execute_link(nearest_link[0])
+            cropped_path_filled = cropped_path.replace(".tif", "_filled.tif")
+            merge_tiffs(
+                [cropped_path, cropped_path_fill],
+                cropped_path_filled,
+            )
+
+            cropped_path = cropped_path_filled
 
         return cropped_path
 
