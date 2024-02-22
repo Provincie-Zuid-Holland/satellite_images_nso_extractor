@@ -13,8 +13,7 @@ from rasterio.warp import (
     reproject,
     transform_geom,
 )
-from rasterio.merge import merge
-from shapely.geometry import box, Polygon, 
+from shapely.geometry import box, Polygon
 import satellite_images_nso.__lidar.ahn as ahn
 from satellite_images_nso._index_channels.calculate_index_channels import (
     generate_ndvi_channel,
@@ -380,29 +379,3 @@ def run(raster_path, coordinates, region_name, output_folder, plot):
     move_tiff(raster_path_cropped, raster_path_cropped_moved)
 
     return raster_path_cropped_moved
-
-
-# Function to merge two GeoTIFF files
-def merge_tiffs(input_files, output_file):
-    raster_to_mosiac = []
-    # Open the input files
-    src_files_to_mosaic = [rasterio.open(file) for file in input_files]
-
-    # Merge the files
-    mosaic, out_trans = merge(src_files_to_mosaic)
-
-    mosaic, output = merge(raster_to_mosiac)
-
-    output_meta = src_files_to_mosaic[0].meta.copy()
-    output_meta.update(
-        {
-            "driver": "GTiff",
-            "height": mosaic.shape[1],
-            "width": mosaic.shape[2],
-            "transform": output,
-        }
-    )
-
-    # Write the merged raster to the output file
-    with rasterio.open(output_file, "w", **output_meta) as m:
-        m.write(mosaic)
