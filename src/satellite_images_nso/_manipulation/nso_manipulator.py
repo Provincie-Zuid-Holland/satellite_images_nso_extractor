@@ -1,6 +1,5 @@
 import logging
 import shutil
-
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -14,8 +13,8 @@ from rasterio.warp import (
     reproject,
     transform_geom,
 )
-from shapely.geometry import box
-
+from rasterio.merge import merge
+from shapely.geometry import box, Polygon, 
 import satellite_images_nso.__lidar.ahn as ahn
 from satellite_images_nso._index_channels.calculate_index_channels import (
     generate_ndvi_channel,
@@ -30,7 +29,7 @@ from satellite_images_nso._index_channels.calculate_index_channels import (
 """
 
 
-def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
+def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
     """
     This crops the sattelite image with a chosen shape.
 
@@ -39,7 +38,10 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
     @param raster_path_wgs: path to the raster .tiff file.
     @param raster_path_cropped: path were the cropped raster will be stored.
     """
-    geo_file = gpd.read_file(load_shape)
+
+    geometry = [Polygon(coords) for coords in coordinates]
+    geo_file = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326")
+
     with rasterio.open(raster_path) as src:
         print("raster path opened")
         # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
@@ -346,7 +348,7 @@ def __calculate_nvdi_function(raster_path_cropped, raster_path_nvdi, plot):
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi, raster_path_nvdi, plot)
 
 
-def run(raster_path, load_shape, output_folder, plot):
+def run(raster_path, coordinates, region_name, output_folder, plot):
     """
     Main run method, combines the cropping of the file based on the shape.
 
@@ -360,13 +362,11 @@ def run(raster_path, load_shape, output_folder, plot):
     logging.info(f"cropping file {raster_path}")
     raster_path_cropped = raster_path.replace(
         ".tif",
-        "_"
-        + load_shape.split("/")[len(load_shape.split("/")) - 1].split(".")[0]
-        + "_cropped.tif",
+        "_" + region_name + "_cropped.tif",
     )
     print("New cropped filename: " + raster_path_cropped)
     logging.info("New cropped filename: " + raster_path_cropped)
-    __make_the_crop(load_shape, raster_path, raster_path_cropped, plot)
+    __make_the_crop(coordinates, raster_path, raster_path_cropped, plot)
     print(f"finished cropping {raster_path}")
     logging.info(f"Finished cropping file {raster_path}")
     # Path fix and move.
@@ -380,3 +380,29 @@ def run(raster_path, load_shape, output_folder, plot):
     move_tiff(raster_path_cropped, raster_path_cropped_moved)
 
     return raster_path_cropped_moved
+
+
+# Function to merge two GeoTIFF files
+def merge_tiffs(input_files, output_file):
+    raster_to_mosiac = []
+    # Open the input files
+    src_files_to_mosaic = [rasterio.open(file) for file in input_files]
+
+    # Merge the files
+    mosaic, out_trans = merge(src_files_to_mosaic)
+
+    mosaic, output = merge(raster_to_mosiac)
+
+    output_meta = src_files_to_mosaic[0].meta.copy()
+    output_meta.update(
+        {
+            "driver": "GTiff",
+            "height": mosaic.shape[1],
+            "width": mosaic.shape[2],
+            "transform": output,
+        }
+    )
+
+    # Write the merged raster to the output file
+    with rasterio.open(output_file, "w", **output_meta) as m:
+        m.write(mosaic)

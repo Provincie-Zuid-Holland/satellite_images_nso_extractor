@@ -115,8 +115,10 @@ def retrieve_download_links(
                     check_region = False
                     print("Going into region check:")
                     try:
-                        check_region = check_if_geojson_in_region(
-                            row, geojson_coordinates, max_diff
+                        check_region, percentage_diff, missing_part, overlap_region = (
+                            check_if_geojson_in_region(
+                                row, geojson_coordinates, max_diff
+                            )
                         )
                     except Exception as e:
                         print(str(e) + " This error can be normal!")
@@ -125,14 +127,21 @@ def retrieve_download_links(
                     if check_region == True or strict_region == False:
                         print("Passed region check")
                         for download in row["properties"]["downloads"]:
-                            links.append(download["href"])
+                            links.append(
+                                [
+                                    download["href"],
+                                    percentage_diff,
+                                    missing_part,
+                                    overlap_region,
+                                ]
+                            )
 
         except Exception as e:
             print(str(e) + " This error can be normal!")
             logging.error(str(e) + " This error can be normal!")
 
     # sys.stdout = save_stdout
-    return set(links)
+    return links
 
 
 def download_link(link, absolute_path, user_n, pass_n):
@@ -219,14 +228,20 @@ def check_if_geojson_in_region(row, geojson, max_diff):
     geojson_shape_xy = np.array(geojson_shape_xy)
     xy_intersection = np.array(xy_intersection)
 
+    missing_region = geojson_shape.difference(row_shape)
+
     try:
         print(geojson_shape_xy)
         # This checks if pixels values are the same for both of the shapes.
         # If this isn't the case there should be min or max fluctations based on pixels which is filter with a threshold value.
         difference_array = np.intersect1d(geojson_shape_xy, xy_intersection)
 
+        diff_geojson_sat = (
+            difference_array.shape[0] / geojson_shape_xy.flatten().shape[0]
+        )
+
         # Check if the difference is under a certain percentage.
-        if difference_array.shape[0] / geojson_shape_xy.flatten().shape[0] >= max_diff:
+        if diff_geojson_sat >= max_diff:
             return_statement = True
 
     except Exception as e:
@@ -234,4 +249,9 @@ def check_if_geojson_in_region(row, geojson, max_diff):
         print(row)
         logging.error(e + " " + row)
 
-    return return_statement
+    return (
+        return_statement,
+        diff_geojson_sat,
+        missing_region,
+        geojson_shape.intersection(row_shape),
+    )
