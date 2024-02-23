@@ -149,3 +149,4 @@ source/*
 src/settings.py
 src/__init__.py
 
+settings.py
