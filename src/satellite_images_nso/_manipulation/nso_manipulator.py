@@ -72,10 +72,16 @@ def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
             descriptions = ("r", "g", "b", "n", "e", "d")
     print("convert to RD")
 
-    with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
-        dest.write(out_image)
-        dest.descriptions = descriptions
-        dest.close()
+    try:
+        with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
+            dest.write(out_image)
+            dest.descriptions = descriptions
+            dest.close()
+    except:
+        print("Error on making descriptions")
+        with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
+            dest.write(out_image)
+            dest.close()
 
     if plot:
         print(

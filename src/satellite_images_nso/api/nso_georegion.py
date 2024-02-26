@@ -8,12 +8,17 @@ import warnings
 from datetime import date
 from datetime import datetime
 import geopandas as gpd
+import pandas as pd
 import numpy as np
 import rasterio
 from cloud_recognition.api import detect_clouds
 from rasterio.merge import merge
+import re
+import shapely
+import json
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 import satellite_images_nso._nso_data_extraction.nso_api as nso_api
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,26 +47,46 @@ def correct_file_path(path):
 
 # Function to merge two GeoTIFF files
 @staticmethod
-def merge_tiffs(input_files, output_file):
+def merge_tifs(input_files, output_file):
+
+    print("Merging: " + input_files[0] + " and " + input_files[1])
+
+    # with rasterio.open(input_files[0]) as src1, rasterio.open(input_files[1]) as src2:
+    # Check CRS
+    #   assert src1.crs == src2.crs, "CRS mismatch"
+
+    # Check shape
+    # assert src1.shape == src2.shape, (
+    #     "Shape mismatch src1: "
+    #     + str(src1.shape)
+    #     + "  src2 shape: "
+    #     + str(src2.shape)
+    #     + " check the resolutions and/or the same bands!"
+    # )
+
+    # Check transform
+    # assert src1.transform == src2.transform, "Transform mismatch"
 
     raster_to_mosiac = []
-    # Open the input files
-    src_files_to_mosaic = [rasterio.open(file) for file in input_files]
 
-    # Merge the files
-    mosaic, out_trans = merge(src_files_to_mosaic)
+    for p in input_files:
+        raster = rasterio.open(p)
+        raster_to_mosiac.append(raster)
 
-    output_meta = src_files_to_mosaic[0].meta.copy()
+    mosaic, output = merge(raster_to_mosiac)
+
+    output_meta = raster.meta.copy()
     output_meta.update(
         {
             "driver": "GTiff",
             "height": mosaic.shape[1],
             "width": mosaic.shape[2],
-            "transform": out_trans,
+            "transform": output,
         }
     )
-    with rasterio.open(output_file, "w", **output_meta) as dest:
-        dest.write(mosaic)
+
+    with rasterio.open(output_file, "w", **output_meta) as m:
+        m.write(mosaic)
 
 
 class nso_georegion:
@@ -91,17 +116,17 @@ class nso_georegion:
         @param password: the password of the nso account
         @cloud_detection_model_path: optional location of a .sav of a cloud detection model
         """
-        if path_to_geojson is not None:
+        if path_to_geojson:
             self.path_to_geojson = correct_file_path(path_to_geojson)
             # Name needs to be included in the geojson name.
             self.region_name = path_to_geojson.split("/")[
                 len(path_to_geojson.split("/")) - 1
             ].split(".")[0]
 
-        elif coordinates is not None:
+        if coordinates:
             self.region_name = "fill_region"
 
-        elif previous_path_to_geojson is not None and coordinates is not None:
+        if previous_path_to_geojson is not None and coordinates is not None:
             self.path_to_geojson = correct_file_path(path_to_geojson)
             # Name needs to be included in the geojson name.
             self.region_name = path_to_geojson.split("/")[
@@ -139,6 +164,15 @@ class nso_georegion:
             self.previous_link_date = datetime.strptime(
                 previous_link.split("/")[-1].split("_")[0], "%Y%m%d"
             )
+
+            self.resolution = re.search(
+                r"(\d{2,3}cm)",
+                previous_link,
+            )[0]
+
+            self.bands = re.search(r"(RGB|RGBI|RGBNED)", previous_link)[0]
+            if not self.bands:
+                raise ValueError("Only RGB, RGBI or RGBNED values are allowed ")
 
     def __getFeatures(self, path):
         """
@@ -191,19 +225,46 @@ class nso_georegion:
 
         if find_nearest_to_previous_link is True:
 
+            print("Looking for resolution: " + self.resolution)
+            # Find links with the same resolution.
+            links = [link for link in links if self.resolution in link[0]]
+
+            print("Looking for bands: " + self.bands)
+            # Find the same bands
+            links = [link for link in links if self.bands in link[0]]
+
             # Find the link closed to the previous link.
             link_dates = [
                 datetime.strptime(link[0].split("/")[-1].split("_")[0], "%Y%m%d")
                 for link in links
             ]
-            links = links[
-                min(
-                    range(len(link_dates)),
-                    key=lambda i: abs(link_dates[i] - self.previous_link_date),
-                )
+            links = [
+                links[
+                    min(
+                        range(len(link_dates)),
+                        key=lambda i: abs(link_dates[i] - self.previous_link_date),
+                    )
+                ]
             ]
 
-        return links
+        return_links = pd.DataFrame(
+            links,
+            columns=[
+                "link",
+                "percentage_geojson",
+                "missing_polygon",
+                "covered_polygon",
+            ],
+        )
+
+        return_links["date"] = (
+            return_links["link"].str.split("/").str[-1].str.split("_").str[0]
+        )
+        return_links["satellite"] = (
+            return_links["link"].str.split("/").str[-1].str.split("_").str[2]
+        )
+
+        return return_links
 
     def crop(self, path, plot):
         """
@@ -287,13 +348,47 @@ class nso_georegion:
             )
 
             # Check if file is already cropped
-            cropped_path = os.path.join(
-                self.output_folder,
-                f"{start_archive_name}*cropped*.tif",
-            )
+
+            if hasattr(self, "resolution"):
+
+                # Bands could be on muliple locations.
+                cropped_path_one = os.path.join(
+                    self.output_folder,
+                    f"{start_archive_name}*"
+                    + self.bands
+                    + "*"
+                    + self.resolution
+                    + "*"
+                    + self.region_name
+                    + "*cropped*.tif",
+                )
+
+                cropped_path_two = os.path.join(
+                    self.output_folder,
+                    f"{start_archive_name}*"
+                    + self.resolution
+                    + "*"
+                    + self.bands
+                    + "*"
+                    + self.region_name
+                    + "*cropped*.tif",
+                )
+            else:
+                cropped_path = os.path.join(
+                    self.output_folder,
+                    f"{start_archive_name}*" + "*" + self.region_name + "*cropped*.tif",
+                )
+
             print("Searching for: " + str(cropped_path))
             logging.info("Searching for: " + str(cropped_path))
-            found_files = [file for file in glob.glob(cropped_path)]
+            if hasattr(self, "resolution"):
+                found_files = [
+                    file
+                    for file in glob.glob(cropped_path_one)
+                    + glob.glob(cropped_path_two)
+                ]
+            else:
+                found_files = [file for file in glob.glob(cropped_path)]
             skip_cropping = False
 
             print("Found files: " + str(found_files))
@@ -400,12 +495,15 @@ class nso_georegion:
             else:
                 cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
 
+        # Fill the image with data from a other satellite image.
         if fill_with_nearest_date:
             print(
                 "-----Filling satellite image with data from the nearest other satellite----"
             )
             nearest_georegion = nso_georegion(
-                coordinates=fill_coordinates,
+                coordinates=json.loads(shapely.to_geojson(fill_coordinates))[
+                    "coordinates"
+                ],
                 previous_link=link,
                 output_folder=self.output_folder,
                 username=self.username,
@@ -416,9 +514,18 @@ class nso_georegion:
                 find_nearest_to_previous_link=True
             )
 
-            cropped_path_fill = nearest_georegion.execute_link(nearest_link[0])
+            print("--------------------")
+            print(
+                "Found "
+                + nearest_link[0:1]["link"].values[0]
+                + " as fill satelitte image for the missing parts in the original satellite image"
+            )
+
+            cropped_path_fill = nearest_georegion.execute_link(
+                nearest_link[0:1]["link"].values[0]
+            )
             cropped_path_filled = cropped_path.replace(".tif", "_filled.tif")
-            merge_tiffs(
+            merge_tifs(
                 [cropped_path, cropped_path_fill],
                 cropped_path_filled,
             )
