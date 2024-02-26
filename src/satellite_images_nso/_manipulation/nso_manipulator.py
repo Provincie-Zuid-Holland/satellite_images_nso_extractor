@@ -39,16 +39,16 @@ def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
     """
 
     geometry = [Polygon(coords) for coords in coordinates]
-    geo_file = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326")
+    geo_area_to_use = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326")
 
     with rasterio.open(raster_path) as src:
         print("raster path opened")
         # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-        if geo_file.crs != "epsg:28992":
-            geo_file = geo_file.to_crs(epsg=28992)
+        if geo_area_to_use.crs != "epsg:28992":
+            geo_area_to_use = geo_area_to_use.to_crs(epsg=28992)
 
         out_image, out_transform = rasterio.mask.mask(
-            src, geo_file["geometry"], crop=True, filled=True
+            src, geo_area_to_use["geometry"], crop=True, filled=True
         )
         out_profile = src.profile
 
