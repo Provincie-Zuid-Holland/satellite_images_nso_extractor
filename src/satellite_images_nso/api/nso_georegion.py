@@ -65,15 +65,10 @@ def merge_tifs(input_files, output_file):
     # Check transform
     # assert src1.transform == src2.transform, "Transform mismatch"
 
-    raster_to_mosiac = []
-
-    for p in input_files:
-        raster = rasterio.open(p)
-        raster_to_mosiac.append(raster)
-
+    raster_to_mosiac = [rasterio.open(p) for p in input_files]
     mosaic, output = merge(raster_to_mosiac)
 
-    output_meta = raster.meta.copy()
+    output_meta = raster_to_mosiac[0].meta.copy()
     output_meta.update(
         {
             "driver": "GTiff",
@@ -82,6 +77,9 @@ def merge_tifs(input_files, output_file):
             "transform": output,
         }
     )
+
+    for file in raster_to_mosiac:
+        file.close()
 
     with rasterio.open(output_file, "w", **output_meta) as m:
         m.write(mosaic)
