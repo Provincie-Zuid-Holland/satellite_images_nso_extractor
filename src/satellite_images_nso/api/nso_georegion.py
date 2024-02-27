@@ -68,10 +68,12 @@ def merge_tifs(input_files, output_file):
     raster_to_mosiac = [rasterio.open(p) for p in input_files]
     mosaic, output = merge(raster_to_mosiac)
 
-    output_meta = raster_to_mosiac[0].meta.copy()
+    output_meta = raster_to_mosiac[0].profile
     output_meta.update(
         {
             "driver": "GTiff",
+            "interleave": "band",
+            "tiled": True,
             "height": mosaic.shape[1],
             "width": mosaic.shape[2],
             "transform": output,
