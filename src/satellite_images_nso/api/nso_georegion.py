@@ -36,7 +36,6 @@ logging.basicConfig(
 """
 
 
-@staticmethod
 def correct_file_path(path):
     "File path does not need to end with /"
     path = path.replace("\\", "/")
@@ -45,16 +44,15 @@ def correct_file_path(path):
     return path
 
 
-# Function to merge two GeoTIFF files
-@staticmethod
 def merge_tifs(input_files, output_file):
 
     print("Merging: " + input_files[0] + " and " + input_files[1])
 
-    # with rasterio.open(input_files[0]) as src1, rasterio.open(input_files[1]) as src2:
-    # Check CRS
-    #   assert src1.crs == src2.crs, "CRS mismatch"
+    with rasterio.open(input_files[0]) as src1, rasterio.open(input_files[1]) as src2:
+        # Check CRS
+        assert src1.crs == src2.crs, "CRS mismatch"
 
+    # TODO: Not sure about these assertion checks.
     # Check shape
     # assert src1.shape == src2.shape, (
     #     "Shape mismatch src1: "
@@ -165,11 +163,13 @@ class nso_georegion:
                 previous_link.split("/")[-1].split("_")[0], "%Y%m%d"
             )
 
+            # We have to know the resolution because we have to have matching resolutions
             self.resolution = re.search(
                 r"(\d{2,3}cm)",
                 previous_link,
             )[0]
 
+            # The same thing for bands.
             self.bands = re.search(r"(RGB|RGBI|RGBNED)", previous_link)[0]
             if not self.bands:
                 raise ValueError("Only RGB, RGBI or RGBNED values are allowed ")
@@ -233,6 +233,9 @@ class nso_georegion:
             # Find the same bands
             links = [link for link in links if self.bands in link[0]]
 
+            if not links:
+                raise ValueError("Links are empty, region might be too strict.")
+
             # Find the link closed to the previous link.
             link_dates = [
                 datetime.strptime(link[0].split("/")[-1].split("_")[0], "%Y%m%d")
@@ -262,6 +265,15 @@ class nso_georegion:
         )
         return_links["satellite"] = (
             return_links["link"].str.split("/").str[-1].str.split("_").str[2]
+        )
+
+        return_links["resolution"] = return_links.apply(
+            lambda x: (
+                re.search(r"(\d{2,3}cm)", str(x["link"]))[0]
+                if re.search(r"(\d{2,3}cm)", str(x["link"]))
+                else None
+            ),
+            axis=1,
         )
 
         return return_links
@@ -351,7 +363,7 @@ class nso_georegion:
 
             if hasattr(self, "resolution"):
 
-                # Bands could be on muliple locations.
+                # Bands could be on muliple locations and we should sure for multiple glob locations.
                 cropped_path_one = os.path.join(
                     self.output_folder,
                     f"{start_archive_name}*"
@@ -498,8 +510,10 @@ class nso_georegion:
         # Fill the image with data from a other satellite image.
         if fill_with_nearest_date:
             print(
-                "-----Filling satellite image with data from the nearest other satellite----"
+                "-----Filling satellite image with data from the nearest  other satellite in time----"
             )
+
+            # Create a other georegion based on the coordinates which are missing returned from the NSO api.
             nearest_georegion = nso_georegion(
                 coordinates=json.loads(shapely.to_geojson(fill_coordinates))[
                     "coordinates"
@@ -510,8 +524,9 @@ class nso_georegion:
                 password=self.password,
             )
 
+            # Ensure that the region is a whole as possible
             nearest_link = nearest_georegion.retrieve_download_links(
-                find_nearest_to_previous_link=True
+                find_nearest_to_previous_link=True, max_diff=0.95
             )
 
             print("--------------------")
