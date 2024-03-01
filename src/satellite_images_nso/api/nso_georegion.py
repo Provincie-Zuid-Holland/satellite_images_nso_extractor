@@ -6,14 +6,19 @@ import pickle
 import shutil
 import warnings
 from datetime import date
-
+from datetime import datetime
 import geopandas as gpd
+import pandas as pd
 import numpy as np
 import rasterio
 from cloud_recognition.api import detect_clouds
-
+from rasterio.merge import merge
+import re
+import shapely
+import json
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 import satellite_images_nso._nso_data_extraction.nso_api as nso_api
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,6 +44,49 @@ def correct_file_path(path):
     return path
 
 
+def merge_tifs(input_files, output_file):
+
+    print("Merging: " + input_files[0] + " and " + input_files[1])
+
+    with rasterio.open(input_files[0]) as src1, rasterio.open(input_files[1]) as src2:
+        # Check CRS
+        assert src1.crs == src2.crs, "CRS mismatch"
+
+    # TODO: Not sure about these assertion checks.
+    # Check shape
+    # assert src1.shape == src2.shape, (
+    #     "Shape mismatch src1: "
+    #     + str(src1.shape)
+    #     + "  src2 shape: "
+    #     + str(src2.shape)
+    #     + " check the resolutions and/or the same bands!"
+    # )
+
+    # Check transform
+    # assert src1.transform == src2.transform, "Transform mismatch"
+
+    raster_to_mosiac = [rasterio.open(p) for p in input_files]
+    mosaic, output = merge(raster_to_mosiac)
+
+    output_meta = raster_to_mosiac[0].profile
+    output_meta.update(
+        {
+            "driver": "GTiff",
+            "interleave": "band",
+            "tiled": True,
+            "height": mosaic.shape[1],
+            "width": mosaic.shape[2],
+            "transform": output,
+        }
+    )
+
+    for file in raster_to_mosiac:
+        file.close()
+
+    with rasterio.open(output_file, "w", **output_meta) as m:
+        m.write(mosaic)
+
+
 class nso_georegion:
     """
     A class used to bind the output folder, a chosen a georegion and a NSO account together in one object.
@@ -48,12 +96,15 @@ class nso_georegion:
 
     def __init__(
         self,
-        path_to_geojson: str,
         output_folder: str,
         username: str,
         password: str,
+        path_to_geojson: str = None,
+        coordinates: str = None,
+        previous_path_to_geojson: str = None,
+        previous_link: str = None,
         cloud_detection_model_path: str = None,
-    ):
+    ) -> None:
         """
         Init of the class.
 
@@ -63,17 +114,30 @@ class nso_georegion:
         @param password: the password of the nso account
         @cloud_detection_model_path: optional location of a .sav of a cloud detection model
         """
+        if path_to_geojson:
+            self.path_to_geojson = correct_file_path(path_to_geojson)
+            # Name needs to be included in the geojson name.
+            self.region_name = path_to_geojson.split("/")[
+                len(path_to_geojson.split("/")) - 1
+            ].split(".")[0]
 
-        self.path_to_geojson = correct_file_path(path_to_geojson)
-        # Name needs to be included in the geojson name.
-        self.region_name = path_to_geojson.split("/")[
-            len(path_to_geojson.split("/")) - 1
-        ].split(".")[0]
+        if coordinates:
+            self.region_name = "fill_region"
+
+        if previous_path_to_geojson is not None and coordinates is not None:
+            self.path_to_geojson = correct_file_path(path_to_geojson)
+            # Name needs to be included in the geojson name.
+            self.region_name = path_to_geojson.split("/")[
+                len(path_to_geojson.split("/")) - 1
+            ].split(".")[0]
 
         self.georegion = False
         try:
-            # georegion is a variable which contains the coordinates in the geojson, which should be WGS!
-            self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+            # georegion is a variable which contains the coordinates in the geojson, which should be WGS84!
+            if path_to_geojson is not None:
+                self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+            elif coordinates is not None:
+                self.georegion = coordinates
         except Exception as e:
             print(e)
 
@@ -93,6 +157,22 @@ class nso_georegion:
             self.cloud_detection_model = pickle.load(
                 open(cloud_detection_model_path, "rb")
             )
+
+        if previous_link is not None:
+            self.previous_link_date = datetime.strptime(
+                previous_link.split("/")[-1].split("_")[0], "%Y%m%d"
+            )
+
+            # We have to know the resolution because we have to have matching resolutions
+            self.resolution = re.search(
+                r"(\d{2,3}cm)",
+                previous_link,
+            )[0]
+
+            # The same thing for bands.
+            self.bands = re.search(r"(RGB|RGBI|RGBNED)", previous_link)[0]
+            if not self.bands:
+                raise ValueError("Only RGB, RGBI or RGBNED values are allowed ")
 
     def __getFeatures(self, path):
         """
@@ -117,6 +197,7 @@ class nso_georegion:
         strict_region=True,
         max_diff=0.8,
         cloud_coverage_whole=30,
+        find_nearest_to_previous_link: bool = False,
     ):
         """
         This functions retrieves download links for area chosen in the geojson for the nso.
@@ -129,7 +210,8 @@ class nso_georegion:
         @param cloud_coverage_whole: level percentage of clouds to filter out of the whole satellite image, so 30 means the percentage has to be less or equal to 30.
         @return: the found download links.
         """
-        return nso_api.retrieve_download_links(
+
+        links = nso_api.retrieve_download_links(
             self.georegion,
             self.username,
             self.password,
@@ -140,6 +222,61 @@ class nso_georegion:
             max_diff,
             cloud_coverage_whole,
         )
+
+        if find_nearest_to_previous_link is True:
+
+            print("Looking for resolution: " + self.resolution)
+            # Find links with the same resolution.
+            links = [link for link in links if self.resolution in link[0]]
+
+            print("Looking for bands: " + self.bands)
+            # Find the same bands
+            links = [link for link in links if self.bands in link[0]]
+
+            if not links:
+                raise ValueError("Links are empty, region might be too strict.")
+
+            # Find the link closed to the previous link.
+            link_dates = [
+                datetime.strptime(link[0].split("/")[-1].split("_")[0], "%Y%m%d")
+                for link in links
+            ]
+            links = [
+                links[
+                    min(
+                        range(len(link_dates)),
+                        key=lambda i: abs(link_dates[i] - self.previous_link_date),
+                    )
+                ]
+            ]
+
+        return_links = pd.DataFrame(
+            links,
+            columns=[
+                "link",
+                "percentage_geojson",
+                "missing_polygon",
+                "covered_polygon",
+            ],
+        )
+
+        return_links["date"] = (
+            return_links["link"].str.split("/").str[-1].str.split("_").str[0]
+        )
+        return_links["satellite"] = (
+            return_links["link"].str.split("/").str[-1].str.split("_").str[2]
+        )
+
+        return_links["resolution"] = return_links.apply(
+            lambda x: (
+                re.search(r"(\d{2,3}cm)", str(x["link"]))[0]
+                if re.search(r"(\d{2,3}cm)", str(x["link"]))
+                else None
+            ),
+            axis=1,
+        )
+
+        return return_links
 
     def crop(self, path, plot):
         """
@@ -159,7 +296,7 @@ class nso_georegion:
             raise Exception(".tif not found")
         else:
             cropped_path = nso_manipulator.run(
-                true_path, self.path_to_geojson, self.output_folder, plot
+                true_path, self.georegion, self.region_name, self.output_folder, plot
             )
             logging.info(f"Cropped file is found at: {cropped_path}")
 
@@ -195,6 +332,8 @@ class nso_georegion:
         add_red_edge_ndvi_band: bool = False,
         add_ndwi_band: bool = False,
         cloud_detection_warning: bool = False,
+        fill_with_nearest_date: bool = False,
+        fill_coordinates: [] = [],
     ):
         """
         Executes the download, crops and the calculates the NVDI for a specific link.
@@ -221,13 +360,47 @@ class nso_georegion:
             )
 
             # Check if file is already cropped
-            cropped_path = os.path.join(
-                self.output_folder,
-                f"{start_archive_name}*cropped*.tif",
-            )
+
+            if hasattr(self, "resolution"):
+
+                # Bands could be on muliple locations and we should sure for multiple glob locations.
+                cropped_path_one = os.path.join(
+                    self.output_folder,
+                    f"{start_archive_name}*"
+                    + self.bands
+                    + "*"
+                    + self.resolution
+                    + "*"
+                    + self.region_name
+                    + "*cropped*.tif",
+                )
+
+                cropped_path_two = os.path.join(
+                    self.output_folder,
+                    f"{start_archive_name}*"
+                    + self.resolution
+                    + "*"
+                    + self.bands
+                    + "*"
+                    + self.region_name
+                    + "*cropped*.tif",
+                )
+            else:
+                cropped_path = os.path.join(
+                    self.output_folder,
+                    f"{start_archive_name}*" + "*" + self.region_name + "*cropped*.tif",
+                )
+
             print("Searching for: " + str(cropped_path))
             logging.info("Searching for: " + str(cropped_path))
-            found_files = [file for file in glob.glob(cropped_path)]
+            if hasattr(self, "resolution"):
+                found_files = [
+                    file
+                    for file in glob.glob(cropped_path_one)
+                    + glob.glob(cropped_path_two)
+                ]
+            else:
+                found_files = [file for file in glob.glob(cropped_path)]
             skip_cropping = False
 
             print("Found files: " + str(found_files))
@@ -333,6 +506,46 @@ class nso_georegion:
                 print("Height is already in it's path")
             else:
                 cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
+
+        # Fill the image with data from a other satellite image.
+        if fill_with_nearest_date:
+            print(
+                "-----Filling satellite image with data from the nearest  other satellite in time----"
+            )
+
+            # Create a other georegion based on the coordinates which are missing returned from the NSO api.
+            nearest_georegion = nso_georegion(
+                coordinates=json.loads(shapely.to_geojson(fill_coordinates))[
+                    "coordinates"
+                ],
+                previous_link=link,
+                output_folder=self.output_folder,
+                username=self.username,
+                password=self.password,
+            )
+
+            # Ensure that the region is a whole as possible
+            nearest_link = nearest_georegion.retrieve_download_links(
+                find_nearest_to_previous_link=True, max_diff=0.95
+            )
+
+            print("--------------------")
+            print(
+                "Found "
+                + nearest_link[0:1]["link"].values[0]
+                + " as fill satelitte image for the missing parts in the original satellite image"
+            )
+
+            cropped_path_fill = nearest_georegion.execute_link(
+                nearest_link[0:1]["link"].values[0]
+            )
+            cropped_path_filled = cropped_path.replace(".tif", "_filled.tif")
+            merge_tifs(
+                [cropped_path, cropped_path_fill],
+                cropped_path_filled,
+            )
+
+            cropped_path = cropped_path_filled
 
         return cropped_path
 
