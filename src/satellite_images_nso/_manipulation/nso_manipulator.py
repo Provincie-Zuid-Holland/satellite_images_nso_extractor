@@ -1,6 +1,5 @@
 import logging
 import shutil
-
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -14,8 +13,7 @@ from rasterio.warp import (
     reproject,
     transform_geom,
 )
-from shapely.geometry import box
-
+from shapely.geometry import box, Polygon
 import satellite_images_nso.__lidar.ahn as ahn
 from satellite_images_nso._index_channels.calculate_index_channels import (
     generate_ndvi_channel,
@@ -30,7 +28,7 @@ from satellite_images_nso._index_channels.calculate_index_channels import (
 """
 
 
-def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
+def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
     """
     This crops the sattelite image with a chosen shape.
 
@@ -39,15 +37,18 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
     @param raster_path_wgs: path to the raster .tiff file.
     @param raster_path_cropped: path were the cropped raster will be stored.
     """
-    geo_file = gpd.read_file(load_shape)
+
+    geometry = [Polygon(coords) for coords in coordinates]
+    geo_area_to_use = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326")
+
     with rasterio.open(raster_path) as src:
         print("raster path opened")
         # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-        if geo_file.crs != "epsg:28992":
-            geo_file = geo_file.to_crs(epsg=28992)
+        if geo_area_to_use.crs != "epsg:28992":
+            geo_area_to_use = geo_area_to_use.to_crs(epsg=28992)
 
         out_image, out_transform = rasterio.mask.mask(
-            src, geo_file["geometry"], crop=True, filled=True
+            src, geo_area_to_use["geometry"], crop=True, filled=True
         )
         out_profile = src.profile
 
@@ -71,10 +72,16 @@ def __make_the_crop(load_shape, raster_path, raster_path_cropped, plot):
             descriptions = ("r", "g", "b", "n", "e", "d")
     print("convert to RD")
 
-    with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
-        dest.write(out_image)
-        dest.descriptions = descriptions
-        dest.close()
+    try:
+        with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
+            dest.write(out_image)
+            dest.descriptions = descriptions
+            dest.close()
+    except:
+        print("Error on making descriptions")
+        with rasterio.open(raster_path_cropped, "w", **out_profile) as dest:
+            dest.write(out_image)
+            dest.close()
 
     if plot:
         print(
@@ -346,7 +353,7 @@ def __calculate_nvdi_function(raster_path_cropped, raster_path_nvdi, plot):
     return calculate_nvdi.make_ndvi_plot(raster_path_nvdi, raster_path_nvdi, plot)
 
 
-def run(raster_path, load_shape, output_folder, plot):
+def run(raster_path, coordinates, region_name, output_folder, plot):
     """
     Main run method, combines the cropping of the file based on the shape.
 
@@ -360,13 +367,11 @@ def run(raster_path, load_shape, output_folder, plot):
     logging.info(f"cropping file {raster_path}")
     raster_path_cropped = raster_path.replace(
         ".tif",
-        "_"
-        + load_shape.split("/")[len(load_shape.split("/")) - 1].split(".")[0]
-        + "_cropped.tif",
+        "_" + region_name + "_cropped.tif",
     )
     print("New cropped filename: " + raster_path_cropped)
     logging.info("New cropped filename: " + raster_path_cropped)
-    __make_the_crop(load_shape, raster_path, raster_path_cropped, plot)
+    __make_the_crop(coordinates, raster_path, raster_path_cropped, plot)
     print(f"finished cropping {raster_path}")
     logging.info(f"Finished cropping file {raster_path}")
     # Path fix and move.
