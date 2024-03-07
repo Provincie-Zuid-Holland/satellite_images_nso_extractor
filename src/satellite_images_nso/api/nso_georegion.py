@@ -104,7 +104,7 @@ class nso_georegion:
         previous_path_to_geojson: str = None,
         previous_link: str = None,
         cloud_detection_model_path: str = None,
-    ) -> None:
+    ):
         """
         Init of the class.
 
