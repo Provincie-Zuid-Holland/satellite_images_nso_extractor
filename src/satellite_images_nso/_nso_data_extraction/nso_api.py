@@ -21,7 +21,7 @@ from requests.auth import HTTPBasicAuth
 
     - Download and unzipping functionality for satellite download links. 
 
-    Author: Michael de Winter.
+    Author: Michael de Winter, Pieter Kouyzer
 """
 
 
@@ -60,6 +60,8 @@ def retrieve_download_links(
     This functions retrieves download links for satellite image corresponding to the region in the geojson.
 
     @param georegion: a polygon with the georegion.
+    @param user_n: NSO username.
+    @param pass_n: NSO password.
     @param start_date: From when satelliet date needs to be looked at.
     @param end_date: the end date of the period which needs to be looked at
     @param max_meters: Maximum resolution which needs to be looked at.
