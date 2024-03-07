@@ -24,7 +24,7 @@ from satellite_images_nso._index_channels.calculate_index_channels import (
 """
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
 
-    @author: Michael de Winter.
+    @author: Michael de Winter, Pieter Kouyzer
 """
 
 
@@ -33,7 +33,7 @@ def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
     This crops the sattelite image with a chosen shape.
 
     TODO: Make this accept a object of geopandas or shapely and crs independant.
-    @param load_schape: path to a geojson shape file.
+    @param coordinates: Coordinates of the polygon to make the crop on.
     @param raster_path_wgs: path to the raster .tiff file.
     @param raster_path_cropped: path were the cropped raster will be stored.
     """
@@ -210,6 +210,11 @@ def add_height(tif_input_file, height_tif_file):
 
 
 def get_ahn_data(ahn_input_file):
+    """
+    This function returns height data from a ahn file.
+
+    @param ahn_input_file
+    """
     inds = rasterio.open(ahn_input_file, "r")
     vegetation_height_data = inds.read(1)
     vegetation_height_transform = inds.meta["transform"]
@@ -255,18 +260,14 @@ def generate_vegetation_height_channel(
     return channel
 
 
-def transform_vector_to_pixel_df(path_to_vector, add_ndvi_column=False):
+def transform_vector_to_pixel_df(path_to_vector):
     """
     Maps a rasterio satellite vector object to a geo pandas dataframe per pixel.
-    With the corresponding x and y coordinates and NVDI.
-
+    TODO: This method is not used anymore, could be deleted.
 
     @param path_to_vector: path to a vector which be read with rasterio.
-    @param add_ndvi_column: WWether or not to add a ndvi column to the pandas dataframe.
     @return pandas dataframe: with x and y coordinates in epsg:4326
     """
-
-    gpf = ""
 
     src = rasterio.open(path_to_vector)
     crs = src.crs
@@ -309,13 +310,7 @@ def transform_vector_to_pixel_df(path_to_vector, add_ndvi_column=False):
     df = pd.DataFrame(data=data)
     geometry = gpd.points_from_xy(df.X, df.Y)
 
-    if add_ndvi_column == True:
-        df["ndvi"] = calculate_nvdi.normalized_diff(
-            src.read()[3][mask], src.read()[2][mask]
-        )
-        df = df[["blue", "green", "red", "nir", "ndvi", "X", "Y"]]
-    else:
-        df = df[["blue", "green", "red", "nir", "X", "Y"]]
+    df = df[["blue", "green", "red", "nir", "X", "Y"]]
 
     gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
     src.close()
@@ -358,7 +353,10 @@ def run(raster_path, coordinates, region_name, output_folder, plot):
     Main run method, combines the cropping of the file based on the shape.
 
     @param raster_path: path to a raster file.
-    @param load_shape: path the file that needs to be cropped.
+    @param coordinates: coordinates from a polygon to crop on.
+    @param region_name: the region name of the cropped area to be saved in the file name.
+    @param output_folder: Which output folder to store the .tif file.
+    @param plot: Whether or not to plot the cropped image.
     @return: the path where the cropped file is stored or where the nvdi is stored.
     """
     raster_path_cropped_moved = ""
