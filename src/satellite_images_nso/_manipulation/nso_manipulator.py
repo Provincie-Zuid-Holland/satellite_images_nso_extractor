@@ -34,8 +34,9 @@ def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
 
     TODO: Make this accept a object of geopandas or shapely and crs independant.
     @param coordinates: Coordinates of the polygon to make the crop on.
-    @param raster_path_wgs: path to the raster .tiff file.
+    @param raster_path: path to the raster .tiff file.
     @param raster_path_cropped: path were the cropped raster will be stored.
+    @param plot: Plot the results true or false
     """
 
     geometry = [Polygon(coords) for coords in coordinates]
