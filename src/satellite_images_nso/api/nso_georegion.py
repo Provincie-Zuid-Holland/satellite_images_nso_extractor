@@ -329,10 +329,10 @@ class nso_georegion:
         Executes the download, crops and the calculates the NVDI for a specific link.
 
         @param link: Link to a file from the NSO.
-        @param delete_zip_file: whether or not to keep the original .zip file on default it will keep the file, defaults to keeping the zip file. For unnecessary redownloading a .zip file
-        @param delete_source_files: whether or not to keep the extracted files on default it will delete the source files.
+        @param delete_zip_file: This determines whether to retain the original .zip file. By default, the .zip file is kept to prevent unnecessary re-downloading.
+        @param delete_source_files: This decides whether to keep the extracted files. By default, the source files are deleted after extraction.
         @param plot: Rather or not to plot the resulting image from cropping.
-        @param in_image_cloud_percentage:  TODO: Calculate the cloud percentage in a picture.
+        @param in_image_cloud_percentage: Calculate the cloud percentage in a picture.
         @param add_ndvi_band: Whether or not to add the ndvi as a new band.
         @param add_height_band: Whether or not to height as new bands, input should be a file location to the height file.
         @param add_red_edge_ndvi_band: Whether or not to add the re_ndvi as a new band.
