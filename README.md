@@ -61,7 +61,7 @@ links = georegion.retrieve_download_links(max_diff=0.5, start_date="2022-01-01")
 
 # This example filters out only 30 cm RGBNED  from all the links
 links = links[links['resolution'] == "30cm"]
-links = links[links["link"].str.contains("RGBNE")]
+links = links[links["link"].str.contains("RGBNED")]
 
 
 # Downloads a satellite image from the NSO, makes a crop out of it so it fits the geojson region and calculates the NVDI index.
