@@ -260,64 +260,6 @@ def generate_vegetation_height_channel(
     return channel
 
 
-def transform_vector_to_pixel_df(path_to_vector):
-    """
-    Maps a rasterio satellite vector object to a geo pandas dataframe per pixel.
-    TODO: This method is not used anymore, could be deleted.
-
-    @param path_to_vector: path to a vector which be read with rasterio.
-    @return pandas dataframe: with x and y coordinates in epsg:4326
-    """
-
-    src = rasterio.open(path_to_vector)
-    crs = src.crs
-
-    # create 1D coordinate arrays (coordinates of the pixel center)
-    xmin, ymax = np.around(src.xy(0.00, 0.00), 9)  # src.xy(0, 0)
-    xmax, ymin = np.around(
-        src.xy(src.height - 1, src.width - 1), 9
-    )  # src.xy(src.width-1, src.height-1)
-    x = np.linspace(xmin, xmax, src.width)
-    y = np.linspace(ymax, ymin, src.height)  # max -> min so coords are top -> bottom
-
-    # create 2D arrays
-    xs, ys = np.meshgrid(x, y)
-    blue = src.read(1)
-    green = src.read(2)
-    red = src.read(3)
-    nir = src.read(4)
-
-    # Apply NoData mask
-    mask = src.read_masks(1) > 0
-    xs, ys, blue, green, red, nir = (
-        xs[mask],
-        ys[mask],
-        blue[mask],
-        green[mask],
-        red[mask],
-        nir[mask],
-    )
-
-    data = {
-        "X": pd.Series(xs.ravel()),
-        "Y": pd.Series(ys.ravel()),
-        "blue": pd.Series(blue.ravel()),
-        "green": pd.Series(green.ravel()),
-        "red": pd.Series(red.ravel()),
-        "nir": pd.Series(nir.ravel()),
-    }
-
-    df = pd.DataFrame(data=data)
-    geometry = gpd.points_from_xy(df.X, df.Y)
-
-    df = df[["blue", "green", "red", "nir", "X", "Y"]]
-
-    gdf = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-    src.close()
-
-    return gdf
-
-
 def move_tiff(raster_path_cropped, raster_path_cropped_moved):
     """
     Moves cropped tiff file to the main folder.
@@ -331,21 +273,6 @@ def move_tiff(raster_path_cropped, raster_path_cropped_moved):
         logging.info(f"Moving tiff file to {raster_path_cropped_moved}")
     except:
         logging.error(f"Failed to move tiff to {raster_path_cropped_moved}")
-
-
-def __calculate_nvdi_function(raster_path_cropped, raster_path_nvdi, plot):
-    """
-    Function which calculates the NVDI index, used in a external package.
-
-    @param raster_path_cropped: Path to the cropped file.
-    @param raster_path_nvdi: path where the nvdi will be stored.
-    """
-    src = rasterio.open(raster_path_cropped)
-    data_ndvi = calculate_nvdi.normalized_diff(src.read()[3], src.read()[2])
-    data_ndvi.dump(raster_path_nvdi)
-
-    src.close()
-    return calculate_nvdi.make_ndvi_plot(raster_path_nvdi, raster_path_nvdi, plot)
 
 
 def run(raster_path, coordinates, region_name, output_folder, plot):
