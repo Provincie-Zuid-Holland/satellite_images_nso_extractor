@@ -61,18 +61,6 @@ def merge_tifs(input_files, output_file):
         # Check CRS
         assert src1.crs == src2.crs, "CRS mismatch"
 
-        # TODO: Not sure about these assertion checks.
-        # Check shape
-        # assert src1.shape == src2.shape, (
-        #     "Shape mismatch src1: "
-        #     + str(src1.shape)
-        #     + "  src2 shape: "
-        #     + str(src2.shape)
-        #     + " check the resolutions and/or the same bands!"
-        #
-        # Check transform
-        # assert src1.transform == src2.transform, "Transform mismatch"
-
     raster_to_mosiac = [rasterio.open(p) for p in input_files]
     mosaic, output = merge(raster_to_mosiac)
 
