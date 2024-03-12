@@ -32,12 +32,15 @@ logging.basicConfig(
     WHich can be used for retrieving download links for satellite images for a parameter georegion.
     Or cropping satellite images for the parameter georegion.
    
-    Author: Michael de Winter
+    Author: Michael de Winter, Pieter Kouyzer
 """
 
 
 def correct_file_path(path):
-    "File path does not need to end with /"
+    """
+    Method to check if all file path slashes are correct.
+    Windows file paths can return not correct file paths.
+    """
     path = path.replace("\\", "/")
     if path.endswith("/"):
         return path[:-1]
@@ -45,25 +48,18 @@ def correct_file_path(path):
 
 
 def merge_tifs(input_files, output_file):
+    """
+    Merge two different 2 tif files together into one.
+
+    @param input_files: a python array with files paths to .tif files in it.
+    @param output_files: The name of the resulting output based on the merged tif files.
+    """
 
     print("Merging: " + input_files[0] + " and " + input_files[1])
 
     with rasterio.open(input_files[0]) as src1, rasterio.open(input_files[1]) as src2:
         # Check CRS
         assert src1.crs == src2.crs, "CRS mismatch"
-
-    # TODO: Not sure about these assertion checks.
-    # Check shape
-    # assert src1.shape == src2.shape, (
-    #     "Shape mismatch src1: "
-    #     + str(src1.shape)
-    #     + "  src2 shape: "
-    #     + str(src2.shape)
-    #     + " check the resolutions and/or the same bands!"
-    # )
-
-    # Check transform
-    # assert src1.transform == src2.transform, "Transform mismatch"
 
     raster_to_mosiac = [rasterio.open(p) for p in input_files]
     mosaic, output = merge(raster_to_mosiac)
@@ -101,17 +97,18 @@ class nso_georegion:
         password: str,
         path_to_geojson: str = None,
         coordinates: str = None,
-        previous_path_to_geojson: str = None,
         previous_link: str = None,
         cloud_detection_model_path: str = None,
-    ) -> None:
+    ):
         """
         Init of the class.
 
-        @param path_to_geojson: Path where the geojson is located.
-        @param output_folder: Folder where the cropped and nvdi files will be stored.
+        @param output_folder: Path where the resulting .tif file will be saved to.
         @param username: the username of the nso account.
         @param password: the password of the nso account
+        @param path_to_geojson: path where the geojson is located with the selected region.
+        @param coordinates: instead of geojson also a polygon with coordinates can be given.
+        @param previous_link: If we need to fill a region a with new satellite data, we need to know the previous since we have to find the closed link to this one.
         @cloud_detection_model_path: optional location of a .sav of a cloud detection model
         """
         if path_to_geojson:
@@ -123,13 +120,6 @@ class nso_georegion:
 
         if coordinates:
             self.region_name = "fill_region"
-
-        if previous_path_to_geojson is not None and coordinates is not None:
-            self.path_to_geojson = correct_file_path(path_to_geojson)
-            # Name needs to be included in the geojson name.
-            self.region_name = path_to_geojson.split("/")[
-                len(path_to_geojson.split("/")) - 1
-            ].split(".")[0]
 
         self.georegion = False
         try:
@@ -158,7 +148,7 @@ class nso_georegion:
                 open(cloud_detection_model_path, "rb")
             )
 
-        if previous_link is not None:
+        if previous_link:
             self.previous_link_date = datetime.strptime(
                 previous_link.split("/")[-1].split("_")[0], "%Y%m%d"
             )
@@ -202,12 +192,13 @@ class nso_georegion:
         """
         This functions retrieves download links for area chosen in the geojson for the nso.
 
-        @param start_date: From when satelliet date needs to be looked at.
-        @param end_date: the end date of the period which needs to be looked at
+        @param start_date: From when satellite date needs to be looked at.
+        @param end_date: the end date of the period which needs to be looked at, defaults to the current date.
         @param max_meters: Maximum resolution which needs to be looked at.
         @param strict_region: A filter applied to links which have to fully contain the region in the geojson.
         @param max_diff: The percentage that a satellite image has to have of the selected geojson region.
         @param cloud_coverage_whole: level percentage of clouds to filter out of the whole satellite image, so 30 means the percentage has to be less or equal to 30.
+        @param find_nearest_to_previous_link: When this parameters is enabled it tries to find a link which is closed to the previous link in time.
         @return: the found download links.
         """
 
@@ -224,7 +215,7 @@ class nso_georegion:
         )
 
         if find_nearest_to_previous_link is True:
-
+            print("Finding link closed to the previous link.")
             print("Looking for resolution: " + self.resolution)
             # Find links with the same resolution.
             links = [link for link in links if self.resolution in link[0]]
@@ -280,7 +271,7 @@ class nso_georegion:
 
     def crop(self, path, plot):
         """
-        Function for the crop and the calculating of the NVDI index.
+        Function for the crop.
         Can be used as a standalone if you have already unzipped the file.
 
         @oaram path: Path to a .tif file.
@@ -332,23 +323,22 @@ class nso_georegion:
         add_red_edge_ndvi_band: bool = False,
         add_ndwi_band: bool = False,
         cloud_detection_warning: bool = False,
-        fill_with_nearest_date: bool = False,
         fill_coordinates: [] = [],
     ):
         """
         Executes the download, crops and the calculates the NVDI for a specific link.
 
         @param link: Link to a file from the NSO.
-        @param delete_zip_file: whether or not to keep the original .zip file on default it will keep the file.
-        @param delete_source_files: whether or not to keep the extracted files on defualt it will delete the source files.
+        @param delete_zip_file: This determines whether to retain the original .zip file. By default, the .zip file is kept to prevent unnecessary re-downloading.
+        @param delete_source_files: This decides whether to keep the extracted files. By default, the source files are deleted after extraction.
         @param plot: Rather or not to plot the resulting image from cropping.
-        @param in_image_cloud_percentage:  TODO: Calculate the cloud percentage in a picture.
+        @param in_image_cloud_percentage: Calculate the cloud percentage in a picture.
         @param add_ndvi_band: Whether or not to add the ndvi as a new band.
         @param add_height_band: Whether or not to height as new bands, input should be a file location to the height file.
         @param add_red_edge_ndvi_band: Whether or not to add the re_ndvi as a new band.
         @param add_ndwi_band: Whether or not to add the ndwi as a new band.
-        @param cloud_detection_warning: Whether to give warning when clouds have been detected
-
+        @param cloud_detection_warning: Whether to give warning when clouds have been detected.
+        @param fill_coordinates: If the satellite image is missing a region, this parameters control if it has to filled up with satellite data from the nearest image with coordinates of the missing region to look for.
         """
         cropped_path = ""
 
@@ -508,7 +498,7 @@ class nso_georegion:
                 cropped_path = nso_manipulator.add_height(cropped_path, add_height_band)
 
         # Fill the image with data from a other satellite image.
-        if fill_with_nearest_date:
+        if fill_coordinates != []:
             print(
                 "-----Filling satellite image with data from the nearest  other satellite in time----"
             )
