@@ -18,8 +18,9 @@ import shapely
 import json
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 import satellite_images_nso._nso_data_extraction.nso_api as nso_api
+from shapely.ops import unary_union
 
-
+# TODO: Make a decision about the logging.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(funcName)s %(message)s",
@@ -125,16 +126,19 @@ class nso_georegion:
         try:
             # georegion is a variable which contains the coordinates in the geojson, which should be WGS84!
             if path_to_geojson is not None:
-                self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+                # Set a variable to check if if the polygon is a multipolygon.
+                self.georegion, self.buffered_georegion = self.__getFeatures(
+                    self.path_to_geojson
+                )
             elif coordinates is not None:
                 self.georegion = coordinates
         except Exception as e:
             print(e)
 
-        if not self.georegion:
-            raise Exception(
-                "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
-            )
+        # if not self.georegion:
+        #     raise Exception(
+        #         "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
+        #     )
 
         if os.path.isdir(output_folder):
             self.output_folder = correct_file_path(output_folder)
@@ -171,13 +175,34 @@ class nso_georegion:
         @param path: The path to a geojson.
         @return coordinates which rasterio wants to have.
         """
+        gdf = gpd.read_file(path)
         json_loaded = json.loads(gpd.read_file(path).to_json())
+        buffered_polygon = False
 
         if json_loaded["features"][0]["geometry"]["type"] == "MultiPolygon":
-            logging.info("Caution multiploygons are not well supported!")
-            print("Caution multiploygons are not well supported!")
+            logging.info("Multipolygon detected!")
+            print("Multipolygon detected!")
 
-        return [json_loaded["features"][0]["geometry"]["coordinates"]]
+            logging.info("Buffering to grow the different multipolygons together")
+            print("Buffering to grow the different multipolygons together")
+
+            gdf = gdf.set_crs("EPSG:4326").to_crs("EPSG:28992")
+            buffer_x = 0
+            while gdf.geometry.iloc[0].geom_type != "Polygon":
+                gdf["geometry"] = unary_union(gdf["geometry"].buffer(buffer_x))
+                buffer_x = buffer_x + 1
+
+            gdf = gdf.to_crs("EPSG:4326")
+            buffered_polygon = json.loads(gdf.to_json())
+
+        if buffered_polygon is False:
+            return [
+                json_loaded["features"][0]["geometry"]["coordinates"]
+            ], buffered_polygon
+        elif buffered_polygon:
+            return [json_loaded["features"][0]["geometry"]["coordinates"]], [
+                buffered_polygon["features"][0]["geometry"]["coordinates"]
+            ]
 
     def retrieve_download_links(
         self,
@@ -202,8 +227,16 @@ class nso_georegion:
         @return: the found download links.
         """
 
+        # Check if there is a buffered georegion
+       selected_georegion = (
+            self.buffered_georegion if self.buffered_georegion else self.georegion
+        )
+
+        print("Printing selected georegion: ")
+        print(selected_georegion)
+
         links = nso_api.retrieve_download_links(
-            self.georegion,
+           selected_georegion,
             self.username,
             self.password,
             start_date,
