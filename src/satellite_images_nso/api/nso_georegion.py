@@ -184,7 +184,9 @@ class nso_georegion:
             print("Multipolygon detected!")
 
             logging.info("Buffering to grow the different multipolygons together")
-            print("Buffering to grow the different multipolygons together")
+            print(
+                "Buffering to grow the different multipolygons together in one polygon for retrieving links"
+            )
 
             gdf = gdf.set_crs("EPSG:4326").to_crs("EPSG:28992")
             buffer_x = 0
@@ -197,12 +199,12 @@ class nso_georegion:
 
         if buffered_polygon is False:
             return [
-                json_loaded["features"][0]["geometry"]["coordinates"]
+                json_loaded["features"][0]["geometry"]["coordinates"][0]
             ], buffered_polygon
         elif buffered_polygon:
-            return [json_loaded["features"][0]["geometry"]["coordinates"]], [
+            return [json_loaded["features"][0]["geometry"]["coordinates"]][0], [
                 buffered_polygon["features"][0]["geometry"]["coordinates"]
-            ]
+            ][0]
 
     def retrieve_download_links(
         self,
@@ -228,15 +230,12 @@ class nso_georegion:
         """
 
         # Check if there is a buffered georegion
-       selected_georegion = (
+        selected_georegion = (
             self.buffered_georegion if self.buffered_georegion else self.georegion
         )
 
-        print("Printing selected georegion: ")
-        print(selected_georegion)
-
         links = nso_api.retrieve_download_links(
-           selected_georegion,
+            selected_georegion,
             self.username,
             self.password,
             start_date,
