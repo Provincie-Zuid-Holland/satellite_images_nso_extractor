@@ -135,10 +135,10 @@ class nso_georegion:
         except Exception as e:
             print(e)
 
-        # if not self.georegion:
-        #     raise Exception(
-        #         "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
-        #     )
+        if not self.georegion:
+            raise Exception(
+                "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
+            )
 
         if os.path.isdir(output_folder):
             self.output_folder = correct_file_path(output_folder)
@@ -170,7 +170,7 @@ class nso_georegion:
 
     def __getFeatures(self, path):
         """
-        Function to parse features from GeoDataFrame in such a manner that rasterio wants them
+        Function to parse features from GeoDataFrame in such a manner that the NSO api wants them.
 
         @param path: The path to a geojson.
         @return coordinates which rasterio wants to have.
@@ -193,6 +193,12 @@ class nso_georegion:
             while gdf.geometry.iloc[0].geom_type != "Polygon":
                 gdf["geometry"] = unary_union(gdf["geometry"].buffer(buffer_x))
                 buffer_x = buffer_x + 1
+
+                # Raise a error in case the buffer gets to big
+                if buffer_x > 200:
+                    raise Exception(
+                        "Multipolygon buffer limit exceeded still a no valid geometry, might not be a error but check your geojson."
+                    )
 
             gdf = gdf.to_crs("EPSG:4326")
             buffered_polygon = json.loads(gdf.to_json())
