@@ -204,8 +204,8 @@ class nso_georegion:
             buffered_polygon = json.loads(gdf.to_json())
 
         if buffered_polygon is False:
-            return [
-                json_loaded["features"][0]["geometry"]["coordinates"][0]
+            return [json_loaded["features"][0]["geometry"]["coordinates"]][
+                0
             ], buffered_polygon
         elif buffered_polygon:
             return [json_loaded["features"][0]["geometry"]["coordinates"]][0], [
@@ -456,11 +456,21 @@ class nso_georegion:
                     )
                     logging.info("Downloaded: " + download_archive_name)
 
-                logging.info("Extracting files")
-                print("Extracting files")
-                extracted_folder = nso_api.unzip_delete(
-                    download_archive_name, delete_zip_file
-                )
+                # See if the .zip file has already been extracted.
+                extracted_folder = download_archive_name.replace(".zip", "")
+                if os.path.exists(extracted_folder):
+                    logging.info(
+                        "Extracted folder already exists, assuming .zip file has already been extracted!"
+                    )
+                    print(
+                        "Extracted folder already exists, assuming .zip file has already been extracted!"
+                    )
+                else:
+                    logging.info("Extracting files")
+                    print("Extracting files")
+                    extracted_folder = nso_api.unzip_delete(
+                        download_archive_name, delete_zip_file
+                    )
                 logging.info("Extracted folder is: " + extracted_folder)
                 print("Extracted folder is: " + extracted_folder)
 
