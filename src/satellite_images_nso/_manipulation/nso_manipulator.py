@@ -20,6 +20,7 @@ from satellite_images_nso._index_channels.calculate_index_channels import (
     generate_ndwi_channel,
     generate_red_edge_ndvi_channel,
 )
+from shapely.geometry import mapping
 
 """
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
@@ -39,17 +40,31 @@ def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
     @param plot: Plot the results true or false
     """
 
-    geometry = [Polygon(coords) for coords in coordinates]
-    geo_area_to_use = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326")
+    if len(coordinates) == 1:
+        geometry = [Polygon(coords) for coords in coordinates]
+        geo_area_to_use = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326")
+
+        if geo_area_to_use.crs != "epsg:28992":
+            geo_area_to_use = geo_area_to_use.to_crs(epsg=28992)
+        area_to_crop = geo_area_to_use["geometry"]
+
+    elif len(coordinates) > 1:
+
+        print("Cropping multipolygons")
+        polygons = []
+        for x in range(0, len(coordinates)):
+            polygon = Polygon(coordinates[x][0])
+            polygons.append(polygon)
+        agdf = gpd.GeoDataFrame(geometry=polygons, crs="EPSG:4326")
+        agdf = agdf.to_crs("EPSG:28992")
+        area_to_crop = [mapping(agdf.unary_union)]
 
     with rasterio.open(raster_path) as src:
         print("raster path opened")
         # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-        if geo_area_to_use.crs != "epsg:28992":
-            geo_area_to_use = geo_area_to_use.to_crs(epsg=28992)
 
         out_image, out_transform = rasterio.mask.mask(
-            src, geo_area_to_use["geometry"], crop=True, filled=True
+            src, area_to_crop, crop=True, filled=True
         )
         out_profile = src.profile
 
