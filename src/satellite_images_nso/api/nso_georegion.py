@@ -204,13 +204,15 @@ class nso_georegion:
             buffered_polygon = json.loads(gdf.to_json())
 
         if buffered_polygon is False:
-            return [json_loaded["features"][0]["geometry"]["coordinates"]][
-                0
-            ], buffered_polygon
+            return (
+                json_loaded["features"][0]["geometry"]["coordinates"],
+                buffered_polygon,
+            )
         elif buffered_polygon:
-            return [json_loaded["features"][0]["geometry"]["coordinates"]][0], [
-                buffered_polygon["features"][0]["geometry"]["coordinates"]
-            ][0]
+            return (
+                json_loaded["features"][0]["geometry"]["coordinates"],
+                buffered_polygon["features"][0]["geometry"]["coordinates"],
+            )
 
     def retrieve_download_links(
         self,
@@ -325,7 +327,12 @@ class nso_georegion:
             raise Exception(".tif not found")
         else:
             cropped_path = nso_manipulator.run(
-                true_path, self.georegion, self.region_name, self.output_folder, plot
+                true_path,
+                self.georegion,
+                self.region_name,
+                self.output_folder,
+                self.buffered_georegion,
+                plot,
             )
             logging.info(f"Cropped file is found at: {cropped_path}")
 
