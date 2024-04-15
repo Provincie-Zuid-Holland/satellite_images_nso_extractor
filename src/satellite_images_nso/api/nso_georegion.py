@@ -18,8 +18,9 @@ import shapely
 import json
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
 import satellite_images_nso._nso_data_extraction.nso_api as nso_api
+from shapely.ops import unary_union
 
-
+# TODO: Make a decision about the logging.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(funcName)s %(message)s",
@@ -121,17 +122,25 @@ class nso_georegion:
         if coordinates:
             self.region_name = "fill_region"
 
-        self.georegion = False
         try:
             # georegion is a variable which contains the coordinates in the geojson, which should be WGS84!
             if path_to_geojson is not None:
-                self.georegion = self.__getFeatures(self.path_to_geojson)[0]
+                # Set a variable to check if if the polygon is a multipolygon.
+                (
+                    self.georegion_to_crop,
+                    self.georegion_to_download,
+                    self.buffered_polygon,
+                ) = self.__getFeatures(self.path_to_geojson)
             elif coordinates is not None:
-                self.georegion = coordinates
+
+                # TODO: There might be multipolygons for missing regions as well!
+                self.georegion_to_crop = coordinates
+                self.georegion_to_download = coordinates
+                self.buffered_polygon = False
         except Exception as e:
             print(e)
 
-        if not self.georegion:
+        if not self.georegion_to_crop or not self.georegion_to_download:
             raise Exception(
                 "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
             )
@@ -166,18 +175,52 @@ class nso_georegion:
 
     def __getFeatures(self, path):
         """
-        Function to parse features from GeoDataFrame in such a manner that rasterio wants them
+        Function to parse features from GeoDataFrame in such a manner that the NSO api wants them.
 
         @param path: The path to a geojson.
         @return coordinates which rasterio wants to have.
         """
+        gdf = gpd.read_file(path)
         json_loaded = json.loads(gpd.read_file(path).to_json())
+        buffered_polygon = False
 
         if json_loaded["features"][0]["geometry"]["type"] == "MultiPolygon":
-            logging.info("Caution multiploygons are not well supported!")
-            print("Caution multiploygons are not well supported!")
+            logging.info("Multipolygon detected!")
+            print("Multipolygon detected!")
 
-        return [json_loaded["features"][0]["geometry"]["coordinates"]]
+            logging.info("Buffering to grow the different multipolygons together")
+            print(
+                "Buffering to grow the different multipolygons together in one polygon for retrieving links"
+            )
+
+            gdf = gdf.set_crs("EPSG:4326").to_crs("EPSG:28992")
+            buffer_x = 0
+            while gdf.geometry.iloc[0].geom_type != "Polygon":
+                gdf["geometry"] = unary_union(gdf["geometry"].buffer(buffer_x))
+                buffer_x = buffer_x + 1
+
+                # Raise a error in case the buffer gets to big
+                if buffer_x > 200:
+                    raise Exception(
+                        "Multipolygon buffer limit exceeded still a no valid geometry, might not be a error but check your geojson."
+                    )
+
+            gdf = gdf.to_crs("EPSG:4326")
+            buffered_polygon_json = json.loads(gdf.to_json())
+            buffered_polygon = True
+
+        if buffered_polygon is False:
+            return (
+                json_loaded["features"][0]["geometry"]["coordinates"],
+                json_loaded["features"][0]["geometry"]["coordinates"],
+                buffered_polygon,
+            )
+        elif buffered_polygon:
+            return (
+                json_loaded["features"][0]["geometry"]["coordinates"],
+                buffered_polygon_json["features"][0]["geometry"]["coordinates"],
+                buffered_polygon,
+            )
 
     def retrieve_download_links(
         self,
@@ -203,7 +246,7 @@ class nso_georegion:
         """
 
         links = nso_api.retrieve_download_links(
-            self.georegion,
+            self.georegion_to_download,
             self.username,
             self.password,
             start_date,
@@ -287,7 +330,12 @@ class nso_georegion:
             raise Exception(".tif not found")
         else:
             cropped_path = nso_manipulator.run(
-                true_path, self.georegion, self.region_name, self.output_folder, plot
+                true_path,
+                self.georegion_to_crop,
+                self.region_name,
+                self.output_folder,
+                self.buffered_polygon,
+                plot,
             )
             logging.info(f"Cropped file is found at: {cropped_path}")
 
@@ -418,11 +466,21 @@ class nso_georegion:
                     )
                     logging.info("Downloaded: " + download_archive_name)
 
-                logging.info("Extracting files")
-                print("Extracting files")
-                extracted_folder = nso_api.unzip_delete(
-                    download_archive_name, delete_zip_file
-                )
+                # See if the .zip file has already been extracted.
+                extracted_folder = download_archive_name.replace(".zip", "")
+                if os.path.exists(extracted_folder):
+                    logging.info(
+                        "Extracted folder already exists, assuming .zip file has already been extracted!"
+                    )
+                    print(
+                        "Extracted folder already exists, assuming .zip file has already been extracted!"
+                    )
+                else:
+                    logging.info("Extracting files")
+                    print("Extracting files")
+                    extracted_folder = nso_api.unzip_delete(
+                        download_archive_name, delete_zip_file
+                    )
                 logging.info("Extracted folder is: " + extracted_folder)
                 print("Extracted folder is: " + extracted_folder)
 

@@ -20,6 +20,7 @@ from satellite_images_nso._index_channels.calculate_index_channels import (
     generate_ndwi_channel,
     generate_red_edge_ndvi_channel,
 )
+from shapely.geometry import mapping
 
 """
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
@@ -28,28 +29,40 @@ from satellite_images_nso._index_channels.calculate_index_channels import (
 """
 
 
-def __make_the_crop(coordinates, raster_path, raster_path_cropped, plot):
+def __make_the_crop(
+    coordinates, raster_path, raster_path_cropped, buffered_georegion, plot
+):
     """
-    This crops the sattelite image with a chosen shape.
+    This crops the satellite image with a chosen shape.
 
-    TODO: Make this accept a object of geopandas or shapely and crs independant.
+    TODO: Make this accept a object of geopandas or shapely and crs independent.
     @param coordinates: Coordinates of the polygon to make the crop on.
     @param raster_path: path to the raster .tiff file.
     @param raster_path_cropped: path were the cropped raster will be stored.
     @param plot: Plot the results true or false
     """
 
-    geometry = [Polygon(coords) for coords in coordinates]
-    geo_area_to_use = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326")
+    # For polygons.
+    if not buffered_georegion:
+        geometry = [Polygon(coords) for coords in coordinates]
+
+    # For multipolygons.
+    elif buffered_georegion:
+        print("Cropping multipolygons")
+        geometry = []
+        for x in range(len(coordinates)):
+            geometry.append(Polygon(coordinates[x][0]))
+
+    # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
+    agdf = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326").to_crs(epsg=28992)
+
+    area_to_crop = mapping(agdf.unary_union) if buffered_georegion else agdf["geometry"]
 
     with rasterio.open(raster_path) as src:
         print("raster path opened")
-        # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
-        if geo_area_to_use.crs != "epsg:28992":
-            geo_area_to_use = geo_area_to_use.to_crs(epsg=28992)
 
         out_image, out_transform = rasterio.mask.mask(
-            src, geo_area_to_use["geometry"], crop=True, filled=True
+            src, area_to_crop, crop=True, filled=True
         )
         out_profile = src.profile
 
@@ -276,7 +289,7 @@ def move_tiff(raster_path_cropped, raster_path_cropped_moved):
         logging.error(f"Failed to move tiff to {raster_path_cropped_moved}")
 
 
-def run(raster_path, coordinates, region_name, output_folder, plot):
+def run(raster_path, coordinates, region_name, output_folder, buffered_georegion, plot):
     """
     Main run method, combines the cropping of the file based on the shape.
 
@@ -297,7 +310,9 @@ def run(raster_path, coordinates, region_name, output_folder, plot):
     )
     print("New cropped filename: " + raster_path_cropped)
     logging.info("New cropped filename: " + raster_path_cropped)
-    __make_the_crop(coordinates, raster_path, raster_path_cropped, plot)
+    __make_the_crop(
+        coordinates, raster_path, raster_path_cropped, buffered_georegion, plot
+    )
     print(f"finished cropping {raster_path}")
     logging.info(f"Finished cropping file {raster_path}")
     # Path fix and move.
