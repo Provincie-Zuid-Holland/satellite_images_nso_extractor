@@ -122,20 +122,23 @@ class nso_georegion:
         if coordinates:
             self.region_name = "fill_region"
 
-        self.georegion = False
         try:
             # georegion is a variable which contains the coordinates in the geojson, which should be WGS84!
             if path_to_geojson is not None:
                 # Set a variable to check if if the polygon is a multipolygon.
-                self.georegion, self.buffered_georegion = self.__getFeatures(
-                    self.path_to_geojson
-                )
+                (
+                    self.georegion_to_crop,
+                    self.georegion_to_download,
+                    self.buffered_polygon,
+                ) = self.__getFeatures(self.path_to_geojson)
             elif coordinates is not None:
-                self.georegion = coordinates
+                self.georegion_to_crop = coordinates
+                self.georegion_to_download = coordinates
+                self.buffered_polygon = False
         except Exception as e:
             print(e)
 
-        if not self.georegion:
+        if not self.georegion_to_crop or not self.georegion_to_download:
             raise Exception(
                 "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
             )
@@ -206,12 +209,14 @@ class nso_georegion:
         if buffered_polygon is False:
             return (
                 json_loaded["features"][0]["geometry"]["coordinates"],
+                json_loaded["features"][0]["geometry"]["coordinates"],
                 buffered_polygon,
             )
         elif buffered_polygon:
             return (
                 json_loaded["features"][0]["geometry"]["coordinates"],
                 buffered_polygon["features"][0]["geometry"]["coordinates"],
+                buffered_polygon,
             )
 
     def retrieve_download_links(
@@ -237,13 +242,8 @@ class nso_georegion:
         @return: the found download links.
         """
 
-        # Check if there is a buffered georegion
-        selected_georegion = (
-            self.buffered_georegion if self.buffered_georegion else self.georegion
-        )
-
         links = nso_api.retrieve_download_links(
-            selected_georegion,
+            self.georegion_to_download,
             self.username,
             self.password,
             start_date,
@@ -328,10 +328,10 @@ class nso_georegion:
         else:
             cropped_path = nso_manipulator.run(
                 true_path,
-                self.georegion,
+                self.georegion_to_crop,
                 self.region_name,
                 self.output_folder,
-                self.buffered_georegion,
+                self.buffered_polygon,
                 plot,
             )
             logging.info(f"Cropped file is found at: {cropped_path}")
