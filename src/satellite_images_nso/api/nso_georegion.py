@@ -132,6 +132,8 @@ class nso_georegion:
                     self.buffered_polygon,
                 ) = self.__getFeatures(self.path_to_geojson)
             elif coordinates is not None:
+
+                # TODO: There might be multipolygons for missing regions as well!
                 self.georegion_to_crop = coordinates
                 self.georegion_to_download = coordinates
                 self.buffered_polygon = False
@@ -204,7 +206,8 @@ class nso_georegion:
                     )
 
             gdf = gdf.to_crs("EPSG:4326")
-            buffered_polygon = json.loads(gdf.to_json())
+            buffered_polygon_json = json.loads(gdf.to_json())
+            buffered_polygon = True
 
         if buffered_polygon is False:
             return (
@@ -215,7 +218,7 @@ class nso_georegion:
         elif buffered_polygon:
             return (
                 json_loaded["features"][0]["geometry"]["coordinates"],
-                buffered_polygon["features"][0]["geometry"]["coordinates"],
+                buffered_polygon_json["features"][0]["geometry"]["coordinates"],
                 buffered_polygon,
             )
 
