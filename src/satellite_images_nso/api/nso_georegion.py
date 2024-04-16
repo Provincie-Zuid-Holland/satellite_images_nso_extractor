@@ -178,7 +178,9 @@ class nso_georegion:
         Function to parse features from GeoDataFrame in such a manner that the NSO api wants them.
 
         @param path: The path to a geojson.
-        @return coordinates which rasterio wants to have.
+        @return polygon_to_crop: The first returned variable is a polygon to which the satellite image has to be cropped.
+        @return polygon_to_down: The second returned variable returns a buffed polygon to download with.
+        @return buffered_polygon: A boolean which checks if a polygon has been buffered.
         """
         gdf = gpd.read_file(path)
         json_loaded = json.loads(gpd.read_file(path).to_json())
@@ -441,8 +443,13 @@ class nso_georegion:
                 found_files = [file for file in glob.glob(cropped_path)]
             skip_cropping = False
 
-            print("Found files: " + str(found_files))
-            logging.info("Found files: " + str(found_files))
+            if len(found_files) > 0:
+                print("Found files: " + str(found_files))
+                logging.info("Found files: " + str(found_files))
+            elif len(found_files) == 0:
+                print("No Found files")
+                logging.info("No Found files ")
+
             if len(found_files) > 0:
                 if os.path.isfile(found_files[0].replace("\\", "/")):
                     logging.info("File already cropped")
