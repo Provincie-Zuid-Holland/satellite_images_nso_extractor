@@ -1,7 +1,0 @@
-{
-"type": "FeatureCollection",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-"features": [
-{ "type": "Feature", "properties": { "MI_PRINX": 2, "Nr_Planeen": null, "Planeenhei": null, "Activiteit": null, "Jaar": null, "Geometrie": null, "Planning": null, "Verslagleg": null, "Afwijking": null, "Oppervlakt": null, "vergelijki": "3B" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 4.307260697837944, 51.945941496689798 ], [ 4.313764234989456, 51.947829679210592 ], [ 4.314138729580721, 51.947383434397075 ], [ 4.307564296181659, 51.94541967728555 ], [ 4.307260697837944, 51.945941496689798 ] ] ] } }
-]
-}

@@ -1,7 +1,0 @@
-{
-"type": "FeatureCollection",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-"features": [
-{ "type": "Feature", "properties": { "MI_PRINX": 57598, "Nr_Planeen": "414", "Planeenhei": "Noordrand van Rotterdam", "Activiteit": "MAAIEN EN AFVOEREN", "Jaar": "2021", "Geometrie": "Geometrie: 470-02/Q01 BV N10.02 Vochtig hooiland", "Planning": "Minimaal 2 keer maaien, alle oevers meemaaien", "Verslagleg": null, "Afwijking": 0.0, "Oppervlakt": 0.8803, "vergelijki": "4A" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 4.459813967979146, 51.971854848367933 ], [ 4.458878816513409, 51.971357057993806 ], [ 4.458871488899995, 51.971362330463265 ], [ 4.458597681408865, 51.971559143110163 ], [ 4.458309753531194, 51.971767250282703 ], [ 4.457884918996948, 51.972074310471548 ], [ 4.45820809614413, 51.97224458320904 ], [ 4.458255806950726, 51.972269723840128 ], [ 4.458347327328718, 51.972317942793595 ], [ 4.45861696604073, 51.972459998583979 ], [ 4.458656355996736, 51.972480749804078 ], [ 4.458806429537856, 51.972559821340099 ], [ 4.459614005694737, 51.971992596530036 ], [ 4.459813967979146, 51.971854848367933 ] ] ] } }
-]
-}
