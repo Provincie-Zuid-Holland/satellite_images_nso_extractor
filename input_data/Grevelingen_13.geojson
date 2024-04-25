@@ -1,6 +1,0 @@
-{
-"type": "FeatureCollection",
-"features": [
-{ "type": "Feature", "properties": { "naam_n2k": "Grevelingen", "vhn_new": "3", "nr": "115", "beschermin": "VR+HR", "sitecode_v": "NL4000021", "sitecode_h": "NL4000021", "status": "Natura 2000-besluit 4 september 2013", "kadaster": "OZ4 63282\/154", "staatscour": "2013\/19978", "FID": "8", "Code": "28", "Provincien": "Zuid-Holland", "SHAPE_Leng": 6.5648016577531996, "SHAPE_Area": 0.38574131604293699 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 3.968745384447788, 51.802428395943721 ], [ 3.968784, 51.80246 ], [ 3.968838, 51.802461 ], [ 3.968981, 51.802425 ], [ 3.969063, 51.802394 ], [ 3.969067, 51.802392 ], [ 3.969576, 51.801887 ], [ 3.969966030723996, 51.801525450221369 ], [ 3.968745384447788, 51.802428395943721 ] ] ] } }
-]
-}

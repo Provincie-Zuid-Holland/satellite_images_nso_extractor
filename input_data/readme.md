@@ -1,4 +1,1 @@
-This is example input region data for satellite-images-nso.
-
-These are all .geojson files of N2000 area's (Nature protected area's) in the Netherlands.
-And
+Use the extract_n2000_region.ipynb to extract single natura2000 regions from the N2000.shp file
