@@ -1,6 +1,0 @@
-{
-"type": "FeatureCollection",
-"features": [
-{ "type": "Feature", "properties": { "naam_n2k": "Voordelta", "vhn_new": "3", "nr": "113", "beschermin": "VR+HR", "sitecode_v": "NL4000017", "sitecode_h": "NL4000017", "status": "Natura 2000-besluit 2008, wijzigingsbesluit juli 2013", "kadaster": "OZ4 63816\/187", "staatscour": "2010\/2236", "FID": "8", "Code": "28", "Provincien": "Zuid-Holland", "SHAPE_Leng": 6.5648016577531996, "SHAPE_Area": 0.38574131604293699 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 4.033781068989935, 51.831665267247487 ], [ 4.033776, 51.831664 ], [ 4.033775869690596, 51.831663961184439 ], [ 4.033780485000023, 51.831665551000071 ], [ 4.033781068989935, 51.831665267247487 ] ] ] } }
-]
-}
