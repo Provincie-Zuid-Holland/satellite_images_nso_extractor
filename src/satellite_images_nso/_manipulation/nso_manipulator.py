@@ -103,7 +103,6 @@ def __make_the_crop(
             + raster_path_cropped
             + "-----------------------------------------------------"
         )
-        # TODO: Make this optional to plot.
         src = rasterio.open(raster_path_cropped)
         plot_out_image = (
             np.clip(src.read()[2::-1], 0, 2200) / 2200
