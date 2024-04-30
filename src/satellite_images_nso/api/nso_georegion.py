@@ -183,7 +183,12 @@ class nso_georegion:
         @return buffered_polygon: A boolean which checks if a polygon has been buffered.
         """
         gdf = gpd.read_file(path)
-        json_loaded = json.loads(gpd.read_file(path).to_json())
+
+        if len(gdf) > 1:
+            print("Multiple polygon rows detected unary unioning the rows.")
+            gdf = gpd.GeoDataFrame(geometry=[gdf.unary_union])
+
+        json_loaded = json.loads(gdf.to_json())
         buffered_polygon = False
 
         if json_loaded["features"][0]["geometry"]["type"] == "MultiPolygon":
