@@ -42,6 +42,27 @@ def all_false(arr):
     return True
 
 
+def download_zip(url):
+    # URL of the zip file you want to download
+    zip_url = url
+
+    # Local path where you want to save the downloaded zip file
+    local_tiff_path = output_path + "/" + url.split("/")[-1]
+
+    # Send a GET request to the URL to download the zip file
+    response = requests.get(zip_url)
+
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Write the content of the response (the zip file) to a local file
+        with open(local_tiff_path, "wb") as file:
+            file.write(response.content)
+
+        print(f"zip file has been downloaded to {local_tiff_path}")
+    else:
+        print("Failed to download zip file:", response.status_code)
+
+
 georegion = nso.nso_georegion(
     path_to_geojson=path_geojson,
     output_folder=output_path,
@@ -49,6 +70,23 @@ georegion = nso.nso_georegion(
     password=nso_password,
 )
 links = georegion.retrieve_download_links(max_diff=0.5, start_date="2011-01-01")
+
+
+### Check if test data exists else download the data.
+
+if not os.path.exists(
+    output_path + "/20230513_104139_PNEO-03_1_1_30cm_RGBNED_12bit_PNEO.zip"
+):
+    download_zip(
+        "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/Test_regions/20230513_104139_PNEO-03_1_1_30cm_RGBNED_12bit_PNEO.zip"
+    )
+
+if not os.path.exists(
+    output_path + "/20191202_110523_SV1-04_SV_RD_11bit_RGBI_50cm.zip"
+):
+    download_zip(
+        "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/Test_regions/20230513_104139_PNEO-03_1_1_30cm_RGBNED_12bit_PNEO.zip"
+    )
 
 
 ### Link tests.
