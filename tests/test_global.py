@@ -5,10 +5,18 @@
 # 2. Cropping satellite images.
 # 3. Adding new bands: NDVI, re_ndvi, NDWI.
 # 4. Cloud detection.
+#
+# If error occur be sure to delete to unzip folder, which could lead to more errors!
 
 
 import satellite_images_nso.api.nso_georegion as nso
-from settings import nso_username, nso_password, path_geojson, output_path
+from settings import (
+    nso_username,
+    nso_password,
+    path_geojson,
+    output_path,
+    path_test_input_data,
+)
 import os
 
 # Optional
@@ -26,6 +34,8 @@ import matplotlib.pyplot as plt
 from cloud_recognition.api import detect_clouds
 import pickle
 import numpy as np
+
+import requests
 
 
 def all_true(arr):
@@ -72,7 +82,7 @@ georegion = nso.nso_georegion(
 links = georegion.retrieve_download_links(max_diff=0.5, start_date="2011-01-01")
 
 
-### Check if test data exists else download the data.
+### Check if test data exists else download the test data.
 
 if not os.path.exists(
     output_path + "/20230513_104139_PNEO-03_1_1_30cm_RGBNED_12bit_PNEO.zip"
@@ -92,12 +102,12 @@ if not os.path.exists(
 ### Link tests.
 
 
-def test_found_links():
+def test_retrieve_download_links():
 
     assert len(links) > 0, "No links found error!"
 
 
-def test_link_columns():
+def test_retrieve_download_links_columns():
     # Columns to check for existence
     columns_to_check = [
         "link",
@@ -114,7 +124,7 @@ def test_link_columns():
     ), "Certain columns are not in the links"
 
 
-def test_pneo_links():
+def test_retrieve_download_links_pneo_links():
     # Test if PNEO links are found
     pneo_links = links[links["resolution"] == "30cm"]
     pneo_links = pneo_links[pneo_links["link"].str.contains("RGBNED")]
@@ -123,7 +133,7 @@ def test_pneo_links():
     assert len(pneo_links) > 0, "No PNEO links found error!"
 
 
-def test_superview_links():
+def test_retrieve_download_links_superview_links():
     # Example filter on resolution and bands
     superview_links = links[links["resolution"] == "50cm"]
     superview_links = superview_links[superview_links["link"].str.contains("RGBI")]
@@ -138,7 +148,7 @@ def test_superview_links():
 def pneo_polygon_crop():
 
     georegion = nso.nso_georegion(
-        path_to_geojson="C:/repos/satellite-images-nso/input_data/Test_region.geojson",
+        path_to_geojson=path_test_input_data + "Test_region.geojson",
         output_folder=output_path,
         username=nso_username,
         password=nso_password,
@@ -158,7 +168,7 @@ def pneo_polygon_crop():
 def pneo_multiploygon_crop():
 
     georegion = nso.nso_georegion(
-        path_to_geojson="C:/repos/satellite-images-nso/input_data/Test_multipolygon_region.geojson",
+        path_to_geojson=path_test_input_data + "Test_multipolygon_region.geojson",
         output_folder=output_path,
         username=nso_username,
         password=nso_password,
@@ -170,7 +180,6 @@ def pneo_multiploygon_crop():
 
     assert filepath, "No file has been downloaded or extracted for multiPolygons"
 
-    # Remove the file for later tests
     os.remove(filepath)
 
 
@@ -179,7 +188,7 @@ def pneo_multiploygon_crop():
 
 def test_re_ndvi_pneo():
     # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
-    path_geojson = "C:/repos/satellite-images-nso/input_data/Test_region.geojson"
+    path_geojson = path_test_input_data + "Test_region.geojson"
     output_path = "E:/data/test"
 
     georegion = nso.nso_georegion(
@@ -203,11 +212,31 @@ def test_re_ndvi_pneo():
 
         assert num_bands >= 7, "re_ndvi bands not added correctly"
 
+    os.remove(filepath)
 
-def test_adding_ndwi_pneo():
+
+def test_adding_additional_ndwi_pneo():
+
+    # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
+    path_geojson = path_test_input_data + "Test_region.geojson"
+    output_path = "E:/data/test"
+
+    georegion = nso.nso_georegion(
+        path_to_geojson=path_geojson,
+        output_folder=output_path,
+        username=nso_username,
+        password=nso_password,
+    )
+
+    filepath = georegion.execute_link(
+        "https://api.satellietdataportaal.nl/v1/download/30cm_RGBNED_12bit_PNEO/20230513_104139_PNEO-03_1_1",
+        add_red_edge_ndvi_band=True,
+        plot=False,
+    )
+
     # Add the NDWI Channel
     filepath_ndwi = nso_manipulator.add_index_channels(
-        "E:/data/test/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_Coepelduynen_cropped_Test_region_cropped_re_ndvi.tif",
+        filepath,
         ["ndwi"],
     )
 
@@ -217,15 +246,24 @@ def test_adding_ndwi_pneo():
         num_bands = src.count
         print("Number of bands:", num_bands)
 
-        assert num_bands >= 8, "ndwi bands not added correctly"
+        assert num_bands >= 8, "re_ndwi bands not added correctly"
 
     os.remove(filepath_ndwi)
 
 
-filepath = ""
-
-
 def test_adding_ndvi_superview():
+
+    # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
+    path_geojson = path_test_input_data + "Test_region.geojson"
+    output_path = "E:/data/test"
+
+    georegion = nso.nso_georegion(
+        path_to_geojson=path_geojson,
+        output_folder=output_path,
+        username=nso_username,
+        password=nso_password,
+    )
+
     filepath = georegion.execute_link(
         "https://api.satellietdataportaal.nl/v1/download/SV_RD_11bit_RGBI_50cm/20191202_110523_SV1-04",
         add_ndvi_band=True,
@@ -240,11 +278,31 @@ def test_adding_ndvi_superview():
 
         assert num_bands >= 5, "ndvi bands not added correctly"
 
+    os.remove(filepath)
 
-def test_adding_ndwi_superview():
+
+def test_adding_additional_ndwi_superview():
+
+    # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
+    path_geojson = path_test_input_data + "Test_region.geojson"
+    output_path = "E:/data/test"
+
+    georegion = nso.nso_georegion(
+        path_to_geojson=path_geojson,
+        output_folder=output_path,
+        username=nso_username,
+        password=nso_password,
+    )
+
+    filepath = georegion.execute_link(
+        "https://api.satellietdataportaal.nl/v1/download/SV_RD_11bit_RGBI_50cm/20191202_110523_SV1-04",
+        add_ndvi_band=True,
+        plot=False,
+    )
+
     # Add the NDWI Channel
     filepath_ndwi = nso_manipulator.add_index_channels(
-        "E:/data/test/20191202_110523_SV1-04_50cm_RD_11bit_RGBI_NoordwijkAanZee_Coepelduynen_cropped_Test_region_cropped_ndvi.tif",
+        filepath,
         ["ndwi"],
     )
 
@@ -254,7 +312,7 @@ def test_adding_ndwi_superview():
         num_bands = src.count
         print("Number of bands:", num_bands)
 
-        assert num_bands >= 6, "re_ndvi bands not added correctly"
+        assert num_bands >= 6, "ndwi band  not added correctly"
 
     os.remove(filepath_ndwi)
 
