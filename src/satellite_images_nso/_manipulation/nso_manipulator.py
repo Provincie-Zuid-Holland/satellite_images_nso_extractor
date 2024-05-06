@@ -56,8 +56,6 @@ def __make_the_crop(
 
     # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
     agdf = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326").to_crs(epsg=28992)
-
-    # area_to_crop = mapping(agdf.unary_union) if buffered_georegion else agdf["geometry"]
     area_to_crop = agdf["geometry"]
 
     with rasterio.open(raster_path) as src:
