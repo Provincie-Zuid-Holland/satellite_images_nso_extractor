@@ -48,15 +48,13 @@ def all_false(arr):
     return True
 
 
-def download_zip(url):
-    # URL of the zip file you want to download
-    zip_url = url
+def download_file(url):
 
     # Local path where you want to save the downloaded zip file
     local_tiff_path = output_path + "/" + url.split("/")[-1]
 
     # Send a GET request to the URL to download the zip file
-    response = requests.get(zip_url)
+    response = requests.get(url)
 
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
@@ -64,9 +62,9 @@ def download_zip(url):
         with open(local_tiff_path, "wb") as file:
             file.write(response.content)
 
-        print(f"zip file has been downloaded to {local_tiff_path}")
+        print(f"file has been downloaded to {local_tiff_path}")
     else:
-        print("Failed to download zip file:", response.status_code)
+        print("Failed to download file:", response.status_code)
 
 
 def remove_directories_in_folder(folder_path):
@@ -99,14 +97,14 @@ links = georegion.retrieve_download_links(max_diff=0.5, start_date="2011-01-01")
 if not os.path.exists(
     output_path + "/20230513_104139_PNEO-03_1_1_30cm_RGBNED_12bit_PNEO.zip"
 ):
-    download_zip(
+    download_file(
         "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/Test_regions/20230513_104139_PNEO-03_1_1_30cm_RGBNED_12bit_PNEO.zip"
     )
 
 if not os.path.exists(
     output_path + "/20191202_110523_SV1-04_SV_RD_11bit_RGBI_50cm.zip"
 ):
-    download_zip(
+    download_file(
         "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/Test_regions/20230513_104139_PNEO-03_1_1_30cm_RGBNED_12bit_PNEO.zip"
     )
 
@@ -338,15 +336,74 @@ def test_cloud_detection():
             "rb",
         )
     )
+
+    # TODO: Make smaller files
+
+    # Cloud pictures
+    if not os.path.exists(
+        output_path
+        + "/20220514_114854_SV1-02_SV_RD_11bit_RGBI_50cm_Rijnsburg_natura2000_coepelduynen_cropped.tif"
+    ):
+        download_file(
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20220514_114854_SV1-02_SV_RD_11bit_RGBI_50cm_Rijnsburg_natura2000_coepelduynen_cropped.tif"
+        )
+
+    if not os.path.exists(
+        output_path
+        + "/20190302_105829_SV1-01_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif"
+    ):
+        download_file(
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20190302_105829_SV1-01_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif"
+        )
+
+    if not os.path.exists(
+        output_path
+        + "/20191202_110525_SV1-04_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif"
+    ):
+        download_file(
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20191202_110525_SV1-04_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif"
+        )
+
+    # Not cloud pictures
+    if not os.path.exists(
+        output_path
+        + "/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped.tif"
+    ):
+        download_file(
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped.tif"
+        )
+
+    if not os.path.exists(
+        output_path
+        + "/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped.tif"
+    ):
+        download_file(
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped.tif"
+        )
+
+    if not os.path.exists(
+        output_path
+        + "/20220515_113347_SV1-02_SV_RD_11bit_RGBI_50cm_KatwijkAanZee_natura2000_coepelduynen_cropped.tif"
+    ):
+        download_file(
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20220515_113347_SV1-02_SV_RD_11bit_RGBI_50cm_KatwijkAanZee_natura2000_coepelduynen_cropped.tif"
+        )
+
     cloud_pictures = [
-        "E:/data/coepelduynen/20220514_114854_SV1-02_SV_RD_11bit_RGBI_50cm_Rijnsburg_natura2000_coepelduynen_cropped.tif",
-        "E:/data/coepelduynen/20190302_105829_SV1-01_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif",
-        "E:/data/coepelduynen/20191202_110525_SV1-04_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif",
+        output_path
+        + "/20220514_114854_SV1-02_SV_RD_11bit_RGBI_50cm_Rijnsburg_natura2000_coepelduynen_cropped.tif",
+        output_path
+        + "/20190302_105829_SV1-01_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif",
+        output_path
+        + "/20191202_110525_SV1-04_50cm_RD_11bit_RGBI_KatwijkAanZee_natura2000_coepelduynen_cropped.tif",
     ]
     non_cloud_pictures = [
-        "E:/data/coepelduynen/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped.tif",
-        "E:/data/coepelduynen/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped.tif",
-        "E:/data/coepelduynen/20220515_113347_SV1-02_SV_RD_11bit_RGBI_50cm_KatwijkAanZee_natura2000_coepelduynen_cropped.tif",
+        output_path
+        + "/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped.tif",
+        output_path
+        + "/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped.tif",
+        output_path
+        + "/20220515_113347_SV1-02_SV_RD_11bit_RGBI_50cm_KatwijkAanZee_natura2000_coepelduynen_cropped.tif",
     ]
 
     positive_pictures = [
