@@ -320,7 +320,7 @@ def test_adding_additional_ndwi_superview():
         assert "ndwi" in src.descriptions, "ndwi band  not added correctly"
 
 
-# Clean up from adding chanels
+# Clean up from adding channels
 
 [os.remove(file) for file in glob.glob(output_path + "/*.tif")]
 
@@ -337,7 +337,7 @@ def test_cloud_detection():
         )
     )
 
-    # TODO: Make smaller files
+    # TODO: Make smaller files for cloud detection.
 
     # Cloud pictures
     if not os.path.exists(
@@ -367,18 +367,18 @@ def test_cloud_detection():
     # Not cloud pictures
     if not os.path.exists(
         output_path
-        + "/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped.tif"
+        + "/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped_ndvi_asphalt_crop.tif"
     ):
         download_file(
-            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped.tif"
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped_ndvi_asphalt_crop.tif"
         )
 
     if not os.path.exists(
         output_path
-        + "/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped.tif"
+        + "/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped_ndvi_re_ndvi_asphalt_crop.tif"
     ):
         download_file(
-            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped.tif"
+            "https://e34a505986aa74678a5a0e0f.blob.core.windows.net/satellite-images-nso/coepelduynen/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped_ndvi_re_ndvi_asphalt_crop.tif"
         )
 
     if not os.path.exists(
@@ -399,9 +399,9 @@ def test_cloud_detection():
     ]
     non_cloud_pictures = [
         output_path
-        + "/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped.tif",
+        + "/20230402_105321_PNEO-03_1_49_30cm_RD_12bit_RGBNED_Zoeterwoude_natura2000_coepelduynen_cropped_ndvi_asphalt_crop.tif",
         output_path
-        + "/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped.tif",
+        + "/20230513_104139_PNEO-03_1_1_30cm_RD_12bit_RGBNED_NoordwijkAanZee_natura2000_coepelduynen_cropped_ndvi_re_ndvi_asphalt_crop.tif",
         output_path
         + "/20220515_113347_SV1-02_SV_RD_11bit_RGBI_50cm_KatwijkAanZee_natura2000_coepelduynen_cropped.tif",
     ]
