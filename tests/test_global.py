@@ -18,13 +18,8 @@ from settings import (
     path_test_input_data,
 )
 import os
+import glob
 
-# Optional
-from settings import (
-    height_band_filepath,
-    cloud_detection_model_path,
-    links_must_contain,
-)
 import rasterio
 from rasterio.plot import show
 import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
@@ -34,8 +29,8 @@ import matplotlib.pyplot as plt
 from cloud_recognition.api import detect_clouds
 import pickle
 import numpy as np
-
 import requests
+import shutil
 
 
 def all_true(arr):
@@ -71,6 +66,22 @@ def download_zip(url):
         print(f"zip file has been downloaded to {local_tiff_path}")
     else:
         print("Failed to download zip file:", response.status_code)
+
+
+def remove_directories_in_folder(folder_path):
+    try:
+        # Iterate over all items in the folder
+        for item in os.listdir(folder_path):
+            # Join the folder path with the current item
+            item_path = os.path.join(folder_path, item)
+
+            # Check if the item is a directory
+            if os.path.isdir(item_path):
+                # Remove the directory and its contents
+                shutil.rmtree(item_path)
+                print(f"Directory '{item_path}' removed successfully.")
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 georegion = nso.nso_georegion(
@@ -161,9 +172,6 @@ def pneo_polygon_crop():
 
     assert filepath, "No file has been downloaded or extracted for a polygon in PNEO!"
 
-    # Remove the file for later tests
-    os.remove(filepath)
-
 
 def pneo_multiploygon_crop():
 
@@ -180,8 +188,12 @@ def pneo_multiploygon_crop():
 
     assert filepath, "No file has been downloaded or extracted for multiPolygons"
 
-    os.remove(filepath)
 
+# Clean up from crop tests.
+
+[os.remove(file) for file in glob.glob(output_path + "/*.tif")]
+
+remove_directories_in_folder(output_path)
 
 # Channel adding tests.
 
@@ -210,9 +222,7 @@ def test_re_ndvi_pneo():
         num_bands = src.count
         print("Number of bands:", num_bands)
 
-        assert num_bands >= 7, "re_ndvi bands not added correctly"
-
-    os.remove(filepath)
+        assert "re_ndvi" in src.descriptions, "re_ndvi bands not added correctly"
 
 
 def test_adding_additional_ndwi_pneo():
@@ -246,9 +256,7 @@ def test_adding_additional_ndwi_pneo():
         num_bands = src.count
         print("Number of bands:", num_bands)
 
-        assert num_bands >= 8, "re_ndwi bands not added correctly"
-
-    os.remove(filepath_ndwi)
+        assert "ndwi" in src.descriptions, "re_ndwi bands not added correctly"
 
 
 def test_adding_ndvi_superview():
@@ -276,9 +284,7 @@ def test_adding_ndvi_superview():
         num_bands = src.count
         print("Number of bands:", num_bands)
 
-        assert num_bands >= 5, "ndvi bands not added correctly"
-
-    os.remove(filepath)
+        assert "ndvi" in src.descriptions, "ndvi bands not added correctly"
 
 
 def test_adding_additional_ndwi_superview():
@@ -312,9 +318,14 @@ def test_adding_additional_ndwi_superview():
         num_bands = src.count
         print("Number of bands:", num_bands)
 
-        assert num_bands >= 6, "ndwi band  not added correctly"
+        assert "ndwi" in src.descriptions, "ndwi band  not added correctly"
 
-    os.remove(filepath_ndwi)
+
+# Clean up from adding chanels
+
+[os.remove(file) for file in glob.glob(output_path + "/*.tif")]
+
+remove_directories_in_folder(output_path)
 
 
 # Test Cloud detection
