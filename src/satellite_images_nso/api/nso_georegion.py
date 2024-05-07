@@ -183,7 +183,12 @@ class nso_georegion:
         @return buffered_polygon: A boolean which checks if a polygon has been buffered.
         """
         gdf = gpd.read_file(path)
-        json_loaded = json.loads(gpd.read_file(path).to_json())
+
+        if len(gdf) > 1:
+            print("Multiple polygon rows detected unary unioning the rows.")
+            gdf = gpd.GeoDataFrame(geometry=[gdf.unary_union])
+
+        json_loaded = json.loads(gdf.to_json())
         buffered_polygon = False
 
         if json_loaded["features"][0]["geometry"]["type"] == "MultiPolygon":
@@ -456,7 +461,7 @@ class nso_georegion:
                     print("File is already cropped")
                     skip_cropping = True
                     cropped_path = found_files[-1]
-                # Does not work in notebook mode, input
+                # TODO: Does not work in notebook mode, input
                 # x = input("File is already cropped, continue?")
                 # if x == "no":
                 #     return "File already cropped"
@@ -623,11 +628,17 @@ class nso_georegion:
         """
         return self.output_folder
 
-    def get_georegion(self):
+    def get_georegion_to_crop(self):
         """
-        Get the coordinates from the geojson.
+        Get the coordinates from the geojson which will be cropped.
         """
-        return self.georegion
+        return self.georegion_to_crop
+
+    def get_georegion_to_download(self):
+        """
+        Get the coordinates from the geojson which will be downloaded.
+        """
+        return self.georegion_to_download
 
     def get_region_name(self):
         """-
