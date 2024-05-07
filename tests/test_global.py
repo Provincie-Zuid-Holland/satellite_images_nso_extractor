@@ -16,6 +16,7 @@ from settings import (
     path_geojson,
     output_path,
     path_test_input_data,
+    cloud_detection_model_path,
 )
 import os
 import glob
@@ -333,7 +334,7 @@ def test_cloud_detection():
 
     path_to_model = pickle.load(
         open(
-            "C:/repos/satellite-images-nso/models/cloud_detection_logistic_regression_v1.0.sav",
+            cloud_detection_model_path,
             "rb",
         )
     )
