@@ -21,6 +21,7 @@ from satellite_images_nso._index_channels.calculate_index_channels import (
     generate_red_edge_ndvi_channel,
 )
 from shapely.geometry import mapping
+import os
 
 """
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
@@ -55,8 +56,7 @@ def __make_the_crop(
 
     # Change the crs to rijks driehoek, because all the satelliet images are in rijks driehoek
     agdf = gpd.GeoDataFrame(geometry=geometry, crs="EPSG:4326").to_crs(epsg=28992)
-
-    area_to_crop = mapping(agdf.unary_union) if buffered_georegion else agdf["geometry"]
+    area_to_crop = agdf["geometry"]
 
     with rasterio.open(raster_path) as src:
         print("raster path opened")
@@ -103,7 +103,6 @@ def __make_the_crop(
             + raster_path_cropped
             + "-----------------------------------------------------"
         )
-        # TODO: Make this optional to plot.
         src = rasterio.open(raster_path_cropped)
         plot_out_image = (
             np.clip(src.read()[2::-1], 0, 2200) / 2200
@@ -155,6 +154,7 @@ def add_index_channels(tif_input_file: str, channel_types: list):
             output_dataset.write_band(dataset.count + 1 + i, index_channels[i])
         output_dataset.descriptions = descriptions
 
+    os.remove(tif_input_file)
     return file_to
 
 
