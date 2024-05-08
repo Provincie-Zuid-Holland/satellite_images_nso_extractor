@@ -188,6 +188,10 @@ class nso_georegion:
             print("Multiple polygon rows detected unary unioning the rows.")
             gdf = gpd.GeoDataFrame(geometry=[gdf.unary_union])
 
+        if gdf.crs != "EPSG:4326":
+            print("CRS has to be in WGS84! Casting to WGS84.....")
+            gdf = gdf.to_crs("EPSG:4326")
+
         json_loaded = json.loads(gdf.to_json())
         buffered_polygon = False
 
