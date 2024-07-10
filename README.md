@@ -93,6 +93,15 @@ Navigate to the [satellite-images-nso-datascience repository](https://github.com
 pip install .
 ```
 
+Or run the "rebuild.bat" or "rebuild.sh" file in your python environment.
+```sh
+./rebuild.sh 
+```
+
+```sh
+./rebuild.bat
+```
+
 ### Additional steps for running postprocessing scripts
 
 Additionally, the postprocessing scripts use the Azure SDK, requiring Azure CLI to log in. Follow the [Microsoft Instructions](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on how to install the Azure CLI.

@@ -6,6 +6,8 @@
 # 3. Adding new bands: NDVI, re_ndvi, NDWI.
 # 4. Cloud detection.
 #
+# Make to define the settings file with NSO username,NSO password, outputpath for storing .tif files, input data in the form of a test region and a path to a cloud detection model!!!!
+#
 # If error occur be sure to delete to unzip folder, which could lead to more errors!
 
 
