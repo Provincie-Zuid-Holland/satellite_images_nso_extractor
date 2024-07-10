@@ -14,7 +14,6 @@ from rasterio.warp import (
     transform_geom,
 )
 from shapely.geometry import box, Polygon
-import satellite_images_nso.__lidar.ahn as ahn
 from satellite_images_nso._index_channels.calculate_index_channels import (
     generate_ndvi_channel,
     generate_ndwi_channel,
