@@ -409,7 +409,6 @@ class nso_georegion:
             )
 
             # Check if file is already cropped
-
             if hasattr(self, "resolution"):
 
                 # Bands could be on muliple locations and we should sure for multiple glob locations.
@@ -615,7 +614,7 @@ class nso_georegion:
 
     def check_already_downloaded_links(self):
         """
-        Check which links have already been dowloaded.
+        Check which links have already been downloaded.
         """
         downloaded_files = []
 
@@ -628,7 +627,7 @@ class nso_georegion:
 
     def get_output_folder(self):
         """
-        Get the output folder
+        Get the output folder.
         """
         return self.output_folder
 
@@ -672,6 +671,7 @@ class nso_georegion:
         self, kernel, initial_threshold=145, initial_mean=29.441733905207673
     ):
         """
+        TODO: Can be deleted?
 
         Create mask from tif file on first band.
 
