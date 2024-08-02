@@ -89,11 +89,9 @@ pip install -r requirements.txt
 
 Navigate to the [satellite-images-nso-datascience repository](https://github.com/Provincie-Zuid-Holland/satellite-images-nso-datascience) and then run:
 
-```sh
-pip install .
-```
 
-Or run the "rebuild.bat" or "rebuild.sh" file in your python environment.
+Currently run the "rebuild.bat" or "rebuild.sh" file in your python environment to install the package.
+TODO: still working on a pip install version
 ```sh
 ./rebuild.sh 
 ```
