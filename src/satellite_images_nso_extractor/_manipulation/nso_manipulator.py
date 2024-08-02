@@ -14,7 +14,7 @@ from rasterio.warp import (
     transform_geom,
 )
 from shapely.geometry import box, Polygon
-from satellite_images_nso._index_channels.calculate_index_channels import (
+from satellite_images_nso_extractor._index_channels.calculate_index_channels import (
     generate_ndvi_channel,
     generate_ndwi_channel,
     generate_red_edge_ndvi_channel,
