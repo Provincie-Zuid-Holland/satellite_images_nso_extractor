@@ -16,8 +16,8 @@ from rasterio.merge import merge
 import re
 import shapely
 import json
-import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
-import satellite_images_nso._nso_data_extraction.nso_api as nso_api
+import satellite_images_nso_extractor._manipulation.nso_manipulator as nso_manipulator
+import satellite_images_nso_extractor._nso_data_extraction.nso_api as nso_api
 from shapely.ops import unary_union
 
 # TODO: Make a decision about the logging.
