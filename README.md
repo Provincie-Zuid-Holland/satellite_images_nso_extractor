@@ -41,7 +41,10 @@ from settings import nso_username, nso_password, path_geojson,  output_path
 # Optional
 from settings import height_band_filepath, cloud_detection_model_path, links_must_contain
 
+#Path to the .geojson of the region of interest, which has to be cropped from the original satellite 
 path_geojson = "/src/example/example.geojson"
+
+# Path to where the resulting .tif files will be stored.
 output_folder = "./src/output/"
 
 # Make a georegion object
@@ -92,6 +95,7 @@ Navigate to the [satellite-images-nso-datascience repository](https://github.com
 ```sh
 pip install .
 ```
+
 
 ### Additional steps for running postprocessing scripts
 
