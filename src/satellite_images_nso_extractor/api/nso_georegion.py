@@ -16,8 +16,8 @@ from rasterio.merge import merge
 import re
 import shapely
 import json
-import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
-import satellite_images_nso._nso_data_extraction.nso_api as nso_api
+import satellite_images_nso_extractor._manipulation.nso_manipulator as nso_manipulator
+import satellite_images_nso_extractor._nso_data_extraction.nso_api as nso_api
 from shapely.ops import unary_union
 
 # TODO: Make a decision about the logging.
@@ -187,6 +187,10 @@ class nso_georegion:
         if len(gdf) > 1:
             print("Multiple polygon rows detected unary unioning the rows.")
             gdf = gpd.GeoDataFrame(geometry=[gdf.unary_union])
+
+        if gdf.crs != "EPSG:4326":
+            print("CRS has to be in WGS84! Casting to WGS84.....")
+            gdf = gdf.to_crs("EPSG:4326")
 
         json_loaded = json.loads(gdf.to_json())
         buffered_polygon = False
@@ -405,7 +409,6 @@ class nso_georegion:
             )
 
             # Check if file is already cropped
-
             if hasattr(self, "resolution"):
 
                 # Bands could be on muliple locations and we should sure for multiple glob locations.
@@ -611,7 +614,7 @@ class nso_georegion:
 
     def check_already_downloaded_links(self):
         """
-        Check which links have already been dowloaded.
+        Check which links have already been downloaded.
         """
         downloaded_files = []
 
@@ -624,7 +627,7 @@ class nso_georegion:
 
     def get_output_folder(self):
         """
-        Get the output folder
+        Get the output folder.
         """
         return self.output_folder
 
@@ -668,6 +671,7 @@ class nso_georegion:
         self, kernel, initial_threshold=145, initial_mean=29.441733905207673
     ):
         """
+        TODO: Can be deleted?
 
         Create mask from tif file on first band.
 

@@ -6,10 +6,12 @@
 # 3. Adding new bands: NDVI, re_ndvi, NDWI.
 # 4. Cloud detection.
 #
+# In order for this test to run make sure to define the settings file with NSO username,NSO password, outputpath for storing .tif files, input data in the form of a test region and a path to a cloud detection model!!!!
+#
 # If error occur be sure to delete to unzip folder, which could lead to more errors!
 
 
-import satellite_images_nso.api.nso_georegion as nso
+import satellite_images_nso_extractor.api.nso_georegion as nso
 from settings import (
     nso_username,
     nso_password,
@@ -23,7 +25,7 @@ import glob
 
 import rasterio
 from rasterio.plot import show
-import satellite_images_nso._manipulation.nso_manipulator as nso_manipulator
+import satellite_images_nso_extractor._manipulation.nso_manipulator as nso_manipulator
 import matplotlib.pyplot as plt
 
 # the cloud_recognition.api needs to be imported from the natura2000 data science repo
