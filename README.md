@@ -1,24 +1,23 @@
 # Introduction
 
-This Python code is designed to simplify the data extraction and cropping of satellite image data from the Netherlands Space Office (NSO).
+This Python code simplifies data extraction and cropping of satellite image data from the Netherlands Space Office (NSO).
 
-NSO offers free satellite images of the Netherlands. However, a drawback is that NSO only provides images of large overlapping regions, rather than specific areas. This results in an unnecessarily large amount of data, particularly if you are only interested in studying a smaller, specific region. To address this issue, this package offers a cropping feature.
+The NSO offers free satellite images of the Netherlands. However, a limitation is that the NSO provides images of large overlapping regions rather than specific areas. This results in unnecessarily large amounts of data, especially if you are only interested in a smaller, specific region. To address this issue, this package includes a cropping feature.
 
-If you only need a few satellite files, the data portal of the NSO should be enough: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
-Although you still need to crop the satellite image in a other way.
+If you only need a few satellite files, the NSO data portal should suffice: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
+However, you will still need to crop the satellite images using another method.
 
-Depending on your purpose however, for example machine learning/A.I, you want to have as much satellite images (in a time series) and automate it as much as possible, for which this python code is also intended.
+Depending on your purpose, such as for machine learning or A.I. applications, you may need to process a large number of satellite images in a time series and automate the workflow as much as possible. This Python code is designed to meet those needs.
 
 
-This python code does the following steps:
+Features of the Python code:
 
-1. Searches the NSO for satellite images which contain a selected geoarea in .geojson file, you need to make this .geojson file yourself in WGS84. Parameters can used for how strict this containment should be.
-2. Downloads, unzips and crops the satellite image, found in step 1, to the selected area.
-3. An option can also be set for calculating various index such as the NDVI, NDWI
-4. Add lidar height data as extra band.
-5. Saves the cropped satellite image to a .tif file with the option to also save it as a geopandas dataframe. And deletes the unused data.
-
-This image gives a illustration:
+1. Searches the NSO for satellite images containing a selected geographical area defined in a .geojson file. You need to create this .geojson file yourself in WGS84 format. Parameters can be adjusted to control how strictly the area must be contained within the images.
+2. Downloads, unzips, and crops the satellite images identified in step 1 to the selected area.
+3. Calculates various indices, such as NDVI or NDWI, if this option is enabled.
+4. Saves the cropped satellite images as .tif files, with the option to save them as a GeoPandas DataFrame. Unused data is automatically deleted.
+   
+The image below provides an illustration:
 ![Alt text](example.png?raw=true "Title")
 
 
@@ -28,7 +27,7 @@ For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/
 # Getting Started
 
 0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
-1. First get a GeoJSON file of the selected region you want to study and be cropped to. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that. Note the coordinates have to be in WGS84! ( Which should be standard for a geojson.)
+1. First, create or obtain a GeoJSON file representing the region you want to study and crop to. This file defines the geographical boundaries of your area of interest and is essential for the cropping process. Ensure the GeoJSON file uses the WGS84 coordinate system. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that.
 2. Make a instance of nso_georegion with instance of the geojson region you have, where you want to store the cropped files and the NSO account based on step 0.
 3. Retrieve download links of satellite images which contain the selected region, parameters can be set to how strict this containment should be, if you want to fill missing data in the region with data from a other satellite and/or add extra indexes.
 4. Download, unzip and crop the found links.
