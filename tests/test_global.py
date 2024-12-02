@@ -115,11 +115,18 @@ if not os.path.exists(
 
 
 def test_retrieve_download_links():
+    """
+    Tests if there are links found with the api call
+    """
 
     assert len(links) > 0, "No links found error!"
 
 
 def test_retrieve_download_links_columns():
+    """
+
+    Test if the appropriate columns are found in the fetched data from the api.
+    """
     # Columns to check for existence
     columns_to_check = [
         "link",
@@ -137,7 +144,10 @@ def test_retrieve_download_links_columns():
 
 
 def test_retrieve_download_links_pneo_links():
-    # Test if PNEO links are found
+    """
+    Test if PNEO satellite download links are found and if they contain the appropriate spectral values and resolution.
+
+    """
     pneo_links = links[links["resolution"] == "30cm"]
     pneo_links = pneo_links[pneo_links["link"].str.contains("RGBNED")]
     pneo_links = pneo_links.sort_values("percentage_geojson")
@@ -146,7 +156,10 @@ def test_retrieve_download_links_pneo_links():
 
 
 def test_retrieve_download_links_superview_links():
-    # Example filter on resolution and bands
+    """
+    Test if Superview satellite download links are found and if they contain the appropriate spectral values and resolution.
+
+    """
     superview_links = links[links["resolution"] == "50cm"]
     superview_links = superview_links[superview_links["link"].str.contains("RGBI")]
     superview_links = superview_links.sort_values("percentage_geojson")
@@ -157,7 +170,13 @@ def test_retrieve_download_links_superview_links():
 # Cropping tests
 
 
-def pneo_polygon_crop():
+def test_pneo_polygon_crop():
+    """
+
+    Download a small region and check if the cropping works.
+
+
+    """
 
     georegion = nso.nso_georegion(
         path_to_geojson=path_test_input_data + "Test_region.geojson",
@@ -174,8 +193,12 @@ def pneo_polygon_crop():
     assert filepath, "No file has been downloaded or extracted for a polygon in PNEO!"
 
 
-def pneo_multiploygon_crop():
+def test_pneo_multiploygon_crop():
+    """
 
+    Test if the multipolygon with multiple regions works.
+
+    """
     georegion = nso.nso_georegion(
         path_to_geojson=path_test_input_data + "Test_multipolygon_region.geojson",
         output_folder=output_path,
@@ -200,7 +223,11 @@ remove_directories_in_folder(output_path)
 
 
 def test_re_ndvi_pneo():
-    # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
+    """
+
+    Test re_ndvi on PNEO coepelduynen and see if it correctly added the re_ndvi channel.
+
+    """
     path_geojson = path_test_input_data + "Test_region.geojson"
     output_path = "E:/data/test"
 
@@ -227,8 +254,11 @@ def test_re_ndvi_pneo():
 
 
 def test_adding_additional_ndwi_pneo():
+    """
+    Test re_ndvi on PNEO coepelduynen and see if it correctly added the ndwi channel.
 
-    # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
+    """
+
     path_geojson = path_test_input_data + "Test_region.geojson"
     output_path = "E:/data/test"
 

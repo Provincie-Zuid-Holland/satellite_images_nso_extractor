@@ -3,22 +3,22 @@ import json
 import logging
 import os
 import pickle
+import re
 import shutil
 import warnings
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
+
 import geopandas as gpd
-import pandas as pd
 import numpy as np
+import pandas as pd
 import rasterio
+import shapely
 from cloud_recognition.api import detect_clouds
 from rasterio.merge import merge
-import re
-import shapely
-import json
+from shapely.ops import unary_union
+
 import satellite_images_nso_extractor._manipulation.nso_manipulator as nso_manipulator
 import satellite_images_nso_extractor._nso_data_extraction.nso_api as nso_api
-from shapely.ops import unary_union
 
 # TODO: Make a decision about the logging.
 logging.basicConfig(
@@ -132,7 +132,6 @@ class nso_georegion:
                     self.buffered_polygon,
                 ) = self.__getFeatures(self.path_to_geojson)
             elif coordinates is not None:
-
                 # TODO: There might be multipolygons for missing regions as well!
                 self.georegion_to_crop = coordinates
                 self.georegion_to_download = coordinates
@@ -190,7 +189,7 @@ class nso_georegion:
 
         if gdf.crs != "EPSG:4326":
             print("CRS has to be in WGS84! Casting to WGS84.....")
-            gdf = gdf.to_crs("EPSG:4326")
+            gdf = gdf.set_crs("EPSG:4326")
 
         json_loaded = json.loads(gdf.to_json())
         buffered_polygon = False
@@ -410,7 +409,6 @@ class nso_georegion:
 
             # Check if file is already cropped
             if hasattr(self, "resolution"):
-
                 # Bands could be on muliple locations and we should sure for multiple glob locations.
                 cropped_path_one = os.path.join(
                     self.output_folder,

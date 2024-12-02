@@ -1,5 +1,7 @@
 import logging
+import os
 import shutil
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -13,14 +15,13 @@ from rasterio.warp import (
     reproject,
     transform_geom,
 )
-from shapely.geometry import box, Polygon
+from shapely.geometry import Polygon, box, mapping
+
 from satellite_images_nso_extractor._index_channels.calculate_index_channels import (
     generate_ndvi_channel,
     generate_ndwi_channel,
     generate_red_edge_ndvi_channel,
 )
-from shapely.geometry import mapping
-import os
 
 """
     This is a python class for making various manipulationg such as making crops .tif files, nvdi calculations and exporting to geopandas.
@@ -113,7 +114,9 @@ def __make_the_crop(
         src.close()
 
 
-def add_index_channels(tif_input_file: str, channel_types: list):
+def add_index_channels(
+    tif_input_file: str, channel_types: list, remove_input_file=True
+):
     """
     Add various index channels to a .tif file.
 
@@ -153,7 +156,8 @@ def add_index_channels(tif_input_file: str, channel_types: list):
             output_dataset.write_band(dataset.count + 1 + i, index_channels[i])
         output_dataset.descriptions = descriptions
 
-    os.remove(tif_input_file)
+    if remove_input_file:
+        os.remove(tif_input_file)
     return file_to
 
 
