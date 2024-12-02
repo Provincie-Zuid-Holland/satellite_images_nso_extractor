@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -17,16 +17,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.10",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
-    install_requires=[
-        "requests>=2.25.0",
-        "objectpath>=0.6.1",
-        "earthpy>=0.9.2",
-        "Fiona>=1.9.5",
-        "geopandas>=0.14.3",
-        "rasterio>=1.3.9",
-        "Shapely>=2.0.3",
-    ],
 )

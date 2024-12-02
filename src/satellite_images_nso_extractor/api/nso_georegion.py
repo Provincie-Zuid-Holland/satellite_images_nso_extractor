@@ -13,7 +13,9 @@ import numpy as np
 import pandas as pd
 import rasterio
 import shapely
-from cloud_recognition.api import detect_clouds
+
+# TODO: Dependecies which is not yet on pip
+# from cloud_recognition.api import detect_clouds
 from rasterio.merge import merge
 from shapely.ops import unary_union
 
@@ -528,10 +530,12 @@ class nso_georegion:
         logging.info(str(cropped_path) + " is Ready")
 
         if cloud_detection_warning:
-            clouds = detect_clouds(
-                model=self.cloud_detection_model,
-                filepath=cropped_path,
-            )
+            clouds = False
+
+            # detect_clouds(
+            #    model=self.cloud_detection_model,
+            #    filepath=cropped_path,
+            # )
 
             if clouds:
                 warnings.warn(

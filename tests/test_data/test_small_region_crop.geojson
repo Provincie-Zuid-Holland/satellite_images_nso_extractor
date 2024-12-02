@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "test_small_region_crop",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1 }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 4.534548882574106, 52.200160538147408 ], [ 4.534764342355937, 52.200424650138039 ], [ 4.535157730215665, 52.20031344508935 ], [ 4.535020113967915, 52.199965929312206 ], [ 4.534548882574106, 52.200160538147408 ] ] ] ] } }
+]
+}
