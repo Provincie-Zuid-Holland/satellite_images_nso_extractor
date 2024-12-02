@@ -1,0 +1,32 @@
+name: Run Pytest on PR
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main  # Adjust this to the branch you want to test against
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12  # Specify the Python version you want to use
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+          pip install -e .    
+
+      - name: Run Pytest
+        run: |
+          cd tests
+          python -m pytest test_local.py
