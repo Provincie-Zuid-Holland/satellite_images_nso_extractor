@@ -5,10 +5,13 @@ import rasterio
 
 # the cloud_recognition.api needs to be imported from the natura2000 data science repo
 from rasterio.plot import show
+from settings_local import output_path, path_geojson
 
 import satellite_images_nso_extractor._manipulation.nso_manipulator as nso_manipulator
 import satellite_images_nso_extractor._nso_data_extraction.nso_api as nso_api
 import satellite_images_nso_extractor.api.nso_georegion as nso
+
+output_path = "./test_output_data/"
 
 
 def zip_tif_file(tif_file_path, zip_file_path):
@@ -30,18 +33,6 @@ def zip_tif_file(tif_file_path, zip_file_path):
         zipf.write(tif_file_path, os.path.basename(tif_file_path))
 
     print(f"File '{tif_file_path}' has been zipped into '{zip_file_path}'.")
-
-
-from settings import (
-    cloud_detection_model_path,
-    nso_password,
-    nso_username,
-    output_path,
-    path_geojson,
-    path_test_input_data,
-)
-
-output_path = "./test_output_data/"
 
 
 def test_links():
