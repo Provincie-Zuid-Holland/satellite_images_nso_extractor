@@ -28,6 +28,9 @@ jobs:
            
 
       - name: Run Pytest
+        env:
+          NSO_USERNAME: ${{ secrets.API_KEY }}
+          NSO_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           cd tests
           python -m pytest test_local.py

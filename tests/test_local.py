@@ -1,7 +1,9 @@
 import os
 import zipfile
 
+import pytest
 import rasterio
+from dotenv import load_dotenv
 
 # the cloud_recognition.api needs to be imported from the natura2000 data science repo
 from rasterio.plot import show
@@ -39,11 +41,14 @@ def test_links():
     """
     These tests test the API handling of NSO download link data.
     """
+
+    load_dotenv()
+
     georegion = nso.nso_georegion(
         path_to_geojson=path_geojson,
         output_folder=output_path,
-        username=nso_username,
-        password=nso_password,
+        username=os.getenv("NSO_USERNAME"),
+        password=os.getenv("NSO_PASSWORD"),
     )
 
     links = georegion.retrieve_download_links(max_diff=0.5, start_date="2011-01-01")
