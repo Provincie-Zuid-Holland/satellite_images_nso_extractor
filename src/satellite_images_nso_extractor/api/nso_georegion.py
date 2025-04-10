@@ -141,7 +141,11 @@ class nso_georegion:
         except Exception as e:
             print(e)
 
-        if not self.georegion_to_crop or not self.georegion_to_download:
+        try:
+            if not self.georegion_to_crop or not self.georegion_to_download:
+                print("Geojson not loaded correctly")
+
+        except:
             raise Exception(
                 "Geojson not loaded correctly. Weirdly this error is sometimes solved by reloading the session"
             )
