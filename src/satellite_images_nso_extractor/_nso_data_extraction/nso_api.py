@@ -94,7 +94,18 @@ def retrieve_download_links(
     x = requests.post(
         url, auth=HTTPBasicAuth(user_n, pass_n), data=json.dumps(myobj), headers=headers
     )
-    reponse = json.loads(x.text)
+    
+    # Check HTTP status code first
+    if x.status_code != 200:
+        logging.error(f"NSO API returned status code {x.status_code}: {x.text}")
+        raise Exception(f"NSO API request failed with status {x.status_code}: {x.text}")
+    
+    # Try to parse JSON response
+    try:
+        reponse = json.loads(x.text)
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to parse JSON response from NSO API. Response text: {x.text}")
+        raise Exception(f"Invalid JSON response from NSO API: {e}. Response: {x.text}")
 
     logging.info(f"Got following request: {reponse}")
     if "features" not in reponse.keys():
@@ -119,7 +130,7 @@ def retrieve_download_links(
                     try:
                         check_region, percentage_diff, missing_part, overlap_region = (
                             check_if_geojson_in_region(
-***REMOVED***  row, geojson_coordinates, max_diff
+                                row, geojson_coordinates, max_diff
                             )
                         )
                     except Exception as e:
@@ -130,12 +141,12 @@ def retrieve_download_links(
                         print("Passed region check")
                         for download in row["properties"]["downloads"]:
                             links.append(
-***REMOVED***  [
-***REMOVED***      download["href"],
-***REMOVED***      percentage_diff,
-***REMOVED***      missing_part,
-***REMOVED***      overlap_region,
-***REMOVED***  ]
+                                [
+                                    download["href"],
+                                    percentage_diff,
+                                    missing_part,
+                                    overlap_region,
+                                ]
                             )
 
         except Exception as e:
