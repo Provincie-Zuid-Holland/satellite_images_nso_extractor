@@ -1,130 +1,401 @@
-# Introduction
+# NSO Satellite Images Extractor
 
-This Python code simplifies data extraction and cropping of satellite image data from the Netherlands Space Office (NSO).
+[![Python Version](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-2.0.0-orange.svg)](setup.py)
 
-The NSO offers free satellite images of the Netherlands. However, a limitation is that the NSO provides images of large overlapping regions rather than specific areas. This results in unnecessarily large amounts of data, especially if you are only interested in a smaller, specific region. To address this issue, this package includes a cropping feature.
+## Overview
 
-If you only need a few satellite files, the NSO data portal should suffice: [https://www.satellietdataportaal.nl/](https://www.satellietdataportaal.nl/).
-However, you will still need to crop the satellite images using another method.
+A Python package that simplifies extraction, cropping, and processing of satellite image data from the Netherlands Space Office (NSO). Designed for researchers, data scientists, and developers working with large-scale satellite imagery for machine learning, AI applications, and geospatial analysis.
 
-Depending on your purpose, such as for machine learning or A.I. applications, you may need to process a large number of satellite images in a time series and automate the workflow as much as possible. This Python code is designed to meet those needs.
+## Key Features
 
-
-Features of the Python code:
-
-1. Searches the NSO for satellite images containing a selected geographical area defined in a .geojson file. You need to create this .geojson file yourself in WGS84 format. Parameters can be adjusted to control how strictly the area must be contained within the images.
-2. Downloads, unzips, and crops the satellite images identified in step 1 to the selected area.
-3. Calculates various indices, such as NDVI or NDWI, if this option is enabled.
-4. Saves the cropped satellite images as .tif files, with the option to save them as a GeoPandas DataFrame. Unused data is automatically deleted.
-   
-The image below provides an illustration:
-![Alt text](example.png?raw=true "Title")
+- **✂️ Automated Cropping**: Download, unzip, and crop images to your exact area of interest  
+- **📊 Index Calculation**: Compute vegetation and water indices (NDVI, NDWI, etc.)
+- **🔄 Batch Processing**: Handle large time-series datasets with automated workflows
+- **🗃️ Format Support**: Export as GeoTIFF files or GeoPandas DataFrames
 
 
-\*This satellite data is only intended for dutch legal entities, dutch institutions or dutch citizens.
-For the license terms of the NSO see this links: [https://www.spaceoffice.nl/nl/satellietdataportaal/toegang-data/licentievoorwaarden/](https://www.spaceoffice.nl/nl/satellietdataportaal/toegang-data/licentievoorwaarden/)
+![Satellite Image Processing Example](example.png)
 
-# Getting Started
+> **⚠️ Important**: This satellite data is only available for Dutch legal entities, institutions, or citizens. 
+> See [NSO License Terms](https://www.spaceoffice.nl/nl/satellietdataportaal/toegang-data/licentievoorwaarden/) for details.
 
-0. Get a NSO account, register at [https://satellietdataportaal.nl/register.php](https://satellietdataportaal.nl/register.php)
-1. First, create or obtain a GeoJSON file representing the region you want to study and crop to. This file defines the geographical boundaries of your area of interest and is essential for the cropping process. Ensure the GeoJSON file uses the WGS84 coordinate system. [Geojson.io](https://geojson.io/#map=8/51.821/5.004) can you help you with that.
-2. Make a instance of nso_georegion with instance of the geojson region you have, where you want to store the cropped files and the NSO account based on step 0.
-3. Retrieve download links of satellite images which contain the selected region, parameters can be set to how strict this containment should be, if you want to fill missing data in the region with data from a other satellite and/or add extra indexes.
-4. Download, unzip and crop the found links.
+## When to Use This Package
 
-# Example code
+- **Research & Academia**: Time-series analysis of environmental changes
+- **Machine Learning**: Training datasets for computer vision models
+- **GIS Applications**: Preprocessing satellite data for spatial analysis
+- **Environmental Monitoring**: Automated vegetation or water body tracking
+
+For occasional use or small datasets, the [NSO Data Portal viewer](https://viewer.satellietdataportaal.nl) may suffice, though manual cropping will still be required.
+
+## Quick Start
+
+### Prerequisites
+
+1. **NSO Account**: Register at the [NSO Data Portal](https://www.satellietdataportaal.nl/) to get your credentials
+2. **GeoJSON File**: Create a WGS84 format GeoJSON defining your area of interest using [geojson.io](https://geojson.io) or similar tools
+
+### Configuration
+
+Create a `.env` file in your project root or set environment variables:
+
+```bash
+# Required credentials
+NSO_USERNAME=your_nso_username
+NSO_PASSWORD=your_nso_password
+
+```
+
+Update the paths in the 'settings.py':
 
 ```python
-import satellite_images_nso.api.nso_georegion as nso
-from settings import nso_username, nso_password, path_geojson,  output_path
-# Optional
-from settings import height_band_filepath, cloud_detection_model_path, links_must_contain
+# File paths
+PATH_GEOJSON=path/to/your/area.geojson
+OUTPUT_PATH=path/to/output/directory
 
-path_geojson = "/src/example/example.geojson"
-output_folder = "./src/output/"
+# Optional settings
+LINKS_MUST_CONTAIN=RGBNED,RGBI  # Filter specific band types
+ACCOUNT_URL=your_azure_account_url
+PATH_TEST_INPUT_DATA=path/to/test/data
 
-# Make a georegion object
+```
+### Basic Workflow
+
+1. **Initialize** the NSO georegion object with your credentials and area of interest
+2. **Confige** Confige the settings file with th credentials, area of interest and location of where to download the satellite images.
+3. **Search** for satellite images covering your region with customizable overlap parameters  
+4. **Filter** results by date, resolution, bands, or cloud coverage
+5. **Download & Process** images with automatic cropping and optional index calculation
+
+## Example Usage
+
+### Basic Example
+
+```python
+import satellite_images_nso_extractor.api.nso_georegion as nso
+from settings import nso_username, nso_password, path_geojson, output_path
+
+# Initialize georegion object
 georegion = nso.nso_georegion(
     path_to_geojson=path_geojson, 
     output_folder=output_path,
     username=nso_username,
-    password=nso_password,
+    password=nso_password
+)
+
+# Search for satellite images (80% coverage of your region)
+links = georegion.retrieve_download_links(
+    max_diff=0.8, 
+    start_date="2022-01-01",
+    cloud_coverage_whole=60
+)
+
+# Filter for high-resolution RGB images
+high_res_links = links[
+    (links['resolution'] == "30cm") & 
+    (links["link"].str.contains("RGBNED"))
+].sort_values("percentage_geojson")
+
+# Process images with vegetation index calculation
+for _, row in high_res_links.iterrows():
+    georegion.execute_link(
+        row["link"], 
+        add_ndvi_band=True,
+        delete_zip_file=True,
+        plot=False
     )
-
-# This method fetches all the download links with all the satellite images the NSO has which contain the region in the given geojson.
-# Max_diff parameters represents the amount of percentage the selected region has to be in the satellite image.
-# So 1 is the the selected region has to be fully in the satellite images while 0.5 donates only 50% of the selected region is in the satellite image.
-# The start date parameters denotes the datetime the start date of the satellite images.
-links = georegion.retrieve_download_links(max_diff=0.5, start_date="2022-01-01")
-
-
-# This example filters out only 30 cm RGBNED  from all the links
-links = links[links['resolution'] == "30cm"]
-links = links[links["link"].str.contains("RGBNED")]
-
-
-# Downloads a satellite image from the NSO, makes a crop out of it so it fits the geojson region and calculates the NVDI index.
-# The output will stored in the output folder.
-# Look in the python documentation for the values of the parameters.
-georegion.execute_link(links[1:2]["link"].values[0], add_ndvi_band = True)
-
 ```
 
-See also the jupyter notebook in src/nso_notebook_example.ipynb
+### Advanced Filtering
+
+```python
+# Filter by date and satellite type
+years = ["2019", "2020", "2021", "2022"]
+months = ["05", "06", "07", "08"]  # Growing season
+
+# PNEO high-resolution data
+pneo_links = links[
+    (links['resolution'] == "30cm") &
+    (links["link"].str.contains("RGBNED")) &
+    (links['year'].isin(years)) &
+    (links['month'].isin(months))
+]
+
+# SuperView data for larger areas
+superview_links = links[
+    (links['resolution'] == "50cm") &
+    (links["link"].str.contains("RGBI"))
+]
+```
+
+
+
+> 📓 **See Also**: Check out the complete Jupyter notebook example at `nso_notebook_example.ipynb`
 
 # Class diagram
 
 ![Alt text](class_diagram.PNG?raw=true "Title")
 
-# Installation
+## Installation
 
-When working with 64x Windows and Anaconda for your python environment management execute the following terminal commands in order:
+### Method 1: Using Conda (Recommended)
 
-```sh
+```bash
+# Create isolated environment
 conda create -n satellite_images_nso_extractor python=3.12 -y
 conda activate satellite_images_nso_extractor
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Install the package in development mode
+pip install -e .
 ```
 
-Navigate to the [satellite-images-nso-datascience repository](https://github.com/Provincie-Zuid-Holland/satellite-images-nso-datascience) and then run:
+### Method 2: Using pip + venv
 
-```sh
-pip install .
+```bash
+# Create virtual environment
+python -m venv satellite_env
+source satellite_env/bin/activate  # On Windows: satellite_env\Scripts\activate
+
+# Install package and dependencies
+pip install -r requirements.txt
+pip install -e .
 ```
 
+### Development Installation
 
-### Additional steps for running postprocessing scripts
+For local development with automatic rebuilding:
 
-Additionally, the postprocessing scripts use the Azure SDK, requiring Azure CLI to log in. Follow the [Microsoft Instructions](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) on how to install the Azure CLI.
+```bash
+# Windows
+rebuild.bat
 
-# Application
-
-Copy `settings_example.py` and rename to `settings.py`. Change the variables in there as desired and then execute `nso_notebook_example.ipynb`.
-
-# Run as a docker container
-
-```console
-docker run -it --entrypoint bash dockerhubpzh/satellite_images_nso_docker
+# Unix/Linux/MacOS
+pip install -e . --force-reinstall
 ```
 
-See: https://hub.docker.com/r/dockerhubpzh/satellite_images_nso_docker
+### Optional Dependencies
 
-# Local development
+**Azure Integration**: For cloud storage and advanced postprocessing:
+```bash
+pip install azure-cli
+az login  # Follow authentication prompts
+```
 
-Run `rebuild.bat` to build and install package on local computer.
+**Cloud Detection**: For automatic cloud filtering (requires separate installation):
+```bash
+# Follow cloud_recognition package installation instructions
+```
 
-# Author
+### System Requirements
 
-Michael de Winter
+- **Python**: 3.6+ (tested with 3.12)
+- **Operating System**: Windows, macOS, Linux
+- **Memory**: 4GB+ RAM recommended for large image processing
+- **Storage**: Variable (depends on satellite image sizes and processing volume)
 
-Pieter Kouyzer
 
-Jeroen Esseveld
 
-Daniel Overdevest
+## API Reference
 
-Yilong Wen
+### Core Classes
 
-# Contact
+#### `nso_georegion`
 
-Contact us at vdwh@pzh.nl
+Main class for satellite image processing operations.
+
+**Constructor Parameters:**
+- `path_to_geojson` (str): Path to WGS84 GeoJSON file defining area of interest
+- `output_folder` (str): Directory for processed output files  
+- `username` (str): NSO account username
+- `password` (str): NSO account password
+
+**Key Methods:**
+
+##### `retrieve_download_links(max_diff, start_date, cloud_coverage_whole=None)`
+Search for satellite images covering your region.
+
+- `max_diff` (float): Minimum coverage percentage (0.0-1.0). 1.0 = 100% coverage required
+- `start_date` (str): Start date in "YYYY-MM-DD" format
+- `cloud_coverage_whole` (int, optional): Maximum acceptable cloud coverage percentage
+
+**Returns:** pandas DataFrame with columns: link, percentage_geojson, date, satellite, resolution
+
+##### `execute_link(link_url, **kwargs)`
+Download and process a satellite image.
+
+**Parameters:**
+- `link_url` (str): Download URL from retrieve_download_links()
+- `add_ndvi_band` (bool): Calculate NDVI vegetation index
+- `add_ndwi_band` (bool): Calculate NDWI water index  
+- `delete_zip_file` (bool): Remove downloaded ZIP after processing
+- `plot` (bool): Generate visualization plots
+
+## Architecture
+
+![Class Diagram](class_diagram.PNG)
+
+The package is organized into specialized modules:
+
+- **`api/`**: High-level user interface (`nso_georegion`)
+- **`_nso_data_extraction/`**: NSO API communication (`nso_api`)
+- **`_manipulation/`**: Image processing and cropping (`nso_manipulator`)
+- **`_index_channels/`**: Spectral index calculations (`calculate_index_channels`)
+- **`other/`**: Utility functions (`functions`)
+
+## Troubleshooting
+
+### Common Issues
+
+#### Authentication Errors
+```
+Error: Invalid credentials or authentication failed
+```
+**Solution**: Verify your NSO username and password. Ensure your account is active and has access to the data portal.
+
+#### Memory Issues with Large Images
+```
+MemoryError: Unable to allocate array
+```
+**Solutions**:
+- Reduce the `max_diff` parameter to get smaller image tiles
+- Process images one at a time instead of batch processing
+- Increase system memory or use a machine with more RAM
+
+#### GeoJSON Format Errors
+```
+Error: Invalid GeoJSON format or coordinate system
+```
+**Solutions**:
+- Ensure GeoJSON uses WGS84 coordinate system (EPSG:4326)
+- Validate GeoJSON format using online tools like [geojsonlint.com](https://geojsonlint.com)
+- Check that coordinates are in [longitude, latitude] order
+
+#### Missing Dependencies
+```
+ModuleNotFoundError: No module named 'rasterio'
+```
+**Solution**: Reinstall dependencies:
+```bash
+pip install -r requirements.txt --force-reinstall
+```
+
+#### Download Failures
+```
+Error: Failed to download satellite image
+```
+**Solutions**:
+- Check internet connection
+- Verify NSO service status
+- Try with a smaller date range or different satellite type
+
+### Getting Help
+
+1. **Check logs**: Review `Logging_nso_download.log` for detailed error information
+2. **Test data**: Use files in `tests/test_data/` to verify installation
+3. **Examples**: Run `nso_notebook_example.ipynb` to test functionality
+
+## Contributing
+
+We welcome contributions! Please follow these guidelines:
+
+### Development Setup
+
+1. Fork the repository
+2. Create a virtual environment and install development dependencies:
+   ```bash
+   pip install -r requirements.txt
+   pip install -e .
+   ```
+3. Install testing dependencies:
+   ```bash
+   pip install pytest flake8 tox
+   ```
+
+### Running Tests
+
+```bash
+# Run basic tests (excludes download tests by default)
+pytest tests/
+
+# Run all tests including download tests (requires NSO credentials)
+pytest tests/ -m ""
+
+# Run only download tests
+pytest tests/ -m "download"
+
+# Run with coverage (excluding download tests)
+pytest tests/ --cov=satellite_images_nso_extractor
+
+# Run linting
+flake8 .
+
+# Test across Python versions
+tox
+```
+
+**Note**: Download tests require:
+- Valid NSO credentials in environment variables
+- Internet connection 
+- Sufficient disk space (~500MB+ for test data)
+- Set `TEST_OUTPUT_PATH` environment variable if you want to use a custom test output directory
+
+### Code Style
+
+- Follow PEP 8 style guidelines
+- Use meaningful variable and function names
+- Add docstrings for all public methods
+- Keep functions focused and modular
+
+### Submitting Changes
+
+1. Create a feature branch: `git checkout -b feature-name`
+2. Make your changes with tests
+3. Ensure all tests pass: `pytest tests/`
+4. Submit a pull request with a clear description
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Changelog
+
+### Version 2.0.0
+- Updated NSO API integration
+- Added support for Python 3.12
+- Improved error handling and logging
+- Enhanced cloud detection capabilities
+- Added environment variable configuration
+
+### Version 1.x
+- Initial release with basic functionality
+- Core satellite image extraction and cropping
+
+## Related Projects
+
+- [satellite-images-nso-datascience](https://github.com/Provincie-Zuid-Holland/satellite-images-nso-datascience): Advanced data science tools for NSO satellite imagery
+
+## Support & Contact
+
+- **Issues**: Report bugs and feature requests on [GitHub Issues](https://github.com/Provincie-Zuid-Holland/satellite_images_nso_extractor/issues)
+- **Email**: Contact the development team at vdwh@pzh.nl
+- **Documentation**: See example notebook and inline documentation for detailed usage
+
+## Authors & Contributors
+
+**Core Development Team:**
+- **Michael de Winter** - Lead Developer & Maintainer
+- **Pieter Kouyzer** - Core Contributor  
+- **Jeroen Esseveld** - Contributor
+- **Daniel Overdevest** - Contributor
+- **Yilong Wen** - Contributor
+
+## Acknowledgments
+
+- Netherlands Space Office (NSO) for providing satellite data access
+- Provincie Zuid-Holland for supporting this open-source initiative
+- The Python geospatial community for excellent libraries (rasterio, geopandas, etc.)
