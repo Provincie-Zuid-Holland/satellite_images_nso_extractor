@@ -18,6 +18,7 @@ import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 import rasterio
 import requests
 
@@ -162,7 +163,8 @@ def test_retrieve_download_links_superview_links():
 # Cropping tests
 
 
-def pneo_polygon_crop():
+@pytest.mark.download
+def test_pneo_polygon_crop():
     georegion = nso.nso_georegion(
         path_to_geojson=path_test_input_data + "Test_region.geojson",
         output_folder=output_path,
@@ -178,7 +180,8 @@ def pneo_polygon_crop():
     assert filepath, "No file has been downloaded or extracted for a polygon in PNEO!"
 
 
-def pneo_multiploygon_crop():
+@pytest.mark.download
+def test_pneo_multipolygon_crop():
     georegion = nso.nso_georegion(
         path_to_geojson=path_test_input_data + "Test_multipolygon_region.geojson",
         output_folder=output_path,
@@ -202,14 +205,15 @@ remove_directories_in_folder(output_path)
 # Channel adding tests.
 
 
+@pytest.mark.download
 def test_re_ndvi_pneo():
     # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
     path_geojson = path_test_input_data + "Test_region.geojson"
-    output_path = "E:/data/test"
+    test_output_path = os.environ.get("TEST_OUTPUT_PATH", output_path)
 
     georegion = nso.nso_georegion(
         path_to_geojson=path_geojson,
-        output_folder=output_path,
+        output_folder=test_output_path,
         username=nso_username,
         password=nso_password,
     )
@@ -229,14 +233,15 @@ def test_re_ndvi_pneo():
         assert "re_ndvi" in src.descriptions, "re_ndvi bands not added correctly"
 
 
+@pytest.mark.download
 def test_adding_additional_ndwi_pneo():
     # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
     path_geojson = path_test_input_data + "Test_region.geojson"
-    output_path = "E:/data/test"
+    test_output_path = os.environ.get("TEST_OUTPUT_PATH", output_path)
 
     georegion = nso.nso_georegion(
         path_to_geojson=path_geojson,
-        output_folder=output_path,
+        output_folder=test_output_path,
         username=nso_username,
         password=nso_password,
     )
@@ -262,14 +267,15 @@ def test_adding_additional_ndwi_pneo():
         assert "ndwi" in src.descriptions, "re_ndwi bands not added correctly"
 
 
+@pytest.mark.download
 def test_adding_ndvi_superview():
     # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
     path_geojson = path_test_input_data + "Test_region.geojson"
-    output_path = "E:/data/test"
+    test_output_path = os.environ.get("TEST_OUTPUT_PATH", output_path)
 
     georegion = nso.nso_georegion(
         path_to_geojson=path_geojson,
-        output_folder=output_path,
+        output_folder=test_output_path,
         username=nso_username,
         password=nso_password,
     )
@@ -289,14 +295,15 @@ def test_adding_ndvi_superview():
         assert "ndvi" in src.descriptions, "ndvi bands not added correctly"
 
 
+@pytest.mark.download
 def test_adding_additional_ndwi_superview():
     # Test re_ndvi on PNEO coepelduynen and see if gives the best results.
     path_geojson = path_test_input_data + "Test_region.geojson"
-    output_path = "E:/data/test"
+    test_output_path = os.environ.get("TEST_OUTPUT_PATH", output_path)
 
     georegion = nso.nso_georegion(
         path_to_geojson=path_geojson,
-        output_folder=output_path,
+        output_folder=test_output_path,
         username=nso_username,
         password=nso_password,
     )
@@ -330,6 +337,7 @@ remove_directories_in_folder(output_path)
 
 
 # Test Cloud detection
+@pytest.mark.download
 def test_cloud_detection():
     if not CLOUD_DETECTION_AVAILABLE:
         print("Cloud detection module not available, skipping test")
