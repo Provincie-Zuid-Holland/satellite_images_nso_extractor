@@ -146,10 +146,10 @@ Makefile
 make.bat
 source/*
 
-src/settings.py
+
 src/__init__.py
 
-settings.py
+
 
 input_data/*.json
 input_data/*.geojson
